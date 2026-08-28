@@ -1,0 +1,69 @@
+# Environment variables & secrets (CRITICAL: Never commit secrets or API keys)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+*.jks
+*.keystore
+secrets.json
+
+# SQLite & Databases
+*.db
+*.sqlite
+*.sqlite3
+pest_detection.db
+backend/pest_detection.db
+
+# Uploads & User Generated Data
+uploads/
+uploads/*
+backend/uploads/
+backend/uploads/*
+!uploads/.gitkeep
+!backend/uploads/.gitkeep
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+env/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.npm
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Android & Gradle
+.gradle/
+android/.gradle/
+build/
+android/build/
+android/app/build/
+local.properties
+android/local.properties
+.idea/
+android/.idea/
+*.apk
+*.aab
+*.iml
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.agent/

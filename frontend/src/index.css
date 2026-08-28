@@ -1,0 +1,174 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base background & high contrast text colors - Agricultural Diagnostic Workstation */
+@layer base {
+  html:not(.dark) body {
+    background-color: #f8f9ff; /* surface / background */
+    color: #0b1c30;            /* on-background */
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+
+  html.dark body {
+    background-color: #0f172a; /* dark canvas / surface-container */
+    color: #f8f9ff;            /* on-surface dark */
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-property: background-color, border-color, box-shadow, opacity;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 100ms;
+  }
+
+  /* Accessibility high contrast focus visible ring */
+  *:focus-visible {
+    outline: 2px solid #005d42;
+    outline-offset: 2px;
+  }
+  html.dark *:focus-visible {
+    outline: 2px solid #97f5cc;
+    outline-offset: 2px;
+  }
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  display: inline-block;
+  line-height: 1;
+}
+
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Stitch & Workstation Utility Classes */
+@layer utilities {
+  .app-panel, .app-card {
+    @apply bg-surface-container-lowest dark:bg-slate-900 border border-outline-variant dark:border-slate-800 rounded-xl transition-colors duration-100 shadow-sm;
+  }
+
+  .app-panel-header, .app-card-header {
+    @apply px-4 py-3 border-b border-outline-variant dark:border-slate-800 bg-surface-bright dark:bg-slate-950/80 rounded-t-xl flex items-center justify-between font-bold text-on-surface dark:text-slate-100 text-xs uppercase tracking-wider;
+  }
+
+  .btn-primary-agri {
+    @apply bg-primary hover:bg-primary-container text-on-primary font-bold focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99] transition-all duration-100 rounded-lg px-4 py-2.5 text-xs min-h-[38px] flex items-center justify-center gap-2 cursor-pointer shadow-sm;
+  }
+
+  .btn-secondary-agri {
+    @apply bg-surface-container-lowest dark:bg-slate-900 hover:bg-surface-container-low dark:hover:bg-slate-800 text-on-surface dark:text-slate-100 font-bold border border-outline-variant dark:border-slate-700 focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.99] transition-all duration-100 rounded-lg px-4 py-2.5 text-xs min-h-[38px] flex items-center justify-center gap-2 cursor-pointer shadow-sm;
+  }
+}
+
+/* Workstation High Contrast Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #020617;
+}
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0f172a;
+}
+
+/* Official Print & PDF Export Layout */
+.print-header {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  body, html {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  
+  /* Hide UI chrome, navigation, headers, sidebars, buttons, floating elements */
+  header, nav, aside, button, .no-print, [role="backdrop"], .print\:hidden, input, select {
+    display: none !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #005d42;
+    padding-bottom: 12px;
+    margin-bottom: 24px;
+  }
+
+  .print-header h1 {
+    color: #005d42 !important;
+    font-size: 20pt !important;
+    font-weight: 700 !important;
+    margin: 0;
+  }
+
+  .print-header p {
+    color: #3e4943 !important;
+    font-size: 10pt !important;
+    margin: 4px 0 0 0;
+  }
+
+  /* Cards & layout formatting for print */
+  .bg-surface-container-lowest, .bg-surface, .app-card, .app-panel {
+    background-color: #ffffff !important;
+    border: 1px solid #bdc9c1 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12px !important;
+  }
+
+  .border-l-error, .border-l-\[4px\].border-l-error {
+    border-left: 6px solid #ba1a1a !important;
+  }
+
+  canvas, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .shadow-sm, .shadow-md, .shadow-lg, .shadow-subtle, .shadow-elevated, .shadow-workstation, .shadow-panel {
+    box-shadow: none !important;
+  }
+}
+
+
+
+

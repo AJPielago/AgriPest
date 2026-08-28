@@ -1,0 +1,509 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AgriMonitor - Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#97f5cc",
+                        "on-tertiary-container": "#e4e9ff",
+                        "on-tertiary-fixed": "#131b2e",
+                        "on-secondary-container": "#007230",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "secondary-fixed": "#7ffc97",
+                        "surface-bright": "#f8f9ff",
+                        "surface-container": "#e5eeff",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-container": "#7cf994",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#bdc9c1",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-container": "#9ffdd3",
+                        "error": "#ba1a1a",
+                        "outline": "#6e7a73",
+                        "surface-container-low": "#eff4ff",
+                        "background": "#f8f9ff",
+                        "on-background": "#0b1c30",
+                        "on-surface-variant": "#3e4943",
+                        "surface": "#f8f9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#002109",
+                        "on-surface": "#0b1c30",
+                        "primary": "#005d42",
+                        "error-container": "#ffdad6",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#616980",
+                        "secondary": "#006e2d",
+                        "primary-container": "#047857",
+                        "inverse-primary": "#7bd8b1",
+                        "secondary-fixed-dim": "#62df7d",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary-fixed-variant": "#00513a",
+                        "inverse-surface": "#213145",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-container-high": "#dce9ff",
+                        "primary-fixed-dim": "#7bd8b1",
+                        "surface-tint": "#006c4e",
+                        "on-secondary-fixed-variant": "#005320",
+                        "on-primary-fixed": "#002115",
+                        "tertiary-fixed": "#dae2fd",
+                        "inverse-on-surface": "#eaf1ff",
+                        "tertiary": "#495167"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "container-margin": "16px",
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "gutter-grid": "12px",
+                        "stack-lg": "24px",
+                        "section-gap": "32px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for horizontal scrolling areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- TopAppBar (from JSON) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-margin h-14 bg-surface dark:bg-surface-container border-b border-outline-variant dark:border-outline shadow-sm">
+<div class="flex items-center gap-stack-md">
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors p-2 rounded-full hidden md:block">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-title-lg font-title-lg font-bold text-primary dark:text-primary-fixed">AgriMonitor</h1>
+</div>
+<div class="flex items-center gap-stack-sm">
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors p-2 rounded-full relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img alt="Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a modern farm manager, wearing casual outdoor attire, well-lit natural sunlight, clear blue sky background, conveying trust and expertise in agricultural technology." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAy4VK8IWEGWRfkWLjLboGxlVh2gz0yw1XEfH0SVAEh-Zs4oytt3BJYCOL_HrJh2ZNemr-nmJ02qsBgB-Cp0hLhp3xhBb6pPKew3BiNSicP-yXvQ73N_6I9LlwcmUUJgadj85AQYTYkuMPRZSgKEEj3tIUML6P2qpG2wWDfr3zMI7oVAw_sxxmLer3UMs1RyvX7CUzAYZGj1ZPMQhQfHXdOecBf0dELp1glBNwqTIIciPId8ivdxxTH">
+</div>
+</div>
+</header>
+<div class="flex pt-14 h-screen overflow-hidden">
+<!-- NavigationDrawer (from JSON) - Desktop Only for Layout simplicity in this demo, assumes mobile uses bottom nav or hamburger menu -->
+<nav class="hidden md:flex flex-col h-full py-stack-lg px-stack-md bg-surface dark:bg-surface-container-low border-r border-outline-variant dark:border-outline shadow-xl fixed inset-y-0 left-0 w-80 pt-20 z-40">
+<!-- Header section of Drawer -->
+<div class="flex items-center gap-stack-sm mb-section-gap px-4">
+<div class="w-12 h-12 rounded-full overflow-hidden shrink-0 border border-outline-variant">
+<img alt="Farm Manager Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a modern farm manager, wearing casual outdoor attire, well-lit natural sunlight, clear blue sky background, conveying trust and expertise in agricultural technology." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHrmvLxv6oCGcVmj2wSJeADL7D89x3uXrM_OtpLr-NC-v40fFAXdM3iJhXaytlk47rDUtq20X5_kS5YYRjKA9eS_Ik4JwSogDCq4gu-ZWIpp4vraOTp49M5vWR0rc5G200OaiIIAt6OL4-6Tf_q4fcmEjeIs8nZ45jeRdKG7rPbvWfiiS4NJ-laZ4xPHw2F45HL-Gm1T2noYAMxSbV3ChjHfy_cAmiolL2AVdd-xcYSleAEKNbCZhj">
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed">Alex Rivers</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Farm Manager</span>
+<span class="font-label-sm text-label-sm text-outline">North Sector</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-1 overflow-y-auto">
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 bg-secondary-container text-on-secondary-container dark:bg-secondary dark:text-on-secondary rounded-full font-bold transition-transform duration-300 ease-in-out opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="bug_report">bug_report</span>
+<span class="font-label-md text-label-md">Pest Detection</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="Psychology">downloading</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-4 py-3 text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-transform duration-300 ease-in-out rounded-full" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-80 overflow-y-auto p-container-margin md:p-section-gap pb-24">
+<!-- Welcome Header -->
+<div class="mb-section-gap">
+<h2 class="font-display-lg text-display-lg text-on-surface mb-2">Good morning, Alex</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">cloud</span>
+                    Optimal conditions across North Sector. 3 action items pending.
+                </p>
+</div>
+<!-- Summary Cards (Bento Grid Style) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter-grid mb-section-gap">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] hover:border-primary/20 transition-colors flex flex-col gap-stack-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Total Crops</span>
+<span class="material-symbols-outlined text-primary" data-icon="grass">grass</span>
+</div>
+<span class="font-headline-md text-headline-md text-on-surface">12</span>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] hover:border-primary/20 transition-colors flex flex-col gap-stack-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Active Areas</span>
+<span class="material-symbols-outlined text-primary" data-icon="map">map</span>
+</div>
+<span class="font-headline-md text-headline-md text-on-surface">8</span>
+</div>
+<!-- Card 3 (High Priority) -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[4px] border-l-error rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] hover:border-primary/20 transition-colors flex flex-col gap-stack-sm relative overflow-hidden">
+<div class="absolute inset-0 bg-error/5 z-0 pointer-events-none"></div>
+<div class="flex items-center justify-between relative z-10">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Pest Detections</span>
+<span class="material-symbols-outlined text-error" data-icon="bug_report">bug_report</span>
+</div>
+<div class="flex items-end gap-2 relative z-10">
+<span class="font-headline-md text-headline-md text-on-surface">3</span>
+<span class="font-label-sm text-label-sm text-error bg-error/10 px-2 py-1 rounded-full mb-1">High Risk</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] hover:border-primary/20 transition-colors flex flex-col gap-stack-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Alerts</span>
+<span class="material-symbols-outlined text-tertiary" data-icon="warning">warning</span>
+</div>
+<span class="font-headline-md text-headline-md text-on-surface">2</span>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter-grid mb-section-gap">
+<!-- Pest Detection Summary -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-stack-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Pest Detection Summary</h3>
+<div class="relative w-full h-64 flex items-center justify-center">
+<canvas id="pestSummaryChart" width="406" height="320" style="display: block; box-sizing: border-box; height: 256px; width: 324.8px;"></canvas>
+</div>
+</div>
+<!-- Detection Trends -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-stack-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">Detection Trends (Last 7 Days)</h3>
+<div class="relative w-full h-64 flex items-center justify-center">
+<canvas id="detectionTrendsChart" width="406" height="320" style="display: block; box-sizing: border-box; height: 256px; width: 324.8px;"></canvas>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout for Main Content -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter-grid">
+<!-- Recent Pest Detections (Takes up 2 columns on large screens) -->
+<div class="lg:col-span-2 flex flex-col gap-stack-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-error">bug_report</span>
+                        Recent Pest Detections
+                    </h3>
+<!-- Detection Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant border-l-[4px] border-l-error rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col sm:flex-row gap-stack-md items-start sm:items-center">
+<div class="w-full sm:w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-surface-container">
+<img alt="Aphids on Cabbage" class="w-full h-full object-cover" data-alt="A close-up, high-resolution macro photograph of aphids infesting a bright green cabbage leaf. The lighting is harsh natural daylight, casting sharp micro-shadows. The style is clinical and documentary, emphasizing the agricultural problem in vivid detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuACNekDabxz0wtVGVVb1MVmk41Io-Vd1Se6ZjPcsW7kU0nmevhXGN8tcOQLIuKkQuR_wjEHZbrnGJ82gcXThj0dmpdcyU8wo1PIY7rwaOoJKDP7GxlA8E3VY7tplQN5KJPVLDuTnfjGz3i1AgrDeP7k-1tKj8H_Wmc0r4Ok8tetdnA1PclkHIuYOt4DEyYUMgzSKiwFp-xdpgQJQ8rWfJwavcM40Juc3HEANkJo-jSBPlbrRykQBPYq">
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<div class="flex items-center justify-between w-full">
+<span class="font-title-lg text-title-lg text-on-surface">Aphids on Cabbage</span>
+<span class="font-label-sm text-label-sm text-error bg-error/10 px-2 py-1 rounded-full border border-error/20">Severity: High</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant">North Sector, Plot A2</span>
+<span class="font-label-md text-label-md text-outline mt-1">Detected: Oct 24, 08:30 AM</span>
+</div>
+<button class="w-full sm:w-auto bg-surface-container border border-outline-variant text-on-surface font-label-md px-4 py-2 rounded-lg hover:bg-surface-variant transition-colors whitespace-nowrap">
+                            View Details
+                        </button>
+</div>
+<!-- Detection Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col sm:flex-row gap-stack-md items-start sm:items-center">
+<div class="w-full sm:w-24 h-24 rounded-lg overflow-hidden shrink-0 bg-surface-container">
+<img alt="Armyworm on Corn" class="w-full h-full object-cover" data-alt="A detailed, macro photograph of a single fall armyworm resting on a slightly damaged corn stalk. The lighting is diffused morning light, creating a natural but analytical agricultural aesthetic. The colors are muted greens and browns, focusing on realistic pest identification." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAr_gYsqtsP2I6_LTEiG0nP2jyc6fFQqS1DxeigCxLH9ghzIIXgK3e1jWY-Jb8956GkqYVAzJMuZjp9TiUSHduWCZzb5bS6zjHeaAEpF_Jf0Qy8hUSxvilRK9jHCC3Vj8LBUE7agMX9y1gJ9MBj07mRXSJt88GuqxbIi94l3w159iNN720DdPLQoDCnSGsF3llWhuYCT8OzNcpu_kcEJlMywNKFPCHCaBVGg7bq62Aucaz7iCQXHrnb">
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<div class="flex items-center justify-between w-full">
+<span class="font-title-lg text-title-lg text-on-surface">Armyworm on Corn</span>
+<span class="font-label-sm text-label-sm text-outline bg-surface-variant px-2 py-1 rounded-full border border-outline-variant">Severity: Low</span>
+</div>
+<span class="font-body-md text-body-md text-on-surface-variant">East Sector, Plot C1</span>
+<span class="font-label-md text-label-md text-outline mt-1">Detected: Oct 23, 14:15 PM</span>
+</div>
+<button class="w-full sm:w-auto bg-surface-container border border-outline-variant text-on-surface font-label-md px-4 py-2 rounded-lg hover:bg-surface-variant transition-colors whitespace-nowrap">
+                            View Details
+                        </button>
+</div>
+</div>
+<!-- Right Column: Crop Health & Activity -->
+<div class="flex flex-col gap-gutter-grid">
+<!-- Crop Health Overview -->
+<div class="flex flex-col gap-stack-md">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Crop Health Overview</h3>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-stack-sm">
+<div class="flex justify-between items-center pb-2 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">local_florist</span>
+<span class="font-title-lg text-title-lg text-on-surface">Cabbage</span>
+</div>
+<span class="font-label-sm text-label-sm text-error bg-error/10 px-2 py-1 rounded-full">Needs Attention</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Areas</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">4 Plots</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Risk Level</span>
+<span class="font-body-md text-body-md text-error font-semibold">Elevated</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-stack-sm">
+<div class="flex justify-between items-center pb-2 border-b border-surface-variant">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary">grass</span>
+<span class="font-title-lg text-title-lg text-on-surface">Corn</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-secondary/10 px-2 py-1 rounded-full">Healthy</span>
+</div>
+<div class="grid grid-cols-2 gap-2 mt-1">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Areas</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">6 Plots</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Risk Level</span>
+<span class="font-body-md text-body-md text-secondary font-semibold">Low</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Recent Activity -->
+<div class="flex flex-col gap-stack-md mt-4 lg:mt-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Recent Activity</h3>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-stack-md shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-4">
+<div class="flex gap-3 relative">
+<div class="w-8 h-8 rounded-full bg-error/10 flex items-center justify-center shrink-0 z-10 relative">
+<span class="material-symbols-outlined text-error text-sm">my_location</span>
+</div>
+<!-- Connecting Line -->
+<div class="absolute left-4 top-8 bottom-[-16px] w-[2px] bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">New high-risk detection in North Sector</span>
+<span class="font-label-sm text-label-sm text-outline">2 hours ago</span>
+</div>
+</div>
+<div class="flex gap-3 relative">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 z-10 relative">
+<span class="material-symbols-outlined text-primary text-sm">water_drop</span>
+</div>
+<!-- Connecting Line -->
+<div class="absolute left-4 top-8 bottom-[-16px] w-[2px] bg-surface-variant"></div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">Irrigation cycle completed (East Sector)</span>
+<span class="font-label-sm text-label-sm text-outline">5 hours ago</span>
+</div>
+</div>
+<div class="flex gap-3 relative">
+<div class="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center shrink-0 z-10 relative">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">sync</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md text-on-surface">System firmware updated successfully</span>
+<span class="font-label-sm text-label-sm text-outline">Yesterday</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const errorColor = '#ba1a1a';
+        const primaryColor = '#005d42';
+        const secondaryColor = '#006e2d';
+        const tertiaryColor = '#495167';
+        const onSurfaceColor = '#0b1c30';
+        const outlineVariantColor = '#bdc9c1';
+
+        // Pest Detection Summary (Donut Chart)
+        const ctxSummary = document.getElementById('pestSummaryChart').getContext('2d');
+        new Chart(ctxSummary, {
+            type: 'doughnut',
+            data: {
+                labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+                datasets: [{
+                    data: [3, 5, 8],
+                    backgroundColor: [
+                        errorColor,
+                        secondaryColor,
+                        primaryColor
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: onSurfaceColor,
+                            font: {
+                                family: 'Inter',
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+
+        // Detection Trends (Line Chart)
+        const ctxTrends = document.getElementById('detectionTrendsChart').getContext('2d');
+        new Chart(ctxTrends, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Detections',
+                    data: [2, 5, 3, 7, 4, 6, 3],
+                    borderColor: primaryColor,
+                    backgroundColor: 'rgba(0, 93, 66, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: primaryColor,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: onSurfaceColor,
+                            font: {
+                                family: 'Inter',
+                                size: 12
+                            }
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: outlineVariantColor,
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        },
+                        ticks: {
+                            color: onSurfaceColor,
+                            font: {
+                                family: 'Inter',
+                                size: 12
+                            },
+                            stepSize: 2
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+
+</body></html>

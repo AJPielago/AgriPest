@@ -1,0 +1,519 @@
+<!DOCTYPE html><html class="h-full" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>AgriMonitor - Detection History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#97f5cc",
+                    "on-tertiary-container": "#e4e9ff",
+                    "on-tertiary-fixed": "#131b2e",
+                    "on-secondary-container": "#007230",
+                    "tertiary-fixed-dim": "#bec6e0",
+                    "on-tertiary-fixed-variant": "#3f465c",
+                    "secondary-fixed": "#7ffc97",
+                    "surface-bright": "#f8f9ff",
+                    "surface-container": "#e5eeff",
+                    "surface-variant": "#d3e4fe",
+                    "secondary-container": "#7cf994",
+                    "on-error-container": "#93000a",
+                    "outline-variant": "#bdc9c1",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-container": "#9ffdd3",
+                    "error": "#ba1a1a",
+                    "outline": "#6e7a73",
+                    "surface-container-low": "#eff4ff",
+                    "background": "#f8f9ff",
+                    "on-background": "#0b1c30",
+                    "on-surface-variant": "#3e4943",
+                    "surface": "#f8f9ff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#002109",
+                    "on-surface": "#0b1c30",
+                    "primary": "#005d42",
+                    "error-container": "#ffdad6",
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#616980",
+                    "secondary": "#006e2d",
+                    "primary-container": "#047857",
+                    "inverse-primary": "#7bd8b1",
+                    "secondary-fixed-dim": "#62df7d",
+                    "surface-dim": "#cbdbf5",
+                    "on-primary-fixed-variant": "#00513a",
+                    "inverse-surface": "#213145",
+                    "on-secondary": "#ffffff",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-container-high": "#dce9ff",
+                    "primary-fixed-dim": "#7bd8b1",
+                    "surface-tint": "#006c4e",
+                    "on-secondary-fixed-variant": "#005320",
+                    "on-primary-fixed": "#002115",
+                    "tertiary-fixed": "#dae2fd",
+                    "inverse-on-surface": "#eaf1ff",
+                    "tertiary": "#495167"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "container-margin": "16px",
+                    "stack-md": "16px",
+                    "stack-sm": "8px",
+                    "gutter-grid": "12px",
+                    "stack-lg": "24px",
+                    "section-gap": "32px"
+            },
+            "fontFamily": {
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "title-lg": [
+                            "Inter"
+                    ],
+                    "display-lg": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "headline-sm": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "label-md": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "title-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-sm": [
+                            "20px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-sm": [
+                            "11px",
+                            {
+                                    "lineHeight": "14px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface h-full flex flex-col md:flex-row font-body-md text-body-md">
+<!-- NavigationDrawer (Shared Component) -->
+<nav class="fixed inset-y-0 left-0 w-80 h-full border-r border-outline-variant shadow-xl bg-surface flex flex-col py-stack-lg px-stack-md z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out md:relative md:flex-shrink-0" id="drawer">
+<!-- Header -->
+<div class="flex items-center gap-stack-sm mb-stack-lg">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A close-up portrait of a professional farm manager in agricultural workwear. The individual has a determined expression. Soft, natural daylight illuminates their face, suggesting an outdoor setting. The color palette features natural greens and earthy tones to match an agricultural theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtLEhbYVXuGpFkLCJ0o5f6oPBqIa6z8laTqLO8IEtRJtCJiJfyd98AaBmAOIV1F2zhMywg1KfN-XZfgKPmRRzZj1J9WbZ3aFHFU5QPFWJ86b_zZravEZ93omhRjtFC1MGwVB4WXEABLh3-VDjxpTFtfEKOu7vf-yZ5W2YJZVPrcroafXyhu8eyGAmexSVYYU_tB1brKy6UwCl04vwATYfTxXgdHocfbPNVwCKMDCBb4ECIMtD6SCBV">
+<div>
+<h2 class="text-title-lg font-title-lg font-bold text-primary">Alex Rivers</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Farm Manager</p>
+<p class="font-label-md text-label-md text-on-surface-variant opacity-80">North Sector</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col gap-unit">
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm bg-secondary-container text-on-secondary-container rounded-full font-bold font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="bug_report">bug_report</span>
+                    Pest Detection
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+                    Farm Monitoring
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="Psychology">downloading</span>
+                    Crops
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+                    Reports
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                    Notifications
+                </a>
+</li>
+<li class="">
+<a class="flex items-center gap-stack-sm px-stack-md py-stack-sm text-on-surface-variant hover:bg-surface-variant/50 hover:bg-primary-container/10 transition-colors rounded-full font-label-md text-label-md mt-auto" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Overlay for mobile drawer -->
+<div class="fixed inset-0 bg-on-surface/50 z-30 hidden md:hidden" id="drawer-overlay"></div>
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+<!-- TopAppBar (Shared Component) -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-container-margin h-14 bg-surface text-primary border-b border-outline-variant shadow-sm md:hidden">
+<button class="p-unit text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full" id="menu-btn">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-title-lg font-title-lg font-bold text-primary">AgriMonitor</h1>
+<button class="p-unit text-on-surface-variant hover:bg-surface-container-low transition-colors rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 overflow-y-auto mt-14 md:mt-0 p-container-margin md:p-stack-lg bg-background">
+<div class="max-w-4xl mx-auto"><div class="hidden print-header"><h1 class="text-headline-md text-primary">Pest Detection History Report</h1><p class="text-body-md">Generated on: <span id="print-date"></span></p><script>document.getElementById('print-date').innerText = new Date().toLocaleDateString();</script></div>
+<header class="mb-stack-lg">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-stack-sm">Detection History</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Review recent pest detections and severity levels.</p>
+<button onclick="window.print()" class="mt-stack-sm flex items-center gap-unit px-4 py-2 bg-primary text-on-primary rounded-full font-label-md text-label-md hover:opacity-90 transition-opacity print:hidden"><span class="material-symbols-outlined text-sm">print</span>Print Report</button></header>
+<!-- Search and Filters -->
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline-variant shadow-sm mb-stack-lg flex flex-col gap-stack-sm md:flex-row md:items-center">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface text-on-surface pl-10 pr-4 py-2 rounded-md border border-outline-variant focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-body-md text-body-md" placeholder="Search pest or crop..." type="text">
+</div>
+<div class="flex gap-stack-sm overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+<button class="flex items-center gap-unit px-3 py-1.5 bg-surface-variant text-on-surface-variant rounded-full border border-outline-variant whitespace-nowrap hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                            Crop
+                        </button>
+<button class="flex items-center gap-unit px-3 py-1.5 bg-surface-variant text-on-surface-variant rounded-full border border-outline-variant whitespace-nowrap hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm" data-icon="warning">warning</span>
+                            Severity
+                        </button>
+<button class="flex items-center gap-unit px-3 py-1.5 bg-surface-variant text-on-surface-variant rounded-full border border-outline-variant whitespace-nowrap hover:bg-surface-container-high transition-colors font-label-md text-label-md">
+<span class="material-symbols-outlined text-sm" data-icon="calendar_today">calendar_today</span>
+                            Date
+                        </button>
+</div>
+</div>
+<!-- Analytics Charts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-stack-md mb-stack-lg">
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-stack-sm">Pests by Type</h3>
+<div class="relative h-48 w-full">
+<canvas id="pestsChart" width="406" height="240" style="display: block; box-sizing: border-box; height: 192px; width: 324.8px;"></canvas>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-stack-md rounded-lg border border-outline-variant shadow-sm">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-stack-sm">Detection Frequency</h3>
+<div class="relative h-48 w-full">
+<canvas id="frequencyChart" width="406" height="240" style="display: block; box-sizing: border-box; height: 192px; width: 324.8px;"></canvas>
+</div>
+</div>
+</div>
+<!-- Detection List -->
+<div class="flex flex-col gap-stack-md">
+<!-- Card 1: High Severity -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm overflow-hidden border-l-4 border-l-error hover:border-outline-variant transition-colors group cursor-pointer">
+<div class="p-stack-sm md:p-stack-md flex items-center gap-stack-md">
+<img class="w-16 h-16 md:w-20 md:h-20 rounded object-cover flex-shrink-0 border border-outline-variant" data-alt="A clear, macro photograph of a Diamondback Moth resting on a green cabbage leaf. The lighting highlights the intricate patterns on its wings against the textured leaf background. High contrast, professional agricultural pest photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC80cB7-oesq4pAyqaCQ8E9a2x8YPtYaiuYfECkCKaNkeQ59V7CtNE2oECNAhJVscNG8xu9qFd78h90Uq0o5aSNHBsrkXpp0nnFcKIQFYpOMmZIXtfsk6-zTSackRbvUCStCbyeNi1GpifhE3JrkDgBQ0KzncjqBl_n8POwWpWxijWCUi5Bh3Jfz_juDEvCOmajALQR_bubWgHSazLK2mn_XPD54vb2cbts1ujcq2PdEkgUI-FtacE">
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-unit">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Diamondback Moth</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-error/10 text-error whitespace-nowrap">
+                                        High
+                                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-unit mb-unit">
+<span class="material-symbols-outlined text-sm">downloading</span>
+                                    Cabbage Field A
+                                </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/80 flex items-center gap-unit">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                                    Today, 09:45 AM
+                                </p>
+</div>
+<div class="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Card 2: Medium Severity -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer">
+<div class="p-stack-sm md:p-stack-md flex items-center gap-stack-md">
+<img class="w-16 h-16 md:w-20 md:h-20 rounded object-cover flex-shrink-0 border border-outline-variant" data-alt="A close-up image showing a small cluster of green aphids on the underside of a bright green leaf. The focus is sharp on the pests, with a softly blurred background. Professional agritech documentation style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKc9NwAH3AhQ16OBFeKQPRx_QvSGakSTnabrHse1RYiaKCIsvKHLERFFw5KPsihEp1dq5h5PC3YDFMM0Rxv3s2-1Kh5AewoRmrFA2jNv8AmdXSwstLy_ATCw7WgsPNIzE9AieZtEFdiQHA_lc-YV3w8Aa4PhzshI4Y63Bk1TQltM1Yd_8cqTfCukmTP9z4LPnMjKHymKl8lVfSiN56YzNcx-VUZTNThLzq6sNYOeFEwenGIyTmyOXe">
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-unit">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Aphids Cluster</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 whitespace-nowrap">
+                                        Medium
+                                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-unit mb-unit">
+<span class="material-symbols-outlined text-sm">downloading</span>
+                                    Soybean Plot 3
+                                </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/80 flex items-center gap-unit">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                                    Yesterday, 14:20 PM
+                                </p>
+</div>
+<div class="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Low Severity -->
+<div class="bg-surface-container-lowest rounded-lg border border-outline-variant shadow-sm overflow-hidden hover:border-primary/50 transition-colors group cursor-pointer">
+<div class="p-stack-sm md:p-stack-md flex items-center gap-stack-md">
+<img class="w-16 h-16 md:w-20 md:h-20 rounded object-cover flex-shrink-0 border border-outline-variant" data-alt="A detailed photo of a Corn Earworm caterpillar resting on a husk of corn. The lighting is bright and clear, highlighting the textures of both the pest and the crop. Clean, agricultural observation aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgtKoptZ2_3w7ruCD7gVJfWpLBpVcxK7zUsr1P08jMtDWsFOJ-_PJzyEqfNrh1e1X10HsdW1N-hbs8luB5nepRlsOsVC3dimIIbvesQu_EeUhYKDnOxqRet82fsc5DOdEdM_hy94bhtnnJArqtzkLsyjVkREJpK68IZvh68Bbb5sJWthugk4eUtAOaS4qy9nwE_6XHI-9XXqwPEXVRX7QJUOArCocIcTMBEK3nXYYjhX5rNQrqHzaE">
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-unit">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Corn Earworm</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary whitespace-nowrap">
+                                        Low
+                                    </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-unit mb-unit">
+<span class="material-symbols-outlined text-sm">downloading</span>
+                                    Corn Field East
+                                </p>
+<p class="font-label-sm text-label-sm text-on-surface-variant/80 flex items-center gap-unit">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                                    Oct 24, 08:15 AM
+                                </p>
+</div>
+<div class="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-stack-lg flex justify-center">
+<button class="px-6 py-2 bg-surface-variant text-on-surface-variant rounded-full font-label-md text-label-md font-medium hover:bg-surface-container-high transition-colors">
+                        Load More Results
+                    </button>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Simple drawer toggle logic for mobile
+        const menuBtn = document.getElementById('menu-btn');
+        const drawer = document.getElementById('drawer');
+        const overlay = document.getElementById('drawer-overlay');
+
+        function toggleDrawer() {
+            const isClosed = drawer.classList.contains('-translate-x-full');
+            if (isClosed) {
+                drawer.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                drawer.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        menuBtn.addEventListener('click', toggleDrawer);
+        overlay.addEventListener('click', toggleDrawer);
+
+        // Chart.js implementation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Colors from theme
+            const colorPrimary = '#005d42';
+            const colorError = '#ba1a1a';
+            const colorAmber = '#f59e0b'; // Tailwind amber-500 equivalent
+            const colorSurfaceVariant = '#d3e4fe';
+            const textOnSurface = '#0b1c30';
+
+            // Pests by Type (Bar Chart)
+            const ctxPests = document.getElementById('pestsChart').getContext('2d');
+            new Chart(ctxPests, {
+                type: 'bar',
+                data: {
+                    labels: ['Diamondback Moth', 'Aphids', 'Corn Earworm', 'Spider Mites'],
+                    datasets: [{
+                        label: 'Detections',
+                        data: [45, 82, 29, 15],
+                        backgroundColor: [
+                            colorError,
+                            colorAmber,
+                            colorPrimary,
+                            colorSurfaceVariant
+                        ],
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e5eeff'
+                            },
+                            ticks: {
+                                color: textOnSurface
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: textOnSurface,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Detection Frequency (Line Chart)
+            const ctxFrequency = document.getElementById('frequencyChart').getContext('2d');
+            new Chart(ctxFrequency, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Total Detections',
+                        data: [12, 19, 15, 25, 22, 30, 28],
+                        borderColor: colorPrimary,
+                        backgroundColor: 'rgba(0, 93, 66, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: colorPrimary,
+                        pointRadius: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#e5eeff'
+                            },
+                            ticks: {
+                                color: textOnSurface
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: textOnSurface
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

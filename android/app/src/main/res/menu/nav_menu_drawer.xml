@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:id="@+id/grp_main" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_dashboard"
+            android:icon="@drawable/ic_dashboard"
+            android:title="Dashboard" />
+        <item
+            android:id="@+id/nav_detect"
+            android:icon="@drawable/ic_bug_report"
+            android:title="Pest Detection" />
+        <item
+            android:id="@+id/nav_history"
+            android:icon="@drawable/ic_assessment"
+            android:title="Detection History" />
+        <item
+            android:id="@+id/nav_monitoring"
+            android:icon="@drawable/ic_sensors"
+            android:title="Farm Monitoring" />
+        <item
+            android:id="@+id/nav_crops"
+            android:icon="@drawable/ic_grass"
+            android:title="Crops" />
+        <item
+            android:id="@+id/nav_pests"
+            android:icon="@drawable/ic_bug_report"
+            android:title="Pest Catalog" />
+        <item
+            android:id="@+id/nav_reports"
+            android:icon="@drawable/ic_assessment"
+            android:title="Reports" />
+        <item
+            android:id="@+id/nav_notifications"
+            android:icon="@drawable/ic_notifications"
+            android:title="Notifications" />
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_settings"
+            android:title="Settings" />
+    </group>
+
+    <group android:id="@+id/grp_admin" android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_admin_dashboard"
+            android:icon="@drawable/ic_admin_panel"
+            android:title="Admin Overview" />
+        <item
+            android:id="@+id/nav_admin_users"
+            android:icon="@drawable/ic_admin_panel"
+            android:title="User Directory" />
+        <item
+            android:id="@+id/nav_admin_crops"
+            android:icon="@drawable/ic_grass"
+            android:title="Crop Management" />
+        <item
+            android:id="@+id/nav_admin_pests"
+            android:icon="@drawable/ic_bug_report"
+            android:title="Pest Rules Editor" />
+        <item
+            android:id="@+id/nav_admin_audit"
+            android:icon="@drawable/ic_assessment"
+            android:title="System Audit Logs" />
+    </group>
+
+    <group android:id="@+id/grp_account" android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_logout"
+            android:icon="@drawable/ic_logout"
+            android:title="Sign Out" />
+    </group>
+
+</menu>

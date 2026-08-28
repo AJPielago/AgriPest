@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AgriMonitor Stitch Brand Palette -->
+    <color name="primary">#005D42</color>
+    <color name="primary_variant">#004530</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="primary_container">#047857</color>
+    <color name="on_primary_container">#9FFDD3</color>
+    <color name="primary_fixed">#97F5CC</color>
+    <color name="primary_fixed_dim">#7BD8B1</color>
+    <color name="on_primary_fixed">#002115</color>
+
+    <color name="secondary">#006E2D</color>
+    <color name="on_secondary">#FFFFFF</color>
+    <color name="secondary_container">#E8F8EE</color>
+    <color name="on_secondary_container">#005D42</color>
+    <color name="secondary_fixed">#7FFC97</color>
+    <color name="secondary_fixed_dim">#62DF7D</color>
+
+    <color name="tertiary">#495167</color>
+    <color name="on_tertiary">#FFFFFF</color>
+    <color name="tertiary_container">#616980</color>
+
+    <!-- Surfaces & Canvas Backgrounds (Stitch Light Theme Primary) -->
+    <color name="surface">#F8F9FF</color>
+    <color name="surface_bright">#F8F9FF</color>
+    <color name="surface_container_lowest">#FFFFFF</color>
+    <color name="surface_container_low">#EFF4FF</color>
+    <color name="surface_container">#E5EEFF</color>
+    <color name="surface_container_high">#DCE9FF</color>
+    <color name="surface_variant">#E2E8F0</color>
+
+    <!-- Typography & Outline Colors -->
+    <color name="on_surface">#0B1C30</color>
+    <color name="on_surface_variant">#3E4943</color>
+    <color name="outline">#6E7A73</color>
+    <color name="outline_variant">#CBD5E1</color>
+    <color name="outline_light">#E2E8F0</color>
+
+    <!-- Severity, Risk & Alert Colors -->
+    <color name="error">#BA1A1A</color>
+    <color name="on_error">#FFFFFF</color>
+    <color name="error_container">#FFDAD6</color>
+    <color name="on_error_container">#93000A</color>
+
+    <color name="amber_accent">#B45309</color>
+    <color name="amber_container">#FEF3C7</color>
+    <color name="amber_text">#92400E</color>
+
+    <color name="blue_accent">#1E40AF</color>
+    <color name="blue_container">#DBEAFE</color>
+
+    <!-- Dark Theme Adaptations -->
+    <color name="dark_bg">#0F172A</color>
+    <color name="dark_card">#1E293B</color>
+    <color name="dark_border">#334155</color>
+    <color name="dark_text_primary">#F8F9FF</color>
+    <color name="dark_text_secondary">#CBD5E1</color>
+
+    <!-- Legacy / Slate Aliases for compatibility -->
+    <color name="slate_950">#020617</color>
+    <color name="slate_900">#0F172A</color>
+    <color name="slate_800">#1E293B</color>
+    <color name="slate_700">#334155</color>
+    <color name="slate_600">#475569</color>
+    <color name="slate_500">#64748B</color>
+    <color name="slate_400">#94A3B8</color>
+    <color name="slate_300">#CBD5E1</color>
+    <color name="slate_200">#E2E8F0</color>
+    <color name="slate_100">#F1F5F9</color>
+    <color name="slate_50">#F8FAFC</color>
+    <color name="white">#FFFFFF</color>
+
+    <color name="emerald_950">#002115</color>
+    <color name="emerald_900">#004530</color>
+    <color name="emerald_800">#005D42</color>
+    <color name="emerald_700">#047857</color>
+    <color name="emerald_600">#006E2D</color>
+    <color name="emerald_500">#10B981</color>
+    <color name="emerald_400">#34D399</color>
+    <color name="emerald_200">#A7F3D0</color>
+    <color name="emerald_100">#E8F8EE</color>
+
+    <color name="amber_600">#B45309</color>
+    <color name="amber_100">#FEF3C7</color>
+    <color name="red_600">#BA1A1A</color>
+    <color name="red_100">#FFDAD6</color>
+    <color name="blue_600">#1E40AF</color>
+    <color name="blue_100">#DBEAFE</color>
+</resources>
