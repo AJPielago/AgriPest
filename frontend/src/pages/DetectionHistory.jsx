@@ -4,6 +4,7 @@ import { Bar, Line } from 'react-chartjs-2';
 import { detectionService } from '../services/detectionService';
 import { cropService } from '../services/cropService';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { Modal } from '../components/ui/Modal';
 import { DetectionReportCard } from '../components/detection/DetectionReportCard';
@@ -14,6 +15,8 @@ import { STITCH_COLORS } from '../components/common/ChartConfig';
 
 export const DetectionHistory = () => {
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [searchParams] = useSearchParams();
   const detailIdParam = searchParams.get('id');
 
@@ -170,10 +173,10 @@ export const DetectionHistory = () => {
       y: {
         beginAtZero: true,
         grid: {
-          color: '#e5eeff'
+          color: isDark ? '#334155' : '#e5eeff'
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 }
         }
       },
@@ -182,14 +185,14 @@ export const DetectionHistory = () => {
           display: false
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 },
           maxRotation: 45,
           minRotation: 0
         }
       }
     }
-  }), []);
+  }), [isDark]);
 
   // Chart 2: Detection Frequency (Line Chart)
   const frequencyData = useMemo(() => {
@@ -203,17 +206,17 @@ export const DetectionHistory = () => {
         {
           label: lang === 'tl' ? 'Kabuuang Pagtukoy' : 'Total Detections',
           data: [12, 19, 15, 25, 22, 30, 28],
-          borderColor: STITCH_COLORS.primary,
-          backgroundColor: 'rgba(0, 93, 66, 0.1)',
+          borderColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
+          backgroundColor: isDark ? 'rgba(123, 216, 177, 0.15)' : 'rgba(0, 93, 66, 0.1)',
           borderWidth: 2,
           fill: true,
           tension: 0.4,
-          pointBackgroundColor: STITCH_COLORS.primary,
+          pointBackgroundColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
           pointRadius: 3
         }
       ]
     };
-  }, [lang]);
+  }, [lang, isDark]);
 
   const frequencyOptions = useMemo(() => ({
     responsive: true,
@@ -227,10 +230,10 @@ export const DetectionHistory = () => {
       y: {
         beginAtZero: true,
         grid: {
-          color: '#e5eeff'
+          color: isDark ? '#334155' : '#e5eeff'
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 }
         }
       },
@@ -239,12 +242,12 @@ export const DetectionHistory = () => {
           display: false
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 }
         }
       }
     }
-  }), []);
+  }), [isDark]);
 
   const getSeverityBadge = (level) => {
     switch (level?.toLowerCase()) {

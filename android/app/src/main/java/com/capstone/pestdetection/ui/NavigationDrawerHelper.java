@@ -41,11 +41,17 @@ public class NavigationDrawerHelper {
                 String email = sessionManager.getEmail();
                 String role = sessionManager.getRole();
 
+                String isTl = com.capstone.pestdetection.utils.LocaleHelper.getLanguage(activity);
+                String defaultName = "tl".equals(isTl) ? "Magsasaka" : "Alex Rivers";
                 if (tvNavUserName != null) {
-                    tvNavUserName.setText(!name.isEmpty() ? name : (!email.isEmpty() ? email : "Alex Rivers"));
+                    tvNavUserName.setText(!name.isEmpty() ? name : (!email.isEmpty() ? email : defaultName));
                 }
                 if (tvNavUserRole != null) {
-                    tvNavUserRole.setText("admin".equalsIgnoreCase(role) ? "System Administrator" : "Farm Manager");
+                    boolean isAdmin = "admin".equalsIgnoreCase(role);
+                    String roleText = isAdmin
+                            ? ("tl".equals(isTl) ? "Tagapamahala ng Sistema (Admin)" : "System Administrator")
+                            : ("tl".equals(isTl) ? "Tagapamahala ng Bukid" : "Farm Manager");
+                    tvNavUserRole.setText(roleText);
                 }
                 if (tvNavUserAvatar != null) {
                     tvNavUserAvatar.setText(!name.isEmpty() ? String.valueOf(name.charAt(0)).toUpperCase() : "A");
@@ -85,17 +91,9 @@ public class NavigationDrawerHelper {
                     activity.startActivity(new Intent(activity, SettingsActivity.class));
                 } else if (id == R.id.nav_admin_dashboard) {
                     activity.startActivity(new Intent(activity, AdminDashboardActivity.class));
-                } else if (id == R.id.nav_admin_users) {
-                    activity.startActivity(new Intent(activity, ManageUsersActivity.class));
-                } else if (id == R.id.nav_admin_crops) {
-                    activity.startActivity(new Intent(activity, ManageCropsActivity.class));
-                } else if (id == R.id.nav_admin_pests) {
-                    activity.startActivity(new Intent(activity, ManagePestsActivity.class));
-                } else if (id == R.id.nav_admin_audit) {
-                    activity.startActivity(new Intent(activity, AuditLogsActivity.class));
                 } else if (id == R.id.nav_logout) {
                     sessionManager.clearSession();
-                    Toast.makeText(activity, "Logged out successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, activity.getString(R.string.logged_out_success), Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(activity, LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     activity.startActivity(intent);

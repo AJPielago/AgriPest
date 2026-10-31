@@ -32,7 +32,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class HistoryActivity extends AppCompatActivity {
+public class HistoryActivity extends BaseActivity {
 
     private SwipeRefreshLayout swipeRefresh;
     private RecyclerView rvHistory;
@@ -120,10 +120,10 @@ public class HistoryActivity extends AppCompatActivity {
                     }
                 } else {
                     if (response.code() == 401) {
-                        Toast.makeText(HistoryActivity.this, "Session expired. Please sign in again.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(HistoryActivity.this, getString(R.string.session_expired), Toast.LENGTH_LONG).show();
                         finish();
                     } else {
-                        tvErrorMessage.setText("Failed to load history (" + response.code() + ")");
+                        tvErrorMessage.setText(getString(R.string.load_failed_code, response.code()));
                         setViewState(ViewState.ERROR);
                     }
                 }
@@ -132,7 +132,7 @@ public class HistoryActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<DetectionListResponse> call, Throwable t) {
                 swipeRefresh.setRefreshing(false);
-                tvErrorMessage.setText("Network error: " + t.getLocalizedMessage());
+                tvErrorMessage.setText(getString(R.string.network_error_generic, t.getLocalizedMessage()));
                 setViewState(ViewState.ERROR);
             }
         });
@@ -162,28 +162,28 @@ public class HistoryActivity extends AppCompatActivity {
 
     private void confirmDeleteDetection(DetectionResponse item) {
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Delete Detection Record")
-                .setMessage("Are you sure you want to remove this pest diagnosis record from your history?")
-                .setPositiveButton("Delete", (dialog, which) -> {
+                .setTitle(getString(R.string.delete))
+                .setMessage(getString(R.string.confirm_delete_history))
+                .setPositiveButton(getString(R.string.delete), (dialog, which) -> {
                     ApiService apiService = ApiClient.getApiService(this);
                     apiService.deleteDetection(item.getId()).enqueue(new Callback<okhttp3.ResponseBody>() {
                         @Override
                         public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                             if (response.isSuccessful()) {
-                                Toast.makeText(HistoryActivity.this, "Record deleted", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(HistoryActivity.this, getString(R.string.record_deleted), Toast.LENGTH_SHORT).show();
                                 fetchHistoryFromBackend();
                             } else {
-                                Toast.makeText(HistoryActivity.this, "Failed to delete record", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(HistoryActivity.this, getString(R.string.record_delete_failed), Toast.LENGTH_SHORT).show();
                             }
                         }
 
                         @Override
                         public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                            Toast.makeText(HistoryActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(HistoryActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
                         }
                     });
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .show();
     }
 

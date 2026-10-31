@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Analytical Reports"
+            app:title="@string/title_reports"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -59,7 +59,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Analytical Reports"
+                        android:text="@string/title_reports"
                         android:textSize="22sp"
                         android:textStyle="bold"
                         android:textColor="@color/primary" />
@@ -68,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Generate and export comprehensive farm surveillance and diagnostic summaries."
+                        android:text="@string/reports_subtitle"
                         android:textSize="13sp"
                         android:textColor="@color/on_surface_variant" />
                 </LinearLayout>
@@ -101,7 +101,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="SCANS"
+                                android:text="@string/total_scans_run"
                                 android:textSize="9sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/outline" />
@@ -139,7 +139,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="ALERTS"
+                                android:text="@string/critical_detections"
                                 android:textSize="9sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/outline" />
@@ -177,7 +177,7 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="AVG CONF"
+                                android:text="@string/average_confidence"
                                 android:textSize="9sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/outline" />
@@ -226,7 +226,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Report Category"
+                            android:text="@string/report_type"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -244,7 +244,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Host Crop Scope"
+                            android:text="@string/crop_filter"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -262,7 +262,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Timeframe"
+                            android:text="@string/timeframe"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -281,7 +281,7 @@
                             android:id="@+id/btnExportCSV"
                             android:layout_width="match_parent"
                             android:layout_height="48dp"
-                            android:text="Export CSV Analytical Data"
+                            android:text="@string/btn_export_csv"
                             android:textAllCaps="false"
                             android:textSize="13sp"
                             android:textStyle="bold"

@@ -133,28 +133,28 @@ export const DetectPest = () => {
                     : 'Select your target crop host on the left pane and snap a leaf photo or upload a specimen image. The AI engine will identify pest species, determine risk severity, and present targeted management protocols.'}
                 </p>
 
-                <div className="p-4 bg-surface-container-low dark:bg-surface-container rounded-xl border border-outline-variant dark:border-outline space-y-2.5 text-xs font-medium">
+                <div className="p-4 bg-surface-container-low dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 space-y-2.5 text-xs font-medium">
                   <div className="flex items-center justify-between">
-                    <span className="text-outline uppercase tracking-wider text-[11px] font-bold">
+                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px] font-bold">
                       {lang === 'tl' ? 'AI Inference Pipeline' : 'Inference Pipeline'}
                     </span>
-                    <span className="font-bold text-secondary dark:text-secondary-fixed flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-secondary"></span> {lang === 'tl' ? 'AKTIBO' : 'ONLINE'}
+                    <span className="font-bold text-secondary dark:text-emerald-400 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> {lang === 'tl' ? 'AKTIBO' : 'ONLINE'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-outline uppercase tracking-wider text-[11px] font-bold">
+                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px] font-bold">
                       {lang === 'tl' ? 'Nakarehistrong Pananim' : 'Target Crop Matrix'}
                     </span>
-                    <span className="font-bold text-on-surface dark:text-inverse-on-surface">
+                    <span className="font-bold text-on-surface dark:text-slate-100">
                       {crops.length} {lang === 'tl' ? 'mga Pananim' : 'Host Crops Registered'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-outline uppercase tracking-wider text-[11px] font-bold">
+                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[11px] font-bold">
                       {lang === 'tl' ? 'Bounding Box Engine' : 'Bounding Box Engine'}
                     </span>
-                    <span className="font-bold text-primary dark:text-primary-fixed">
+                    <span className="font-bold text-primary dark:text-emerald-400">
                       {lang === 'tl' ? 'Aktibo at Mataas ang Resolusyon' : 'Active & High Resolution'}
                     </span>
                   </div>

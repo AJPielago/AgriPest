@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriMonitor - Crops</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#171f33",
+                      "on-background": "#dae2fd",
+                      "surface-container-low": "#131b2e",
+                      "on-tertiary-container": "#711419",
+                      "secondary": "#b9c7e0",
+                      "surface": "#0f172a",
+                      "error-container": "#93000a",
+                      "on-secondary-fixed": "#0d1c2f",
+                      "outline": "#334155",
+                      "risk-high": "#fb7185",
+                      "info": "#60a5fa",
+                      "on-surface": "#f8fafc",
+                      "secondary-fixed": "#d5e3fd",
+                      "inverse-on-surface": "#283044",
+                      "on-primary-fixed": "#002113",
+                      "primary-container": "#10b981",
+                      "on-tertiary": "#650911",
+                      "on-secondary-container": "#abb9d2",
+                      "on-primary-fixed-variant": "#005236",
+                      "inverse-surface": "#dae2fd",
+                      "tertiary": "#ffb3af",
+                      "primary": "#4edea3",
+                      "risk-low": "#34d399",
+                      "surface-dim": "#0b1326",
+                      "on-secondary-fixed-variant": "#3a485c",
+                      "surface-container-highest": "#2d3449",
+                      "outline-variant": "#3c4a42",
+                      "surface-bright": "#31394d",
+                      "primary-fixed": "#6ffbbe",
+                      "on-secondary": "#233144",
+                      "tertiary-container": "#fc7c78",
+                      "tertiary-fixed": "#ffdad7",
+                      "surface-container-high": "#222a3d",
+                      "on-error": "#690005",
+                      "secondary-container": "#3c4a5e",
+                      "surface-container-lowest": "#060e20",
+                      "inverse-primary": "#006c49",
+                      "on-error-container": "#ffdad6",
+                      "on-primary": "#003824",
+                      "on-tertiary-fixed": "#410005",
+                      "risk-medium": "#fbbf24",
+                      "background": "#0b1326",
+                      "secondary-fixed-dim": "#b9c7e0",
+                      "surface-tint": "#4edea3",
+                      "on-primary-container": "#00422b",
+                      "on-surface-variant": "#94a3b8",
+                      "on-tertiary-fixed-variant": "#842225",
+                      "primary-fixed-dim": "#4edea3",
+                      "tertiary-fixed-dim": "#ffb3af",
+                      "surface-variant": "#2d3449",
+                      "error": "#ffb4ab"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "section-gap": "32px",
+                      "container-margin": "16px",
+                      "gutter-grid": "12px",
+                      "stack-sm": "8px",
+                      "unit": "4px",
+                      "stack-md": "16px",
+                      "stack-lg": "24px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "title-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "11px",
+                              {
+                                      "lineHeight": "14px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "title-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex">
+<!-- NavigationDrawer (Hidden on mobile, flex on md+) -->
+<nav class="hidden md:flex flex-col h-full fixed left-0 top-0 w-72 bg-surface-container-low dark:bg-surface-container-low border-r border-outline z-40 p-4 transition-all duration-300 ease-in-out">
+<div class="flex items-center gap-3 mb-8 px-2 mt-4">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0 border border-outline">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a farm manager in late 30s, wearing practical outdoor clothing. The lighting is moody and cinematic, consistent with a high-tech agricultural interface. Shot with a dark slate background, strong rim light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB86V1Eljylru9fB0pXmeMkQhP8DlaBmH61JALrz27aV7VkERo1IVGeQl0j60NAFHaqb1vR8SlPNQV6BuaWzdHdSsk5bStfFfi7h0hJApmc63rRoM6AdPb_pbKMlyev_QokhYVLWcHfaDd866xArz_Rvce9tXEy44a9zH3BEZIe4NJEA7Fmt_S9Rb3U_0_tbxT4dr_gBwGOMSF8LcEMFAagxjrF10DhTWewgosePQPLSj7oKPKmcDuF"/>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary">AgriMonitor Admin</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Farm Manager</span>
+<span class="font-label-sm text-label-sm text-primary flex items-center gap-1 mt-1"><span class="w-2 h-2 rounded-full bg-primary"></span>Active Now</span>
+</div>
+</div>
+<ul class="flex flex-col gap-1 flex-1 overflow-y-auto">
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">pest_control</span>
+<span class="font-label-md text-label-md">Pest Detection</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">downloading</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-colors duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- TopAppBar (Mobile only) -->
+<header class="md:hidden fixed top-0 w-full z-50 bg-surface dark:bg-surface border-b border-outline dark:border-outline flex items-center justify-between px-container-margin h-16 transition-colors duration-200">
+<button class="text-on-surface-variant dark:text-on-surface-variant p-2 hover:bg-surface-container dark:hover:bg-surface-container rounded-full transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">AgriMonitor</h1>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a farm manager in late 30s, wearing practical outdoor clothing. The lighting is moody and cinematic, consistent with a high-tech agricultural interface. Shot with a dark slate background, strong rim light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSWCWMgcP1xG283OS39iC9Q725uBz5FcBeeDnQBDSCzGow9eTgxTTM-aJmTquk8kZWmzEmMLLjcgcLVIZhQnBQE76e65XAg12Ebax5J_wBXLPAlhojtyZPjOoyR783F809mSy20tOA1LL1ZZOONPxujrfql_rWH4qOQWbAHxVsfX94wBKDnYNMOFyzYW_vZlAfxu_QEM_PjjgnfKWU_FdqRA4OBfaMQRKHIivqd7_hj6bj9TjVAK6O"/>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-72 pt-16 md:pt-0 min-h-screen pb-24 md:pb-8 flex flex-col max-w-7xl mx-auto w-full px-container-margin md:px-8">
+<!-- Header Section -->
+<div class="mt-8 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface">Crops Management</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Monitor health, alerts, and harvest schedules across all sectors.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container hover:bg-primary-container/90 px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center gap-2 transition-colors self-start md:self-auto shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                Add Crop
+            </button>
+</div>
+<!-- Toolbar (Search & Filter) -->
+<div class="flex flex-col sm:flex-row gap-4 mb-8">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border border-outline text-on-surface rounded-lg pl-10 pr-4 py-2.5 focus:border-primary focus:ring-1 focus:ring-primary transition-all font-body-md text-body-md outline-none placeholder:text-on-surface-variant" placeholder="Search crops, sectors, or alerts..." type="text"/>
+</div>
+<button class="bg-surface-container border border-outline text-on-surface hover:bg-surface-container-high px-4 py-2.5 rounded-lg font-label-md text-label-md flex items-center justify-center gap-2 transition-colors shrink-0">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                Filters
+            </button>
+</div>
+<!-- Crop Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Cabbage Card (Healthy) -->
+<div class="bg-surface border border-outline rounded-xl overflow-hidden flex flex-col hover:border-outline-variant transition-colors group relative">
+<div class="h-48 relative overflow-hidden bg-surface-container-low">
+<img alt="Cabbage Field Sector 4A" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-tech aerial or drone view of a lush cabbage field at night. Illuminated by harsh, focused artificial LED grow lights or drone spotlights. Deep slate shadows with vibrant, almost fluorescent green cabbage leaves popping against the dark soil. Cyber-agricultural aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCG6hFsKvFWxzYtq7oP8o2LUIXhcrVJVT98PmeFvkXITAIw36joOqyMb7YUZl88wnlTbYEyCWKtjWdAfP4i46TO9IbOqPFT1TDinHTiSc-sNBSQWW5FJr7SL7Diz6xuHLr7yMilRwTglOEAKNz1RHEHYe6ivwONmpB9auOcbThlwkTn25q0uNxlgrVDehsUZM65e3160zwiSI_Gp7aATxBb8H0oxGMUsuFhh3BKqAupKqDm_QrxKPYo"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface-dim/80 backdrop-blur-sm border border-outline rounded-lg px-3 py-1 flex items-center gap-1.5 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-risk-low shadow-[0_0_8px_rgba(52,211,153,0.5)]"></span>
+<span class="font-label-md text-label-md text-on-surface">Sector 4A</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1 relative z-10 -mt-6 bg-surface rounded-t-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-title-lg text-title-lg text-on-surface">Cabbage</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Brassica oleracea</p>
+</div>
+<div class="bg-risk-low/10 text-risk-low border border-risk-low/20 px-2.5 py-1 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span class="font-label-sm text-label-sm">Optimal</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-5 flex-1">
+<div class="bg-surface-container-low border border-outline/50 rounded-lg p-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[14px]">water_drop</span> Soil Moisture</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">68%</span>
+</div>
+<div class="bg-surface-container-low border border-outline/50 rounded-lg p-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[14px]">thermometer</span> Temp</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">18°C</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Est. Harvest: 14 days</span>
+<button class="text-primary hover:text-primary-fixed transition-colors font-label-md text-label-md flex items-center gap-1">
+                            Details <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Corn Card (Alert) -->
+<div class="bg-surface border border-risk-high/30 rounded-xl overflow-hidden flex flex-col hover:border-risk-high/50 transition-colors group relative shadow-[0_0_15px_rgba(251,113,133,0.05)]">
+<div class="absolute top-0 inset-x-0 h-1 bg-risk-high z-20"></div>
+<div class="h-48 relative overflow-hidden bg-surface-container-low">
+<img alt="Corn Field Sector 2B" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-tech nighttime view of a vast cornfield. The scene is lit by eerie, systematic red alert lights glowing from automated sensor nodes scattered among the stalks. Deep slate background with harsh shadows, emphasizing a technical issue or pest detection in a modern farming context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe3TVIEgWPEw2O5JhPa1LTQ6HgIiRzu1r-kzo6_RC9NFIA1rZ5Y73tUNr9BaPk6rq_a5vxVfwCAXe3967oJW07R1ZRkTrujSlox34Yt1CoIhCgjaF6OBlpHxK4usCcQIM7yICT6mMyrjl5xizG7MAssh2BxCLhli7nYCk8z8apeQE5xbS9-X-Ea87HZdA_RG8L3y0CJ7uCrSRqTv7iGTGzVo4sSUBKDvD4r5DXf2JR2uaKt435GspQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent"></div>
+<div class="absolute top-4 left-4 bg-surface-dim/80 backdrop-blur-sm border border-outline rounded-lg px-3 py-1 flex items-center gap-1.5 shadow-sm">
+<span class="w-2 h-2 rounded-full bg-risk-high shadow-[0_0_8px_rgba(251,113,133,0.5)] animate-pulse"></span>
+<span class="font-label-md text-label-md text-on-surface">Sector 2B</span>
+</div>
+</div>
+<div class="p-5 flex flex-col flex-1 relative z-10 -mt-6 bg-surface rounded-t-xl">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h2 class="font-title-lg text-title-lg text-on-surface">Corn</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Zea mays</p>
+</div>
+<div class="bg-risk-high/10 text-risk-high border border-risk-high/30 px-2.5 py-1 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+<span class="font-label-sm text-label-sm">Pest Alert</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-5 flex-1">
+<div class="bg-surface-container-low border border-outline/50 rounded-lg p-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1 mb-1"><span class="material-symbols-outlined text-[14px]">water_drop</span> Soil Moisture</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">42%</span>
+</div>
+<div class="bg-surface-container-low border border-risk-high/30 rounded-lg p-3 relative overflow-hidden">
+<div class="absolute inset-0 bg-risk-high/5"></div>
+<span class="font-label-sm text-label-sm text-risk-high flex items-center gap-1 mb-1 relative z-10"><span class="material-symbols-outlined text-[14px]">bug_report</span> Threat Level</span>
+<span class="font-headline-sm text-headline-sm text-on-surface relative z-10">High</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline flex justify-between items-center">
+<span class="font-label-sm text-label-sm text-risk-high">Immediate Action Req.</span>
+<button class="text-risk-high hover:text-risk-high/80 transition-colors font-label-md text-label-md flex items-center gap-1">
+                            View Report <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -4,6 +4,7 @@ import { Line } from 'react-chartjs-2';
 import { cropService } from '../services/cropService';
 import { detectionService } from '../services/detectionService';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { DownloadReportDropdown } from '../components/common/DownloadReportDropdown';
 import '../components/common/ChartConfig';
@@ -11,6 +12,8 @@ import { STITCH_COLORS } from '../components/common/ChartConfig';
 
 export const FarmMonitoring = () => {
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [crops, setCrops] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,19 +51,19 @@ export const FarmMonitoring = () => {
         {
           label: lang === 'tl' ? 'Kalusugan ng Bukid (%)' : 'Farm Health (%)',
           data: [72, 75, 78, 82, 80, 88, 85],
-          borderColor: STITCH_COLORS.secondary,
-          backgroundColor: 'rgba(0, 110, 45, 0.12)',
+          borderColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
+          backgroundColor: isDark ? 'rgba(98, 223, 125, 0.15)' : 'rgba(0, 110, 45, 0.12)',
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: STITCH_COLORS.secondary,
-          pointBorderColor: '#ffffff',
+          pointBackgroundColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
+          pointBorderColor: isDark ? '#1e293b' : '#ffffff',
           pointBorderWidth: 2,
           pointRadius: 4
         }
       ]
     };
-  }, [lang]);
+  }, [lang, isDark]);
 
   const healthTrendOptions = useMemo(() => ({
     responsive: true,
@@ -75,10 +78,10 @@ export const FarmMonitoring = () => {
         min: 50,
         max: 100,
         grid: {
-          color: '#e5eeff'
+          color: isDark ? '#334155' : '#e5eeff'
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 },
           callback: (value) => `${value}%`
         }
@@ -88,12 +91,12 @@ export const FarmMonitoring = () => {
           display: false
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: { family: 'Inter, sans-serif', size: 11 }
         }
       }
     }
-  }), []);
+  }), [isDark]);
 
   if (loading) return <LoadingSpinner label={lang === 'tl' ? "Ikinakarga ang telemetry ng bukid..." : "Aggregating farm zone metrics..."} size="lg" />;
 

@@ -58,18 +58,28 @@ public class RecentDetectionsAdapter extends RecyclerView.Adapter<RecentDetectio
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DetectionResponse item = items.get(position);
 
-        String pestName = item.getDetectedPestName() != null ? item.getDetectedPestName() : "Pest Detected";
-        String cropName = item.getCropName() != null ? item.getCropName() : "Cabbage";
-        holder.tvRecentPestName.setText(pestName + " on " + cropName);
+        String pestName = item.getDetectedPestName() != null ? item.getDetectedPestName() : context.getString(R.string.pest_detected_default);
+        String cropName = item.getCropName() != null ? item.getCropName() : context.getString(R.string.crop_cabbage_default);
+        holder.tvRecentPestName.setText(context.getString(R.string.recent_pest_on_crop, pestName, cropName));
 
-        String location = item.getFieldLocation() != null ? item.getFieldLocation() : "North Sector, Plot A2";
+        String location = item.getFieldLocation() != null ? item.getFieldLocation() : context.getString(R.string.default_sector_location);
         holder.tvRecentLocation.setText(location);
 
-        String dateStr = item.getCreatedAt() != null ? item.getCreatedAt().replace("T", " ").substring(0, Math.min(16, item.getCreatedAt().length())) : "Recent";
-        holder.tvRecentDate.setText("Detected: " + dateStr);
+        String dateStr = item.getCreatedAt() != null ? item.getCreatedAt().replace("T", " ").substring(0, Math.min(16, item.getCreatedAt().length())) : context.getString(R.string.time_recent);
+        holder.tvRecentDate.setText(context.getString(R.string.detected_prefix, dateStr));
 
         String severity = item.getSeverity() != null ? item.getSeverity() : "Low";
-        holder.tvRecentSeverityBadge.setText(severity);
+        String displaySeverity;
+        if ("Critical".equalsIgnoreCase(severity)) {
+            displaySeverity = context.getString(R.string.severity_critical);
+        } else if ("High".equalsIgnoreCase(severity)) {
+            displaySeverity = context.getString(R.string.severity_high);
+        } else if ("Moderate".equalsIgnoreCase(severity)) {
+            displaySeverity = context.getString(R.string.severity_moderate);
+        } else {
+            displaySeverity = context.getString(R.string.severity_low);
+        }
+        holder.tvRecentSeverityBadge.setText(displaySeverity);
 
         boolean isHighRisk = "Critical".equalsIgnoreCase(severity) || "High".equalsIgnoreCase(severity);
         if (isHighRisk) {

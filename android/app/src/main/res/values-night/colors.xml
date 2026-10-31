@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stitch Dark Theme Brand & Accent Tokens matching Web [data-theme="dark"] -->
+    <color name="primary">#10B981</color>
+    <color name="primary_variant">#047857</color>
+    <color name="on_primary">#003824</color>
+    <color name="primary_container">#047857</color>
+    <color name="on_primary_container">#9FFDD3</color>
+    <color name="primary_fixed">#6FFBBE</color>
+    <color name="primary_fixed_dim">#4EDEA3</color>
+    <color name="on_primary_fixed">#002113</color>
+
+    <color name="secondary">#34D399</color>
+    <color name="on_secondary">#002109</color>
+    <color name="secondary_container">#1E3A2F</color>
+    <color name="on_secondary_container">#6EE7B7</color>
+    <color name="secondary_fixed">#D5E3FD</color>
+    <color name="secondary_fixed_dim">#B9C7E0</color>
+
+    <color name="tertiary">#FFB3AF</color>
+    <color name="on_tertiary">#650911</color>
+    <color name="tertiary_container">#711419</color>
+
+    <!-- Dark Surfaces & Canvas Backgrounds (Slate 900 & Slate 800) -->
+    <color name="surface">#0F172A</color>
+    <color name="surface_bright">#1E293B</color>
+    <color name="surface_container_lowest">#1E293B</color>
+    <color name="surface_container_low">#161F30</color>
+    <color name="surface_container">#1E293B</color>
+    <color name="surface_container_high">#334155</color>
+    <color name="surface_variant">#334155</color>
+
+    <!-- Dark Typography & Outline Colors -->
+    <color name="on_surface">#F8FAFC</color>
+    <color name="on_surface_variant">#CBD5E1</color>
+    <color name="outline">#64748B</color>
+    <color name="outline_variant">#334155</color>
+    <color name="outline_light">#1E293B</color>
+
+    <!-- Dark Severity, Risk & Alert Colors -->
+    <color name="error">#FFB4AB</color>
+    <color name="on_error">#690005</color>
+    <color name="error_container">#93000A</color>
+    <color name="on_error_container">#FFDAD6</color>
+
+    <color name="amber_accent">#FBBF24</color>
+    <color name="amber_container">#78350F</color>
+    <color name="amber_text">#FDE68A</color>
+
+    <color name="blue_accent">#60A5FA</color>
+    <color name="blue_container">#1E3A8A</color>
+
+    <!-- Dark Theme Adaptations -->
+    <color name="dark_bg">#0F172A</color>
+    <color name="dark_card">#1E293B</color>
+    <color name="dark_border">#334155</color>
+    <color name="dark_text_primary">#F8FAFC</color>
+    <color name="dark_text_secondary">#CBD5E1</color>
+</resources>

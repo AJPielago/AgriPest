@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Pest Catalog"
+            app:title="@string/title_pest_library"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Pest Catalog &amp; Reference"
+                android:text="@string/title_pest_library"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary" />
@@ -56,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Scientific taxonomy, risk profiles, and biological management protocols."
+                android:text="@string/pest_catalog_subtitle"
                 android:textSize="13sp"
                 android:textColor="@color/on_surface_variant" />
 
@@ -82,7 +82,7 @@
                     android:layout_height="match_parent"
                     android:layout_marginStart="8dp"
                     android:background="@null"
-                    android:hint="Search species by common or scientific name..."
+                    android:hint="@string/search_pests"
                     android:textColor="@color/on_surface"
                     android:textColorHint="@color/outline"
                     android:textSize="13sp"

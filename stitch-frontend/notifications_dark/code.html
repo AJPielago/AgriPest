@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriMonitor - Notifications</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#171f33",
+                        "on-background": "#dae2fd",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary-container": "#711419",
+                        "secondary": "#b9c7e0",
+                        "surface": "#0f172a",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "outline": "#334155",
+                        "risk-high": "#fb7185",
+                        "info": "#60a5fa",
+                        "on-surface": "#f8fafc",
+                        "secondary-fixed": "#d5e3fd",
+                        "inverse-on-surface": "#283044",
+                        "on-primary-fixed": "#002113",
+                        "primary-container": "#10b981",
+                        "on-tertiary": "#650911",
+                        "on-secondary-container": "#abb9d2",
+                        "on-primary-fixed-variant": "#005236",
+                        "inverse-surface": "#dae2fd",
+                        "tertiary": "#ffb3af",
+                        "primary": "#4edea3",
+                        "risk-low": "#34d399",
+                        "surface-dim": "#0b1326",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-highest": "#2d3449",
+                        "outline-variant": "#3c4a42",
+                        "surface-bright": "#31394d",
+                        "primary-fixed": "#6ffbbe",
+                        "on-secondary": "#233144",
+                        "tertiary-container": "#fc7c78",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-high": "#222a3d",
+                        "on-error": "#690005",
+                        "secondary-container": "#3c4a5e",
+                        "surface-container-lowest": "#060e20",
+                        "inverse-primary": "#006c49",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#003824",
+                        "on-tertiary-fixed": "#410005",
+                        "risk-medium": "#fbbf24",
+                        "background": "#0b1326",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "surface-tint": "#4edea3",
+                        "on-primary-container": "#00422b",
+                        "on-surface-variant": "#94a3b8",
+                        "on-tertiary-fixed-variant": "#842225",
+                        "primary-fixed-dim": "#4edea3",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface-variant": "#2d3449",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "32px",
+                        "container-margin": "16px",
+                        "gutter-grid": "12px",
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar (Mobile Only) -->
+<header class="md:hidden flex items-center justify-between px-container-margin h-16 bg-surface dark:bg-surface fixed top-0 w-full z-50 border-b border-outline dark:border-outline">
+<button class="text-primary dark:text-primary transition-colors duration-200 hover:bg-surface-container dark:hover:bg-surface-container p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">AgriMonitor</h1>
+<button class="transition-colors duration-200 hover:bg-surface-container dark:hover:bg-surface-container p-2 rounded-full">
+<img alt="User profile avatar" class="w-8 h-8 rounded-full object-cover" data-alt="A small circular avatar placeholder image for a user profile, showing a generic placeholder silhouette in a dark modern style. Ensure the colors align with the slate and emerald theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1hVDRR6g3mULnoQ-6LJJ65BTYTVD_1RsWAZH5W1yYKx23gVpVM9SF9av94EVjMtrd5mVMJbxuNLMWwX-aD6gb9LgJOeStlrWGSh-Hw2iSBikr636ZPMbi1ngwqgfPP9b94tqIs_W4FqmqIKCiUU58X6dJbJrsLMf3AXEVOe8NACMorFK-ROY0Hy_zZzKH_GMBs3ZLGS6vk53oBlnyNrsEMX23vwTEyiTAYWf_MxX4dhzw2_ICw9No"/>
+</button>
+</header>
+<!-- NavigationDrawer (Desktop Only) -->
+<aside class="hidden md:flex flex-col h-full p-4 fixed left-0 top-0 w-72 bg-surface-container-low dark:bg-surface-container-low shadow-lg dark:shadow-none z-40 overflow-y-auto border-r border-outline dark:border-outline">
+<div class="flex items-center gap-stack-md mb-8 px-4">
+<img alt="User avatar" class="w-12 h-12 rounded" data-alt="A square modern avatar for an AgriMonitor admin user, showing a high-tech agricultural professional silhouette. Use dark slate tones with subtle emerald highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMRXlAAxcI9rZb4w9oTf2SQbxSwK0u9lLbrJmljXmGDa4n70VBzb60HsVITmKXd2iPCShOO7Zp1ECGIFQOoczCcfyQuUR8AG3gg0O4wSBaD4xm4Q8A9JMROR9_T9gvfduKN-YUQbg--Nk6kZIN1KcOh6AzlDmX_qsFkujfCa7Mq68aiGl7sWyS1UCjoDRBkw5e73CM8KIdPWbigultzZ2jJFnP_hlM6oJZfMuftiZektdkTuZl5coi"/>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary">AgriMonitor Admin</h2>
+<p class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant">Farm Manager</p>
+<span class="font-label-sm text-label-sm text-primary dark:text-primary flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Active Now
+                </span>
+</div>
+</div>
+<nav class="flex flex-col gap-2 font-label-md text-label-md">
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="pest_control">pest_control</span>
+                Pest Detection
+            </a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="sensors">sensors</span>
+                Farm Monitoring
+            </a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="Psychology">downloading</span>
+                Crops
+            </a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="assessment">assessment</span>
+                Reports
+            </a>
+<a aria-current="page" class="flex items-center gap-stack-md bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-3 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                Notifications
+            </a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out rounded-full group mt-auto" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="settings">settings</span>
+                Settings
+            </a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 w-full pt-20 pb-20 md:pt-8 md:pl-[304px] px-container-margin md:pr-container-margin lg:max-w-6xl mx-auto">
+<!-- Header -->
+<div class="flex flex-col sm:flex-row sm:items-end justify-between mb-section-gap gap-4">
+<div>
+<h2 class="font-display-lg text-display-lg text-on-surface mb-unit">Notifications</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Review recent alerts and system updates.</p>
+</div>
+<button class="bg-surface-container border border-outline hover:border-primary text-on-surface font-label-md text-label-md px-4 py-2 rounded transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">done_all</span>
+                Mark all as read
+            </button>
+</div>
+<div class="flex flex-col gap-section-gap">
+<!-- Group: Today -->
+<section>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-stack-md flex items-center gap-2">
+                    Today
+                    <span class="bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded-full text-xs font-semibold">3 New</span>
+</h3>
+<div class="flex flex-col gap-unit">
+<!-- High Risk Alert -->
+<div class="bg-surface border border-outline p-4 rounded-lg flex gap-4 hover:border-risk-high/50 transition-colors relative overflow-hidden group cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-high rounded-l-lg"></div>
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-risk-high/10 flex items-center justify-center text-risk-high">
+<span class="material-symbols-outlined" data-weight="fill">pest_control</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start gap-4 mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-tight group-hover:text-risk-high transition-colors">Aphid Swarm Detected in Sector 4</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">10:42 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">Automated drones have identified a dense cluster of aphids near the North irrigation line. Immediate pesticide intervention recommended.</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 rounded bg-risk-high/20 text-risk-high font-label-sm text-label-sm">High Priority</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Sector 4</span>
+</div>
+</div>
+</div>
+<!-- Medium Risk Alert -->
+<div class="bg-surface border border-outline p-4 rounded-lg flex gap-4 hover:border-risk-medium/50 transition-colors relative overflow-hidden group cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-risk-medium rounded-l-lg"></div>
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-risk-medium/10 flex items-center justify-center text-risk-medium">
+<span class="material-symbols-outlined" data-weight="fill">water_drop</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start gap-4 mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-tight group-hover:text-risk-medium transition-colors">Soil Moisture Dropping</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">08:15 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-2">Sensor array in the Eastern Field reports soil moisture dropping below optimal threshold (currently at 22%). Consider scheduling early irrigation.</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 rounded bg-risk-medium/20 text-risk-medium font-label-sm text-label-sm">Warning</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Eastern Field</span>
+</div>
+</div>
+</div>
+<!-- Info Alert -->
+<div class="bg-surface border border-outline p-4 rounded-lg flex gap-4 hover:border-info/50 transition-colors relative overflow-hidden group cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-info rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-info/10 flex items-center justify-center text-info">
+<span class="material-symbols-outlined" data-weight="fill">cloud_sync</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start gap-4 mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-tight group-hover:text-info transition-colors">Weather Model Updated</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">06:00 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Daily microclimate forecast synchronization complete. 30% chance of light precipitation tonight.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Group: Yesterday -->
+<section>
+<h3 class="font-title-lg text-title-lg text-on-surface-variant mb-stack-md">Yesterday</h3>
+<div class="flex flex-col gap-unit">
+<!-- Low Risk / Success Alert -->
+<div class="bg-surface border border-outline p-4 rounded-lg flex gap-4 hover:border-risk-low/50 transition-colors relative overflow-hidden group cursor-pointer opacity-75 hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-risk-low/10 flex items-center justify-center text-risk-low">
+<span class="material-symbols-outlined" data-weight="fill">compost</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start gap-4 mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-tight group-hover:text-risk-low transition-colors">Fertilizer Dispersal Complete</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Yesterday, 4:30 PM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Automated fertilization cycle finished successfully across all active sectors.</p>
+</div>
+</div>
+<!-- System Alert -->
+<div class="bg-surface border border-outline p-4 rounded-lg flex gap-4 hover:border-outline-variant transition-colors relative overflow-hidden group cursor-pointer opacity-75 hover:opacity-100">
+<div class="flex-shrink-0 w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined">update</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start gap-4 mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface text-[16px] leading-tight group-hover:text-on-surface transition-colors">System Firmware Update Available</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant whitespace-nowrap">Yesterday, 1:15 PM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">v4.2.1 is available for main control unit. Includes stability improvements for drone scheduling.</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

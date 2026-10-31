@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Crops Management"
+            app:title="@string/title_crops"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -54,7 +54,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Crops Management"
+                    android:text="@string/title_crops"
                     android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary" />
@@ -63,7 +63,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Manage registered crop species, field sectors, and pathogen vulnerability profiles."
+                    android:text="@string/crops_subtitle"
                     android:textSize="13sp"
                     android:textColor="@color/on_surface_variant" />
 
@@ -95,7 +95,7 @@
                             android:layout_height="match_parent"
                             android:layout_marginStart="8dp"
                             android:background="@null"
-                            android:hint="Search crops..."
+                            android:hint="@string/search_crops"
                             android:textColor="@color/on_surface"
                             android:textColorHint="@color/outline"
                             android:textSize="13sp"
@@ -108,7 +108,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="44dp"
                         android:layout_marginStart="10dp"
-                        android:text="Add"
+                        android:text="@string/save"
                         android:textAllCaps="false"
                         android:textSize="13sp"
                         android:textStyle="bold"

@@ -20,7 +20,12 @@ def validate_and_save_upload(file: UploadFile) -> str:
         )
     
     # 2. Content Type check
-    if file.content_type not in settings.ALLOWED_IMAGE_TYPES:
+    is_image = (
+        file.content_type in settings.ALLOWED_IMAGE_TYPES
+        or (file.content_type and file.content_type.startswith("image/"))
+        or file.content_type == "application/octet-stream"
+    )
+    if not is_image:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported MIME type '{file.content_type}'."

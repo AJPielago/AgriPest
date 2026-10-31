@@ -50,13 +50,19 @@ class MockDetectionService(BaseDetectionService):
     ) -> Dict[str, Any]:
         
         crop_name = "Configurable Target Crop"
+        db_pests = []
         if db and crop_id:
             crop = db.query(Crop).filter(Crop.id == crop_id).first()
             if crop:
                 crop_name = crop.name
+                if crop.crop_pests:
+                    crop_linked_pests = [cp.pest for cp in crop.crop_pests if cp.pest]
+                    if crop_linked_pests:
+                        db_pests = crop_linked_pests
 
-        # Try retrieving real pests from database if provided
-        db_pests = db.query(Pest).all() if db else []
+        # Fall back to all database pests if no crop-specific links exist
+        if not db_pests and db:
+            db_pests = db.query(Pest).all()
 
         if db_pests:
             selected_pest = random.choice(db_pests)

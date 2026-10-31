@@ -35,7 +35,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ReportsActivity extends AppCompatActivity {
+public class ReportsActivity extends BaseActivity {
 
     private TextView tvReportTotalScans, tvReportCriticalCount, tvReportAvgConf;
     private Spinner spinnerReportType, spinnerReportCrop, spinnerReportTimeframe;
@@ -138,7 +138,7 @@ public class ReportsActivity extends AppCompatActivity {
 
     private void exportDataToCSV() {
         if (detectionRecords == null || detectionRecords.isEmpty()) {
-            Toast.makeText(this, "No records available to export report", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.no_records_export), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -174,7 +174,7 @@ public class ReportsActivity extends AppCompatActivity {
             startActivity(Intent.createChooser(sendIntent, "Share Analytical Report"));
 
         } catch (IOException e) {
-            Toast.makeText(this, "Export error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.export_error, e.getMessage()), Toast.LENGTH_SHORT).show();
         }
     }
 }

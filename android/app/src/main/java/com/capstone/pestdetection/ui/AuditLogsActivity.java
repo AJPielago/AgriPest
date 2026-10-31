@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AuditLogsActivity extends AppCompatActivity {
+public class AuditLogsActivity extends BaseActivity {
 
     private RecyclerView rvAuditLogs;
     private ProgressBar auditProgressBar;
@@ -40,7 +40,7 @@ public class AuditLogsActivity extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.auditLogsToolbar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
-        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_audit);
+        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_dashboard);
 
         rvAuditLogs = findViewById(R.id.rvAuditLogs);
         auditProgressBar = findViewById(R.id.auditProgressBar);
@@ -62,14 +62,14 @@ public class AuditLogsActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null && response.body().getItems() != null) {
                     adapter.setLogs(response.body().getItems());
                 } else {
-                    Toast.makeText(AuditLogsActivity.this, "Failed to load audit logs", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AuditLogsActivity.this, getString(R.string.load_audit_failed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<AuditLogDto.AuditLogListResponse> call, Throwable t) {
                 auditProgressBar.setVisibility(View.GONE);
-                Toast.makeText(AuditLogsActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(AuditLogsActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }

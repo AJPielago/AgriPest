@@ -61,13 +61,24 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
         String crop = item.getCropName() != null ? item.getCropName() : "Cabbage";
         String location = item.getFieldLocation() != null ? item.getFieldLocation() : "Field #1";
-        holder.tvCropName.setText("Host: " + crop + " • " + location);
+        holder.tvCropName.setText(context.getString(R.string.host_crop_tag) + ": " + crop + " • " + location);
 
         String dateStr = item.getCreatedAt() != null ? item.getCreatedAt().replace("T", " ").substring(0, Math.min(16, item.getCreatedAt().length())) : "Recent";
         holder.tvDate.setText(dateStr);
 
         String severity = item.getSeverity() != null ? item.getSeverity() : "Low";
-        holder.tvSeverity.setText(severity);
+        String severityKey = severity.toLowerCase();
+        String localizedSeverity;
+        if (severityKey.contains("crit")) {
+            localizedSeverity = context.getString(R.string.risk_critical);
+        } else if (severityKey.contains("high")) {
+            localizedSeverity = context.getString(R.string.risk_high);
+        } else if (severityKey.contains("mod")) {
+            localizedSeverity = context.getString(R.string.risk_moderate);
+        } else {
+            localizedSeverity = context.getString(R.string.risk_low);
+        }
+        holder.tvSeverity.setText(localizedSeverity);
 
         boolean isHighRisk = "Critical".equalsIgnoreCase(severity) || "High".equalsIgnoreCase(severity);
         if (isHighRisk) {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Doughnut, Line } from 'react-chartjs-2';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { detectionService } from '../services/detectionService';
 import { cropService } from '../services/cropService';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -12,6 +13,8 @@ import { STITCH_COLORS } from '../components/common/ChartConfig';
 export const Dashboard = () => {
   const { user } = useAuth();
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [stats, setStats] = useState(null);
   const [crops, setCrops] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,17 +60,15 @@ export const Dashboard = () => {
       datasets: [
         {
           data: [high, medium, low],
-          backgroundColor: [
-            STITCH_COLORS.error,
-            STITCH_COLORS.secondary,
-            STITCH_COLORS.primary
-          ],
+          backgroundColor: isDark
+            ? ['#fb7185', '#10b981', '#34d399']
+            : [STITCH_COLORS.error, STITCH_COLORS.secondary, STITCH_COLORS.primary],
           borderWidth: 0,
           hoverOffset: 4
         }
       ]
     };
-  }, [criticalRecords, stats, lang]);
+  }, [criticalRecords, stats, lang, isDark]);
 
   const pestSummaryOptions = useMemo(() => ({
     responsive: true,
@@ -76,19 +77,19 @@ export const Dashboard = () => {
       legend: {
         position: 'bottom',
         labels: {
-          color: STITCH_COLORS.onSurface,
-          boxWidth: 12,
-          padding: 16,
+          color: isDark ? '#f8fafc' : STITCH_COLORS.onSurface,
+          boxWidth: 10,
+          padding: 14,
           font: {
             family: 'Inter, sans-serif',
-            size: 12,
-            weight: '500'
+            size: 11,
+            weight: '600'
           }
         }
       }
     },
-    cutout: '70%'
-  }), []);
+    cutout: '72%'
+  }), [isDark]);
 
   // Chart 2: Detection Trends (Line Chart - Last 7 Days)
   const detectionTrendsData = useMemo(() => {
@@ -107,20 +108,20 @@ export const Dashboard = () => {
         {
           label: lang === 'tl' ? 'Mga Pagtukoy' : 'Detections',
           data: trendValues,
-          borderColor: STITCH_COLORS.primary,
-          backgroundColor: 'rgba(0, 93, 66, 0.1)',
+          borderColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
+          backgroundColor: isDark ? 'rgba(123, 216, 177, 0.15)' : 'rgba(0, 93, 66, 0.1)',
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: STITCH_COLORS.primary,
-          pointBorderColor: '#ffffff',
+          pointBackgroundColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
+          pointBorderColor: isDark ? '#1e293b' : '#ffffff',
           pointBorderWidth: 2,
           pointRadius: 4,
           pointHoverRadius: 6
         }
       ]
     };
-  }, [stats, lang]);
+  }, [stats, lang, isDark]);
 
   const detectionTrendsOptions = useMemo(() => ({
     responsive: true,
@@ -136,7 +137,7 @@ export const Dashboard = () => {
           display: false
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: {
             family: 'Inter, sans-serif',
             size: 12
@@ -145,11 +146,11 @@ export const Dashboard = () => {
       },
       y: {
         grid: {
-          color: STITCH_COLORS.outlineVariant,
+          color: isDark ? '#334155' : STITCH_COLORS.outlineVariant,
           borderDash: [5, 5]
         },
         ticks: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#cbd5e1' : STITCH_COLORS.onSurface,
           font: {
             family: 'Inter, sans-serif',
             size: 12
@@ -159,7 +160,7 @@ export const Dashboard = () => {
         beginAtZero: true
       }
     }
-  }), []);
+  }), [isDark]);
 
   const translateSeverity = (sev) => {
     if (!sev) return t('lowRisk');
@@ -261,6 +262,10 @@ export const Dashboard = () => {
           </h3>
           <div className="relative w-full h-64 flex items-center justify-center">
             <Doughnut data={pestSummaryData} options={pestSummaryOptions} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-6">
+              <span className="text-2xl sm:text-3xl font-bold font-display-lg text-on-surface">64%</span>
+              <span className="text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider">{lang === 'tl' ? 'Malusog' : 'Healthy'}</span>
+            </div>
           </div>
         </div>
 

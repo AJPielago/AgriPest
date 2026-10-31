@@ -3,6 +3,7 @@ import { Bar, Radar } from 'react-chartjs-2';
 import { detectionService } from '../services/detectionService';
 import { cropService } from '../services/cropService';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { DownloadReportDropdown } from '../components/common/DownloadReportDropdown';
 import '../components/common/ChartConfig';
@@ -10,6 +11,8 @@ import { STITCH_COLORS } from '../components/common/ChartConfig';
 
 export const Reports = () => {
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [stats, setStats] = useState(null);
   const [crops, setCrops] = useState([]);
   const [history, setHistory] = useState([]);
@@ -97,15 +100,15 @@ export const Reports = () => {
     scales: {
       y: {
         beginAtZero: true,
-        grid: { color: '#e5eeff' },
-        ticks: { color: STITCH_COLORS.onSurface, font: { family: 'Inter, sans-serif', size: 11 } }
+        grid: { color: isDark ? '#334155' : '#e5eeff' },
+        ticks: { color: isDark ? '#cbd5e1' : '#0b1c30', font: { family: 'Inter, sans-serif', size: 11 } }
       },
       x: {
         grid: { display: false },
-        ticks: { color: STITCH_COLORS.onSurface, font: { family: 'Inter, sans-serif', size: 11 } }
+        ticks: { color: isDark ? '#cbd5e1' : '#0b1c30', font: { family: 'Inter, sans-serif', size: 11 } }
       }
     }
-  }), []);
+  }), [isDark]);
 
   // Chart 2: Crop Health Comparison (Radar Chart)
   const healthComparisonData = useMemo(() => {
@@ -121,26 +124,26 @@ export const Reports = () => {
         {
           label: t('cabbage'),
           data: [90, 85, 88, 92, 86],
-          backgroundColor: STITCH_COLORS.primary + '33', // 20% opacity
-          borderColor: STITCH_COLORS.primary,
-          pointBackgroundColor: STITCH_COLORS.primary,
-          pointBorderColor: '#ffffff',
+          backgroundColor: STITCH_COLORS.primary + '40', // 25% opacity
+          borderColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
+          pointBackgroundColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
+          pointBorderColor: isDark ? '#1e293b' : '#ffffff',
           borderWidth: 2,
           pointRadius: 3
         },
         {
           label: t('corn'),
           data: [82, 95, 75, 88, 90],
-          backgroundColor: STITCH_COLORS.secondary + '33', // 20% opacity
-          borderColor: STITCH_COLORS.secondary,
-          pointBackgroundColor: STITCH_COLORS.secondary,
-          pointBorderColor: '#ffffff',
+          backgroundColor: STITCH_COLORS.secondary + '40', // 25% opacity
+          borderColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
+          pointBackgroundColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
+          pointBorderColor: isDark ? '#1e293b' : '#ffffff',
           borderWidth: 2,
           pointRadius: 3
         }
       ]
     };
-  }, [lang]);
+  }, [lang, isDark, t]);
 
   const healthComparisonOptions = useMemo(() => ({
     responsive: true,
@@ -149,7 +152,7 @@ export const Reports = () => {
       legend: {
         position: 'bottom',
         labels: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#f8f9ff' : '#0b1c30',
           boxWidth: 12,
           padding: 12,
           font: { family: 'Inter, sans-serif', size: 11, weight: '500' }
@@ -158,17 +161,17 @@ export const Reports = () => {
     },
     scales: {
       r: {
-        angleLines: { display: true, color: '#e5eeff' },
-        grid: { color: '#e5eeff' },
+        angleLines: { display: true, color: isDark ? '#334155' : '#e5eeff' },
+        grid: { color: isDark ? '#334155' : '#e5eeff' },
         pointLabels: {
-          color: STITCH_COLORS.onSurface,
+          color: isDark ? '#f8f9ff' : '#0b1c30',
           font: { family: 'Inter, sans-serif', size: 10, weight: '500' }
         },
         suggestedMin: 50,
         suggestedMax: 100
       }
     }
-  }), []);
+  }), [isDark]);
 
   if (loading) return <LoadingSpinner label={lang === 'tl' ? "Binubuo ang datos ng mga ulat..." : "Compiling analytical telemetry..."} size="lg" />;
 

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriMonitor Dashboard - Dark Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#171f33",
+                    "on-background": "#dae2fd",
+                    "surface-container-low": "#131b2e",
+                    "on-tertiary-container": "#711419",
+                    "secondary": "#b9c7e0",
+                    "surface": "#0f172a",
+                    "error-container": "#93000a",
+                    "on-secondary-fixed": "#0d1c2f",
+                    "outline": "#334155",
+                    "risk-high": "#fb7185",
+                    "info": "#60a5fa",
+                    "on-surface": "#f8fafc",
+                    "secondary-fixed": "#d5e3fd",
+                    "inverse-on-surface": "#283044",
+                    "on-primary-fixed": "#002113",
+                    "primary-container": "#10b981",
+                    "on-tertiary": "#650911",
+                    "on-secondary-container": "#abb9d2",
+                    "on-primary-fixed-variant": "#005236",
+                    "inverse-surface": "#dae2fd",
+                    "tertiary": "#ffb3af",
+                    "primary": "#4edea3",
+                    "risk-low": "#34d399",
+                    "surface-dim": "#0b1326",
+                    "on-secondary-fixed-variant": "#3a485c",
+                    "surface-container-highest": "#2d3449",
+                    "outline-variant": "#3c4a42",
+                    "surface-bright": "#31394d",
+                    "primary-fixed": "#6ffbbe",
+                    "on-secondary": "#233144",
+                    "tertiary-container": "#fc7c78",
+                    "tertiary-fixed": "#ffdad7",
+                    "surface-container-high": "#222a3d",
+                    "on-error": "#690005",
+                    "secondary-container": "#3c4a5e",
+                    "surface-container-lowest": "#060e20",
+                    "inverse-primary": "#006c49",
+                    "on-error-container": "#ffdad6",
+                    "on-primary": "#003824",
+                    "on-tertiary-fixed": "#410005",
+                    "risk-medium": "#fbbf24",
+                    "background": "#0b1326",
+                    "secondary-fixed-dim": "#b9c7e0",
+                    "surface-tint": "#4edea3",
+                    "on-primary-container": "#00422b",
+                    "on-surface-variant": "#94a3b8",
+                    "on-tertiary-fixed-variant": "#842225",
+                    "primary-fixed-dim": "#4edea3",
+                    "tertiary-fixed-dim": "#ffb3af",
+                    "surface-variant": "#2d3449",
+                    "error": "#ffb4ab"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "section-gap": "32px",
+                    "container-margin": "16px",
+                    "gutter-grid": "12px",
+                    "stack-sm": "8px",
+                    "unit": "4px",
+                    "stack-md": "16px",
+                    "stack-lg": "24px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-sm": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "title-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-sm": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-lg": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased min-h-screen flex">
+<!-- NavigationDrawer (Shared Component) -->
+<nav class="hidden md:flex flex-col h-full p-4 fixed left-0 top-0 w-72 bg-surface-container-low dark:bg-surface-container-low z-40 shadow-none border-r border-outline dark:border-outline transition-all duration-300 ease-in-out">
+<div class="flex items-center gap-stack-md mb-section-gap px-4">
+<span class="material-symbols-outlined text-primary text-3xl">agriculture</span>
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary tracking-tight">AgriMonitor</span>
+</div>
+<div class="flex items-center gap-stack-md mb-section-gap px-4">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A small, circular avatar portrait of an agricultural manager wearing a neutral toned field jacket, outdoors in soft, natural daylight, conveying a sense of calm professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZv2pUlT9aAOUi085-MDZRaTKX5C_qHJuXpxH-_SxPiHdv4XwlujZ3CfxLTeDBGhfkVW8hE6bI4Byg1hXF2Kwrtv3h3RIDSq5nRHYPkFhTucpWwUaoiF-NZ6yufQrrN2P0TpCxLFFPES32GSiPLA1_xYP9El8B2CVD2RiBDFeVyABzTd5n8L3P2ybqarh81riR2N0yXSQQboGeJpmQKdqx_NZFB8SV_5rA46-wiEPaB925jxDvxaTO"/>
+<div>
+<p class="font-label-md text-label-md text-on-surface">AgriMonitor Admin</p>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Farm Manager</p>
+</div>
+</div>
+<ul class="flex-1 space-y-unit">
+<li>
+<a class="flex items-center gap-stack-md bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">pest_control</span>
+<span class="font-label-md text-label-md">Pest Detection</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">downloading</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto">
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest rounded-full transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- TopAppBar for Mobile -->
+<header class="md:hidden fixed top-0 w-full z-50 flex items-center justify-between px-container-margin h-16 bg-surface dark:bg-surface border-b border-outline dark:border-outline no shadows transition-colors duration-200">
+<button class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container dark:hover:bg-surface-container p-2 rounded-full">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary tracking-tight">AgriMonitor</span>
+<img class="w-8 h-8 rounded-full object-cover" data-alt="A small, circular avatar portrait of an agricultural manager wearing a neutral toned field jacket, outdoors in soft, natural daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjAxvc_OUlMZop9LWbO8x-elCamsb3PSjGmoQTov2YsLfmml9FfDFyy1eo7ch6zyQREkoFWvG5wnYFeudJ23T7eyElIWyu_GtutxlXpTKgGmx2FhDhsasBOtLRpUpf8WAg7TKLNoriKiI6eCwTE81ndtkRW0u94KKpsf2eixADiGH3JD4XQYDJe6LDrDujcCDAJNMFnTZPaKP8yIt9b2HqOeNHsEcPsWQ3y-QcUZyHWhZupJ7EnuoX"/>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-72 mt-16 md:mt-0 p-container-margin md:p-section-gap overflow-y-auto">
+<!-- Header -->
+<header class="mb-section-gap">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-unit">Good morning, Alex</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Here is the latest data from your monitored fields.</p>
+</header>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter-grid">
+<!-- Summary Cards Row -->
+<div class="col-span-1 md:col-span-12 grid grid-cols-2 md:grid-cols-4 gap-gutter-grid">
+<div class="bg-surface rounded-xl p-4 border border-outline flex flex-col justify-between h-32 hover:border-primary transition-colors duration-300">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant">Total Crops</span>
+<span class="material-symbols-outlined text-info">grass</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface">12</div>
+</div>
+<div class="bg-surface rounded-xl p-4 border border-outline flex flex-col justify-between h-32 hover:border-primary transition-colors duration-300">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant">Active Areas</span>
+<span class="material-symbols-outlined text-risk-low">map</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface">8</div>
+</div>
+<div class="bg-surface rounded-xl p-4 border border-risk-high shadow-[inset_0_0_12px_rgba(251,113,133,0.1)] flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="absolute inset-0 bg-risk-high/5 group-hover:bg-risk-high/10 transition-colors"></div>
+<div class="relative z-10 flex justify-between items-start">
+<span class="font-label-md text-label-md text-risk-high">Pest Detections</span>
+<span class="material-symbols-outlined text-risk-high">bug_report</span>
+</div>
+<div class="relative z-10 flex items-end justify-between">
+<span class="font-display-lg text-display-lg text-risk-high">3</span>
+<span class="px-2 py-1 bg-risk-high/20 text-risk-high rounded-full font-label-sm text-label-sm">High Risk</span>
+</div>
+</div>
+<div class="bg-surface rounded-xl p-4 border border-outline flex flex-col justify-between h-32 hover:border-primary transition-colors duration-300">
+<div class="flex justify-between items-start">
+<span class="font-label-md text-label-md text-on-surface-variant">Alerts</span>
+<span class="material-symbols-outlined text-risk-medium">warning</span>
+</div>
+<div class="font-display-lg text-display-lg text-on-surface">2</div>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="col-span-1 md:col-span-4 bg-surface rounded-xl p-stack-md border border-outline min-h-[300px]">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-stack-lg">Detection Summary</h3>
+<!-- Placeholder for Donut Chart -->
+<div class="relative w-full h-48 flex items-center justify-center">
+<div class="absolute inset-0 rounded-full border-[12px] border-surface-container"></div>
+<!-- Faked Donut Segments using SVG for simplicity in HTML context -->
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="transparent" r="40" stroke="#fb7185" stroke-dasharray="251.2" stroke-dashoffset="180" stroke-width="12"></circle>
+<circle class="transition-all duration-1000" cx="50" cy="50" fill="transparent" r="40" stroke="#10b981" stroke-dasharray="251.2" stroke-dashoffset="120" stroke-width="12" style="stroke-dashoffset: 70;"></circle>
+<circle cx="50" cy="50" fill="transparent" r="40" stroke="#005236" stroke-dasharray="251.2" stroke-dashoffset="200" stroke-width="12" style="stroke-dashoffset: 200;"></circle>
+</svg>
+<div class="absolute text-center flex flex-col">
+<span class="font-headline-md text-headline-md text-on-surface">64%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Healthy</span>
+</div>
+</div>
+<div class="flex justify-center gap-stack-md mt-stack-md font-label-sm text-label-sm">
+<div class="flex items-center gap-unit"><div class="w-2 h-2 rounded-full bg-risk-high"></div> High Risk</div>
+<div class="flex items-center gap-unit"><div class="w-2 h-2 rounded-full bg-primary-container"></div> Healthy</div>
+<div class="flex items-center gap-unit"><div class="w-2 h-2 rounded-full bg-on-primary-fixed-variant"></div> Low Risk</div>
+</div>
+</div>
+<div class="col-span-1 md:col-span-8 bg-surface rounded-xl p-stack-md border border-outline min-h-[300px] flex flex-col">
+<div class="flex justify-between items-center mb-stack-lg">
+<h3 class="font-title-lg text-title-lg text-on-surface">Detection Trends (7-Day)</h3>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-unit">
+                        Export <span class="material-symbols-outlined text-[16px]">download</span>
+</button>
+</div>
+<!-- Fake Bar Chart -->
+<div class="flex-1 flex items-end justify-between gap-2 px-2 pb-6 relative w-full h-full">
+<!-- Grid lines -->
+<div class="absolute w-full border-t border-outline/30 bottom-[20%] z-0"></div>
+<div class="absolute w-full border-t border-outline/30 bottom-[40%] z-0"></div>
+<div class="absolute w-full border-t border-outline/30 bottom-[60%] z-0"></div>
+<div class="absolute w-full border-t border-outline/30 bottom-[80%] z-0"></div>
+<!-- Bars -->
+<div class="w-full bg-primary-container/20 hover:bg-primary-container/40 rounded-t-sm h-[30%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end">
+<div class="w-full bg-primary-container h-full rounded-t-sm"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Mon</span>
+</div>
+<div class="w-full bg-primary-container/20 hover:bg-primary-container/40 rounded-t-sm h-[45%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end">
+<div class="w-full bg-primary-container h-full rounded-t-sm"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Tue</span>
+</div>
+<div class="w-full bg-risk-high/20 hover:bg-risk-high/40 rounded-t-sm h-[80%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end border-t border-risk-high">
+<div class="w-full bg-risk-high/50 h-[30%] rounded-t-sm"></div>
+<div class="w-full bg-primary-container h-[70%]"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Wed</span>
+</div>
+<div class="w-full bg-primary-container/20 hover:bg-primary-container/40 rounded-t-sm h-[20%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end">
+<div class="w-full bg-primary-container h-full rounded-t-sm"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Thu</span>
+</div>
+<div class="w-full bg-primary-container/20 hover:bg-primary-container/40 rounded-t-sm h-[60%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end">
+<div class="w-full bg-primary-container h-full rounded-t-sm"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Fri</span>
+</div>
+<div class="w-full bg-risk-medium/20 hover:bg-risk-medium/40 rounded-t-sm h-[50%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end border-t border-risk-medium">
+<div class="w-full bg-risk-medium/50 h-[20%] rounded-t-sm"></div>
+<div class="w-full bg-primary-container h-[80%]"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Sat</span>
+</div>
+<div class="w-full bg-primary-container/20 hover:bg-primary-container/40 rounded-t-sm h-[35%] relative z-10 transition-colors cursor-crosshair flex flex-col justify-end">
+<div class="w-full bg-primary-container h-full rounded-t-sm"></div>
+<span class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 font-label-sm text-label-sm text-on-surface-variant">Sun</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -33,7 +33,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManageCropsActivity extends AppCompatActivity {
+public class ManageCropsActivity extends BaseActivity {
 
     private RecyclerView rvManageCrops;
     private SwipeRefreshLayout swipeRefresh;
@@ -97,7 +97,7 @@ public class ManageCropsActivity extends AppCompatActivity {
                     fullCropsList = response.body();
                     adapter.setCrops(fullCropsList);
                 } else {
-                    Toast.makeText(ManageCropsActivity.this, "Failed to load crops (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManageCropsActivity.this, getString(R.string.load_crops_failed, response.code()), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -105,7 +105,7 @@ public class ManageCropsActivity extends AppCompatActivity {
             public void onFailure(Call<List<CropDto>> call, Throwable t) {
                 cropsProgressBar.setVisibility(View.GONE);
                 swipeRefresh.setRefreshing(false);
-                Toast.makeText(ManageCropsActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageCropsActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -130,21 +130,21 @@ public class ManageCropsActivity extends AppCompatActivity {
 
     private void showAddCropDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Register New Crop");
+        builder.setTitle(getString(R.string.btn_add_crop));
 
         View dialogView = LayoutInflater.from(this).inflate(R.layout.item_crop, null);
         final EditText etName = new EditText(this);
-        etName.setHint("Crop Name (e.g. Tomato)");
+        etName.setHint(getString(R.string.crop_common_name));
         builder.setView(etName);
 
-        builder.setPositiveButton("Register", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.save), (dialog, which) -> {
             String name = etName.getText().toString().trim();
             if (!name.isEmpty()) {
-                Toast.makeText(this, "Crop registered successfully", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.crop_registered_success), Toast.LENGTH_SHORT).show();
                 loadCrops();
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel());
         builder.show();
     }
 

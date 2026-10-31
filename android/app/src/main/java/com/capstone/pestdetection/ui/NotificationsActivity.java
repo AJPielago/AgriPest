@@ -34,7 +34,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class NotificationsActivity extends AppCompatActivity {
+public class NotificationsActivity extends BaseActivity {
 
     private RecyclerView rvNotifications;
     private SwipeRefreshLayout swipeRefresh;
@@ -64,7 +64,7 @@ public class NotificationsActivity extends AppCompatActivity {
 
         swipeRefresh.setOnRefreshListener(this::loadNotifications);
         findViewById(R.id.btnMarkAllRead).setOnClickListener(v -> {
-            Toast.makeText(this, "All notifications marked as read", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.all_notifications_read), Toast.LENGTH_SHORT).show();
         });
 
         loadNotifications();
@@ -122,13 +122,16 @@ public class NotificationsActivity extends AppCompatActivity {
             DetectionResponse item = items.get(position);
             boolean isCritical = "Critical".equalsIgnoreCase(item.getSeverity()) || "High".equalsIgnoreCase(item.getSeverity());
 
-            holder.tvNotifTitle.setText((item.getDetectedPestName() != null ? item.getDetectedPestName() : "Pest") + " Alert (" + (item.getSeverity() != null ? item.getSeverity() : "Active") + ")");
+            String pestName = item.getDetectedPestName() != null ? item.getDetectedPestName() : "Pest";
+            String severity = item.getSeverity() != null ? item.getSeverity() : "Active";
+            holder.tvNotifTitle.setText(holder.itemView.getContext().getString(R.string.notif_alert_title, pestName, severity));
             String dateStr = item.getCreatedAt() != null ? item.getCreatedAt().replace("T", " ").substring(0, Math.min(16, item.getCreatedAt().length())) : "Recent";
             holder.tvNotifTime.setText(dateStr);
 
             String host = item.getCropName() != null ? item.getCropName() : "Host Crop";
+            String location = item.getFieldLocation() != null ? item.getFieldLocation() : "Field #1";
             String rec = item.getRecommendedAction() != null ? item.getRecommendedAction() : "Targeted field protocol recommended.";
-            holder.tvNotifMessage.setText("Incident recorded on " + host + " in " + (item.getFieldLocation() != null ? item.getFieldLocation() : "Field #1") + ". " + rec);
+            holder.tvNotifMessage.setText(holder.itemView.getContext().getString(R.string.notif_incident_message, host, location, rec));
 
             if (isCritical) {
                 holder.card.setStrokeColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.error));

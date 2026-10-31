@@ -5,69 +5,53 @@
         <item
             android:id="@+id/nav_dashboard"
             android:icon="@drawable/ic_dashboard"
-            android:title="Dashboard" />
+            android:title="@string/title_dashboard" />
         <item
             android:id="@+id/nav_detect"
             android:icon="@drawable/ic_bug_report"
-            android:title="Pest Detection" />
+            android:title="@string/title_detect" />
         <item
             android:id="@+id/nav_history"
             android:icon="@drawable/ic_assessment"
-            android:title="Detection History" />
+            android:title="@string/title_history" />
         <item
             android:id="@+id/nav_monitoring"
             android:icon="@drawable/ic_sensors"
-            android:title="Farm Monitoring" />
+            android:title="@string/title_monitoring" />
         <item
             android:id="@+id/nav_crops"
             android:icon="@drawable/ic_grass"
-            android:title="Crops" />
+            android:title="@string/title_crops" />
         <item
             android:id="@+id/nav_pests"
             android:icon="@drawable/ic_bug_report"
-            android:title="Pest Catalog" />
+            android:title="@string/title_pest_library" />
         <item
             android:id="@+id/nav_reports"
             android:icon="@drawable/ic_assessment"
-            android:title="Reports" />
+            android:title="@string/title_reports" />
         <item
             android:id="@+id/nav_notifications"
             android:icon="@drawable/ic_notifications"
-            android:title="Notifications" />
+            android:title="@string/title_notifications" />
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings"
-            android:title="Settings" />
+            android:title="@string/title_settings" />
     </group>
 
     <group android:id="@+id/grp_admin" android:checkableBehavior="single">
         <item
             android:id="@+id/nav_admin_dashboard"
             android:icon="@drawable/ic_admin_panel"
-            android:title="Admin Overview" />
-        <item
-            android:id="@+id/nav_admin_users"
-            android:icon="@drawable/ic_admin_panel"
-            android:title="User Directory" />
-        <item
-            android:id="@+id/nav_admin_crops"
-            android:icon="@drawable/ic_grass"
-            android:title="Crop Management" />
-        <item
-            android:id="@+id/nav_admin_pests"
-            android:icon="@drawable/ic_bug_report"
-            android:title="Pest Rules Editor" />
-        <item
-            android:id="@+id/nav_admin_audit"
-            android:icon="@drawable/ic_assessment"
-            android:title="System Audit Logs" />
+            android:title="@string/title_admin" />
     </group>
 
     <group android:id="@+id/grp_account" android:checkableBehavior="none">
         <item
             android:id="@+id/nav_logout"
             android:icon="@drawable/ic_logout"
-            android:title="Sign Out" />
+            android:title="@string/nav_sign_out" />
     </group>
 
 </menu>

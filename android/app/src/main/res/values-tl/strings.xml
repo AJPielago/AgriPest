@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Application Brand & Navigation -->
+    <string name="app_name">AgriMonitor</string>
+    <string name="app_subtitle">Sistema ng Pagsusuri sa Peste at Pagmamanman sa Bukid</string>
+    <string name="navigation_drawer_open">Buksan ang Navigation Drawer</string>
+    <string name="navigation_drawer_close">Isara ang Navigation Drawer</string>
+    <string name="nav_workstation">Workstation sa Pagsasaka</string>
+    <string name="nav_user_north_sector">Hilagang Sona</string>
+    <string name="nav_sign_out">Lumabas</string>
+
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_detect">Pagtukoy sa Peste</string>
+    <string name="title_monitoring">Pagmamanman sa Bukid</string>
+    <string name="title_crops">Mga Pananim</string>
+    <string name="title_reports">Mga Ulat</string>
+    <string name="title_notifications">Mga Abiso</string>
+    <string name="title_settings">Mga Setting</string>
+    <string name="title_history">Kasaysayan ng Pagsusuri</string>
+    <string name="title_pest_library">Katalogo ng Peste</string>
+    <string name="title_admin">Pangangasiwa</string>
+    <string name="title_admin_dashboard">Pangkalahatang Tanawin</string>
+    <string name="title_admin_users">Listahan ng Gumagamit</string>
+    <string name="title_admin_crops">Pamamahala ng Pananim</string>
+    <string name="title_admin_pests">Mga Patakaran sa Peste</string>
+    <string name="title_admin_audit">Talaan ng Audit</string>
+
+    <!-- Dashboard -->
+    <string name="good_morning_user">Magandang umaga, %1$s</string>
+    <string name="farm_status_optimal">Maayos ang kondisyon sa buong Hilagang Sona. %1$d aksyon ang kailangan asikasuhin.</string>
+    <string name="total_crops">KABUUANG PANANIM</string>
+    <string name="active_areas">AKTIBONG SONA</string>
+    <string name="pest_detections">NATUKOY NA PESTE</string>
+    <string name="alerts">MGA ALERTO</string>
+    <string name="high_risk">MATAAS NA BANTA</string>
+    <string name="recent_pest_detections">Kamakailang Pagtukoy sa Peste</string>
+    <string name="no_recent_detections">Walang naitalang pagsusuri kamakailan. Magsagawa ng scan upang magkaroon ng datos.</string>
+    <string name="crop_health_overview">Kalagayan ng mga Pananim</string>
+    <string name="recent_activity">Kamakailang Gawain</string>
+    <string name="quick_actions">Mabilisang Aksyon sa Pagsusuri</string>
+    <string name="btn_new_scan">Bagong Pagsusuri ng Peste</string>
+    <string name="view_details">Tingnan ang Detalye</string>
+    <string name="view_all_records">Tingnan Lahat ng Tala</string>
+    <string name="activity_act_1">Bagong mataas na banta ng peste sa Hilagang Sona</string>
+    <string name="activity_act_2">Natapos ang pagpapatubig (Silangang Sona)</string>
+    <string name="activity_act_3">Aktibo ang mga AI model ng sistema</string>
+
+    <!-- Pest Detection -->
+    <string name="detect_subtitle">Mag-upload o kumuha ng litrato ng dahon para sa agarang pagtukoy ng AI at gabay sa pagpuksa.</string>
+    <string name="live_camera_scanner">Live Camera Scanner</string>
+    <string name="file_upload_mode">Mag-upload ng Litrato ng Halaman</string>
+    <string name="specimen_capture_frame">KUWADRO PARA SA HALAMAN</string>
+    <string name="align_crop_in_frame">Itapat ang dahon o halaman sa loob ng reticle...</string>
+    <string name="take_photo_or_select">Kumuha ng litrato o pumili mula sa gallery</string>
+    <string name="camera">Kamera</string>
+    <string name="gallery">Galerya</string>
+    <string name="crop_aligned_ready">Nakatutok sa halaman! Handa nang kuhaan ng litrato.</string>
+    <string name="diagnostic_metadata">IMPORMASYON NG PAGSUSURI</string>
+    <string name="target_host_crop">Target na Pananim</string>
+    <string name="select_host_crop">Pumili ng Pananim...</string>
+    <string name="weather_condition">Kalagayan ng Panahon</string>
+    <string name="select_weather">Pumili ng Panahon...</string>
+    <string name="weather_sunny">Maaraw / Maliwanag</string>
+    <string name="weather_cloudy">Maulap</string>
+    <string name="weather_rainy">Maulan / Basa</string>
+    <string name="weather_humid">Mahalumigmig / Maalinsangan</string>
+    <string name="field_sector_location">Lokasyon ng Sona / Plot sa Bukid</string>
+    <string name="field_location_hint">hal. Hilagang Sona, Plot A2</string>
+    <string name="analyze_specimen">Suriin ang Halaman</string>
+    <string name="analyzing_image">Sinusuri ng AI Model ang Larawan...</string>
+    <string name="clear_specimen">Alisin ang Larawan</string>
+
+    <!-- Detection Result -->
+    <string name="result_title">Ulat ng Pagsusuri</string>
+    <string name="ai_confidence">KATIYAKAN NG AI</string>
+    <string name="host_crop_tag">PANANIM</string>
+    <string name="severity">ANTAS NG PINALA</string>
+    <string name="recommendations_treatment">INIREREKOMENDANG HAKBANG SA PAGSUGPO</string>
+    <string name="field_telemetry">TELEMETRY SA BUKID</string>
+    <string name="inference_engine">Inference Engine</string>
+    <string name="confirm_accuracy">Kumpirmahin ang Kawastuhan ng AI</string>
+    <string name="accurate">Wasto / Tama</string>
+    <string name="inaccurate">Hindi Wasto</string>
+    <string name="start_new_scan">Magsimula ng Bagong Pagsusuri</string>
+    <string name="export_report">I-export ang Ulat</string>
+
+    <!-- Farm Monitoring -->
+    <string name="monitoring_subtitle">Real-time na pangkalahatang-ideya ng mga sona sa bukid, telemetry, at mga alerto.</string>
+    <string name="total_farm_area">KABUUANG LAKI NG BUKID</string>
+    <string name="active_sectors">AKTIBONG MGA SONA</string>
+    <string name="overall_health">PANGKALAHATANG KALUSUGAN</string>
+    <string name="telemetry_stream">DALOY NG TELEMETRY</string>
+    <string name="live_status">LIVE</string>
+    <string name="environmental_sensor_telemetry">Telemetry ng mga Sensor sa Kapaligiran</string>
+    <string name="soil_moisture">Halumigmig ng Lupa</string>
+    <string name="ambient_temperature">Temperatura ng Hangin</string>
+    <string name="relative_humidity">Halumigmig ng Hangin</string>
+    <string name="solar_radiation">Sikat ng Araw</string>
+    <string name="field_zone_status">Katayuan ng Sona sa Bukid</string>
+    <string name="recent_high_risk_alerts">Kamakailang Mataas na Banta</string>
+
+    <!-- Crops & Management -->
+    <string name="crops_subtitle">Pamahalaan ang mga nakarehistrong pananim, sona sa bukid, at banta ng peste.</string>
+    <string name="search_crops">Maghanap ng pananim sa karaniwan o siyentipikong pangalan...</string>
+    <string name="btn_add_crop">Magrehistro ng Bagong Pananim</string>
+    <string name="crop_common_name">Pangalan ng Pananim</string>
+    <string name="scientific_name">Siyentipikong Pangalan</string>
+    <string name="crop_description">Deskripsyon at Tala sa Bukid</string>
+    <string name="save_crop">I-save ang Pananim</string>
+    <string name="no_crops_found">Walang nakitang rehistradong pananim.</string>
+
+    <!-- Detection History -->
+    <string name="history_subtitle">Komprehensibong talaan ng mga pagsusuri sa peste at tala sa bukid.</string>
+    <string name="search_history">Maghanap ayon sa peste, pananim, o lokasyon...</string>
+    <string name="no_history_records">Walang nahanap na talaan ng pagsusuri na tumutugma sa filter.</string>
+    <string name="confirm_delete_history">Sigurado ka bang nais mong burahin ang talaang ito ng pagsusuri?</string>
+
+    <!-- Pest Catalog -->
+    <string name="pest_catalog_subtitle">Siyentipikong taxonomy, antas ng panganib, at pamamaraan sa pagpuksa.</string>
+    <string name="search_pests">Maghanap ng peste sa karaniwan o siyentipikong pangalan...</string>
+    <string name="symptoms_damage">Mga Sintomas at Pinsala</string>
+    <string name="management_protocols">Mga Pamamaraan sa Pagsugpo</string>
+
+    <!-- Reports -->
+    <string name="reports_subtitle">Gumawa at mag-export ng mga ulat ukol sa peste, telemetry, at pamamahala sa bukid.</string>
+    <string name="btn_export_csv">I-export ang CSV Data</string>
+    <string name="report_type">Kategorya ng Ulat</string>
+    <string name="crop_filter">Salain ayon sa Pananim</string>
+    <string name="timeframe">Saklaw ng Panahon</string>
+    <string name="total_scans_run">Kabuuang Pagsusuri</string>
+    <string name="critical_detections">Kritikal na Insidente</string>
+    <string name="average_confidence">Karaniwang Katiyakan ng AI</string>
+
+    <!-- Notifications -->
+    <string name="notifications_subtitle">Real-time na mga alerto, sensor threshold triggers, at mga update sa pagsusuri.</string>
+    <string name="btn_mark_all_read">Markahan Lahat na Nabasa Na</string>
+    <string name="no_notifications">Walang abiso. Handa at maayos ang lahat!</string>
+
+    <!-- Settings -->
+    <string name="settings_subtitle">I-personalize ang iyong AgriMonitor workstation at pamahalaan ang mga parameter ng sistema.</string>
+    <string name="account_profile">PROFILE NG ACCOUNT</string>
+    <string name="full_name">Buong Pangalan</string>
+    <string name="email_address">Email Address</string>
+    <string name="role_designation">Tungkulin sa Sistema</string>
+    <string name="appearance_display">ITSURA AT DISPLAY</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Lumipat sa pagitan ng Maliwanag (default) at Madilim na tema</string>
+    <string name="language_preference">PAGPILI NG WIKA</string>
+    <string name="language_desc">Pumili ng wika ng interface (English / Filipino)</string>
+    <string name="security_credentials">MGA KREDENSYAL SA SEGURIDAD</string>
+    <string name="current_password">Kasalukuyang Password</string>
+    <string name="new_password">Bagong Password</string>
+    <string name="btn_update_password">I-update ang Password</string>
+    <string name="system_network">SISTEMA AT SERVER NETWORK</string>
+    <string name="active_server_endpoint">Aktibong Server Endpoint</string>
+    <string name="btn_configure_server">I-configure ang Base Server URL</string>
+    <string name="active_server_display">Aktibong Server Endpoint: %1$s</string>
+
+    <!-- Authentication -->
+    <string name="sign_in_title">Mag-sign In</string>
+    <string name="sign_in_subtitle">Mag-sign in upang ma-access ang iyong workstation sa bukid</string>
+    <string name="create_account_title">Gumawa ng Account</string>
+    <string name="create_account_subtitle">Sumali sa Diagnostic Workstation para sa Pagsasaka</string>
+    <string name="farmer_demo">Demo ng Magsasaka</string>
+    <string name="admin_demo">Demo ng Admin</string>
+    <string name="dont_have_account">Bago ka ba rito? Gumawa ng account</string>
+    <string name="already_have_account">May account na? Mag-sign in</string>
+    <string name="btn_sign_in">Mag-sign In</string>
+    <string name="btn_create_account">Gumawa ng Account</string>
+    <string name="prompt_email">EMAIL ADDRESS</string>
+    <string name="prompt_password">PASSWORD</string>
+    <string name="prompt_full_name">BUONG PANGALAN</string>
+    <string name="prompt_role_designation">TUNGKULIN SA SISTEMA</string>
+    <string name="login_brand_title">AgriMonitor</string>
+    <string name="login_brand_subtitle">Sistema ng Pagsusuri sa Peste at Pagmamanman sa Bukid</string>
+    <string name="register_brand_title">Gumawa ng AgriMonitor Account</string>
+    <string name="register_brand_subtitle">Sumali sa Diagnostic Workstation para sa Pagsasaka</string>
+
+    <!-- Notification Center -->
+    <string name="notification_center_toolbar">Sentro ng Abiso</string>
+    <string name="notification_action_hint">I-tap upang makita ang buong ulat ng pagsusuri →</string>
+
+    <!-- Audit Logs -->
+    <string name="audit_trail_title">Talaan ng Audit ng Sistema</string>
+    <string name="audit_trail_subtitle">Hindi mababago na talaan ng seguridad, telemetriya, at mga aksyon sa administrasyon.</string>
+
+    <!-- Manage Pests -->
+    <string name="manage_pests_subtitle">Itakda ang mga threshold ng inference at mga parameter ng klasipikasyon ng tindi.</string>
+
+    <!-- Manage Users -->
+    <string name="manage_users_subtitle">Pamahalaan ang mga account ng operator at pahintulot base sa tungkulin.</string>
+
+    <!-- Admin -->
+    <string name="admin_dashboard_title">Pangkalahatang Tanawin</string>
+    <string name="admin_dashboard_subtitle">Kalagayan ng sistema, listahan ng gumagamit, modelo ng AI, at talaan ng audit.</string>
+    <string name="registered_users">Mga Nakarehistrong Gumagamit</string>
+    <string name="active_ai_models">Mga Aktibong AI Model</string>
+    <string name="system_uptime">Uptime ng Telemetry sa Sistema</string>
+    <string name="logged_audit_events">Mga Naitalang Gawain</string>
+    <string name="btn_add_user">Magrehistro ng Operator</string>
+    <string name="user_directory_title">Listahan ng Gumagamit at Pahintulot</string>
+    <string name="admin_system_health">KALUSUGAN NG SISTEMA &amp; PAGSUBAYBAY SA TELEMETRIYA</string>
+    <string name="admin_healthy">MAAYOS</string>
+    <string name="admin_db_connectivity">KONEKSYON SA DB</string>
+    <string name="admin_engine_pipeline">ENGINE PIPELINE</string>
+    <string name="admin_upload_storage">IMBAKAN NG UPLOAD</string>
+    <string name="admin_python_runtime">RUNTIME NG PYTHON</string>
+    <string name="admin_user_directory">DIREKTORYO NG GUMAGAMIT</string>
+    <string name="admin_crop_catalog">KATALOGO NG PANANIM</string>
+    <string name="admin_pest_entries">MGA TALA NG PESTE</string>
+    <string name="admin_total_diagnoses">KABUUANG MGA DIAGNOSIS</string>
+    <string name="admin_console_actions">MGA AKSYON SA KONSOLA NG ADMIN</string>
+    <string name="admin_manage_users_btn">Pamahalaan ang Direktoryo ng Gumagamit</string>
+    <string name="admin_manage_crops_btn">Pamahalaan ang Katalogo ng Pananim</string>
+    <string name="admin_manage_pests_btn">Pamahalaan ang Rehistro at Panuntunan sa Peste</string>
+    <string name="admin_view_audit_btn">Tingnan ang Audit Trail ng Sistema</string>
+
+    <!-- Common Actions & Statuses -->
+    <string name="cancel">Kanselahin</string>
+    <string name="save">I-save</string>
+    <string name="delete">Burahin</string>
+    <string name="retry">Subukan Muli</string>
+    <string name="loading">Naglo-load...</string>
+    <string name="status_active">Aktibo</string>
+    <string name="status_inactive">Hindi Aktibo</string>
+    <string name="risk_critical">Lubhang Mapanganib</string>
+    <string name="risk_high">Mataas na Banta</string>
+    <string name="risk_moderate">Katamtamang Banta</string>
+    <string name="risk_low">Mababang Banta</string>
+    <string name="lang_english">English</string>
+    <string name="lang_filipino">Filipino (Tagalog)</string>
+    <string name="toggle_theme">Ilipat ang Tema</string>
+    <string name="toggle_language">Palitan ang Wika</string>
+
+    <!-- Toast / Validation / Dialog Messages -->
+    <string name="error_email_required">Kinakailangan ang email address</string>
+    <string name="error_password_required">Kinakailangan ang password</string>
+    <string name="error_fullname_required">Kinakailangan ang buong pangalan</string>
+    <string name="error_email_invalid">Kinakailangan ang wastong email address</string>
+    <string name="error_password_short">Dapat may hindi bababa sa 4 na karakter ang password</string>
+    <string name="error_password_fields_empty">Pakilagay ang kasalukuyan at bagong password</string>
+    <string name="login_failed">Hindi matagumpay ang pag-sign in: Hindi tamang mga credential (%1$d)</string>
+    <string name="network_error_connect">Error sa network: Hindi makakonekta sa %1$s</string>
+    <string name="welcome_back">Maligayang pagbabalik, %1$s!</string>
+    <string name="register_success">Matagumpay na nagawa ang account! Mangyaring mag-log in.</string>
+    <string name="register_failed">Hindi matagumpay ang pagpaparehistro. Maaaring mayroon nang email.</string>
+    <string name="network_error_generic">Error sa network: %1$s</string>
+    <string name="password_updated">Matagumpay na na-update ang password</string>
+    <string name="password_update_failed">Hindi ma-update ang password. I-verify ang kasalukuyang password.</string>
+    <string name="base_url_updated">Na-update ang Base URL</string>
+    <string name="all_notifications_read">Lahat ng abiso ay minarkahang nabasa na</string>
+    <string name="configure_server_title">I-configure ang Server Endpoint</string>
+    <string name="server_url_hint">hal. http://10.0.2.2:8000/</string>
+    <string name="lang_switched_fil">Inilipat sa Filipino</string>
+    <string name="lang_switched_en">Switched to English</string>
+    <string name="notif_alert_title">%1$s Alerto (%2$s)</string>
+    <string name="notif_incident_message">Naitala ang insidente sa %1$s sa %2$s. %3$s</string>
+    <string name="load_failed_code">Hindi nagawa ang paglo-load ng datos (%1$d)</string>
+    <string name="load_audit_failed">Hindi nagawa ang paglo-load ng mga talaan ng audit</string>
+    <string name="recent_pest_on_crop">%1$s sa %2$s</string>
+    <string name="detected_prefix">Natukoy: %1$s</string>
+    <string name="pest_detected_default">Natukoy na Peste</string>
+    <string name="logged_out_success">Matagumpay na nag-log out</string>
+    <string name="no_records_export">Walang tala upang i-export ang ulat</string>
+    <string name="export_error">Error sa pag-export: %1$s</string>
+    <string name="load_pest_catalog_failed">Hindi nagawa ang paglo-load ng katalogo ng peste</string>
+    <string name="load_crops_failed">Hindi nagawa ang paglo-load ng mga pananim (%1$d)</string>
+    <string name="crop_registered_success">Matagumpay na nairehistro ang pananim</string>
+    <string name="session_expired">Nag-expire ang sesyon. Mangyaring mag-sign in muli.</string>
+    <string name="record_deleted">Nabura ang tala</string>
+    <string name="record_delete_failed">Hindi nagawang burahin ang tala</string>
+    <string name="diagnostic_data_unavailable">Hindi magagamit ang diagnostic data</string>
+    <string name="feedback_recorded_success">Matagumpay na naitala ang feedback</string>
+    <string name="feedback_submission_failed">Hindi nagawa ang pagpapadala ng feedback</string>
+    <string name="feedback_network_error">Error sa network habang nagpapadala ng feedback</string>
+    <string name="camera_permission_required">Kinakailangan ang pahintulot sa camera upang kumuha ng mga larawan ng espesimen</string>
+    <string name="select_capture_specimen">Pumili o kumuha muna ng larawan ng espesimen</string>
+    <string name="prepare_image_failed">Hindi nagawang ihanda ang file ng larawan ng espesimen</string>
+    <string name="prescreen_check_failed">Hindi nagtagumpay ang pre-screening check</string>
+    <string name="load_crop_catalog_failed">Hindi ma-load ang katalogo ng pananim</string>
+    <string name="create_image_file_failed">Hindi magawang lumikha ng file ng larawan para sa litrato</string>
+    <string name="diagnostic_analysis_failed">Hindi nagtagumpay ang diagnostic analysis (%1$d)</string>
+    <string name="severity_critical">Lubhang Mapanganib</string>
+    <string name="severity_high">Mataas</string>
+    <string name="severity_moderate">Katamtaman</string>
+    <string name="severity_low">Mababa</string>
+    <string name="time_recent">Kamakailan</string>
+    <string name="crop_cabbage_default">Repolyo</string>
+    <string name="default_sector_location">Hilagang Sona, Plot A2</string>
+</resources>

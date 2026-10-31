@@ -76,16 +76,16 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       
       {/* Target Host Crop & Domain Metadata Selector */}
-      <div className="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl p-5 border border-outline-variant dark:border-outline shadow-sm space-y-4">
+      <div className="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl p-5 border border-outline-variant dark:border-slate-700 shadow-sm space-y-4">
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
             {t('targetHostCrop')}
           </label>
           <select
             value={selectedCropId}
             onChange={(e) => setSelectedCropId(e.target.value)}
             disabled={loading}
-            className="w-full bg-surface dark:bg-surface-container border border-outline-variant dark:border-outline text-on-surface dark:text-inverse-on-surface rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
+            className="w-full bg-surface dark:bg-slate-800 border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-100 rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
           >
             <option value="">-- {t('selectHostCrop')} --</option>
             {crops.map((crop) => (
@@ -98,14 +98,14 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
               {t('weatherCondition')}
             </label>
             <select
               value={weatherCondition}
               onChange={(e) => setWeatherCondition(e.target.value)}
               disabled={loading}
-              className="w-full bg-surface dark:bg-surface-container border border-outline-variant dark:border-outline text-on-surface dark:text-inverse-on-surface rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
+              className="w-full bg-surface dark:bg-slate-800 border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-100 rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
             >
               <option value="Sunny">{t('weatherSunny')}</option>
               <option value="Rainy">{t('weatherRainy')}</option>
@@ -115,7 +115,7 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-outline mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
               {t('fieldSectorLocation')}
             </label>
             <input
@@ -124,7 +124,7 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
               onChange={(e) => setFieldLocation(e.target.value)}
               placeholder={t('fieldLocationPlaceholder')}
               disabled={loading}
-              className="w-full bg-surface dark:bg-surface-container border border-outline-variant dark:border-outline text-on-surface dark:text-inverse-on-surface rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
+              className="w-full bg-surface dark:bg-slate-800 border border-outline-variant dark:border-slate-700 text-on-surface dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg px-3.5 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors outline-none"
             />
           </div>
         </div>

@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Pest Detection"
+            app:title="@string/title_detect"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -59,7 +59,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Pest Detection"
+                        android:text="@string/title_detect"
                         android:textSize="22sp"
                         android:textStyle="bold"
                         android:textColor="@color/primary" />
@@ -68,7 +68,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
-                        android:text="Upload or capture a crop leaf image for instant AI pest recognition and treatment advice."
+                        android:text="@string/detect_subtitle"
                         android:textSize="13sp"
                         android:textColor="@color/on_surface_variant" />
                 </LinearLayout>
@@ -93,7 +93,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="SPECIMEN CAPTURE FRAME"
+                            android:text="@string/specimen_capture_frame"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:textColor="@color/outline"
@@ -138,7 +138,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="8dp"
-                                    android:text="Align leaf specimen within frame"
+                                    android:text="@string/align_crop_in_frame"
                                     android:textColor="@color/on_surface_variant"
                                     android:textSize="13sp"
                                     android:textStyle="bold" />
@@ -147,7 +147,7 @@
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp"
-                                    android:text="Take a photo or select from gallery"
+                                    android:text="@string/take_photo_or_select"
                                     android:textColor="@color/outline"
                                     android:textSize="11sp" />
                             </LinearLayout>
@@ -166,7 +166,7 @@
                                 android:layout_height="44dp"
                                 android:layout_weight="1"
                                 android:layout_marginEnd="6dp"
-                                android:text="Camera"
+                                android:text="@string/camera"
                                 android:textAllCaps="false"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
@@ -181,7 +181,7 @@
                                 android:layout_height="44dp"
                                 android:layout_weight="1"
                                 android:layout_marginStart="6dp"
-                                android:text="Gallery"
+                                android:text="@string/gallery"
                                 android:textAllCaps="false"
                                 android:textSize="13sp"
                                 android:textStyle="bold"
@@ -216,7 +216,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="DIAGNOSTIC METADATA"
+                            android:text="@string/diagnostic_metadata"
                             android:textSize="11sp"
                             android:textStyle="bold"
                             android:textColor="@color/outline"
@@ -227,7 +227,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Target Host Crop"
+                            android:text="@string/target_host_crop"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -245,7 +245,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Weather Condition"
+                            android:text="@string/weather_condition"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -263,7 +263,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Field Sector / Plot Location"
+                            android:text="@string/field_sector_location"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -275,7 +275,7 @@
                             android:layout_marginTop="4dp"
                             android:background="@drawable/bg_card_stitch"
                             android:paddingHorizontal="12dp"
-                            android:hint="e.g. North Sector, Plot A2"
+                            android:hint="@string/field_location_hint"
                             android:textColor="@color/on_surface"
                             android:textColorHint="@color/outline"
                             android:textSize="13sp"
@@ -297,7 +297,7 @@
                     android:id="@+id/btnSubmitDetection"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:text="Analyze Specimen"
+                    android:text="@string/analyze_specimen"
                     android:textAllCaps="false"
                     android:textSize="14sp"
                     android:textStyle="bold"

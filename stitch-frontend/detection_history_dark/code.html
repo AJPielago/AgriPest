@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detection History - AgriMonitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#171f33",
+                        "on-background": "#dae2fd",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary-container": "#711419",
+                        "secondary": "#b9c7e0",
+                        "surface": "#0f172a",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "outline": "#334155",
+                        "risk-high": "#fb7185",
+                        "info": "#60a5fa",
+                        "on-surface": "#f8fafc",
+                        "secondary-fixed": "#d5e3fd",
+                        "inverse-on-surface": "#283044",
+                        "on-primary-fixed": "#002113",
+                        "primary-container": "#10b981",
+                        "on-tertiary": "#650911",
+                        "on-secondary-container": "#abb9d2",
+                        "on-primary-fixed-variant": "#005236",
+                        "inverse-surface": "#dae2fd",
+                        "tertiary": "#ffb3af",
+                        "primary": "#4edea3",
+                        "risk-low": "#34d399",
+                        "surface-dim": "#0b1326",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-highest": "#2d3449",
+                        "outline-variant": "#3c4a42",
+                        "surface-bright": "#31394d",
+                        "primary-fixed": "#6ffbbe",
+                        "on-secondary": "#233144",
+                        "tertiary-container": "#fc7c78",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-high": "#222a3d",
+                        "on-error": "#690005",
+                        "secondary-container": "#3c4a5e",
+                        "surface-container-lowest": "#060e20",
+                        "inverse-primary": "#006c49",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#003824",
+                        "on-tertiary-fixed": "#410005",
+                        "risk-medium": "#fbbf24",
+                        "background": "#0b1326",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "surface-tint": "#4edea3",
+                        "on-primary-container": "#00422b",
+                        "on-surface-variant": "#94a3b8",
+                        "on-tertiary-fixed-variant": "#842225",
+                        "primary-fixed-dim": "#4edea3",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface-variant": "#2d3449",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "32px",
+                        "container-margin": "16px",
+                        "gutter-grid": "12px",
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col md:flex-row antialiased">
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden flex items-center justify-between px-container-margin h-16 bg-surface border-b border-outline fixed top-0 w-full z-50 transition-colors duration-200">
+<button class="text-primary hover:bg-surface-container rounded-full p-2 transition-colors duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+<div class="font-headline-sm text-headline-sm font-bold text-primary">AgriMonitor</div>
+<button class="hover:bg-surface-container rounded-full p-1 transition-colors duration-200">
+<img class="w-8 h-8 rounded-full object-cover border border-outline" data-alt="A small circular avatar placeholder showing a generic user silhouette in a professional agricultural setting. The lighting is subtle, matching a dark mode corporate application aesthetic, emphasizing the user profile context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxCTLJgcCaiUtxT6vW71V4xPmULq6usimUkTVMv97KaAXDNHDoDPuVnoa3iUcyEsfVvpdq8k-re4uxPwH-3EdYQzhaoo3EfuRSKhkhcbi5EP3t6dWzxC9EqKjqR1MXlybDMyG48jf2B2cV6RIUD7qgkEwTpPGKIoKxIyn0cvIi7jXvgF9kFcynWNg9VCnwhOhSyDgGifYyv7jZcm2yNqK1jsOEVkydKV0swNzIGHVoK2JrjKnxTR_T"/>
+</button>
+</header>
+<!-- NavigationDrawer (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen w-72 bg-surface-container-low border-r border-outline fixed left-0 top-0 z-40 transition-all duration-300 ease-in-out shadow-none p-4 shrink-0">
+<div class="flex items-center gap-stack-md mb-section-gap px-2 pt-2">
+<img class="w-12 h-12 rounded-full object-cover border-2 border-surface-container" data-alt="A crisp, high-resolution circular avatar of an AgriMonitor Admin. The portrait features subtle, moody lighting typical of professional dark mode corporate dashboards, suggesting serious data stewardship." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbhh8GKwYHRnF-UjwdeSfYQFrgwk1zdBI7oBrzvrYUBRSsWSdGg0g1f_-TSnJnkwai2LnAWExxQm8eNA49YU63SZfzene_Vydj17rDWs0PiOHoyE8QlXa7w5wD-HiIqrqTSEa35hKLQsRfckPtAw0vIomgOyXVaSyKKH8AQ4ady2T-aYVguHah8Vi-iDTgyRr0nGU_nf3S3Fvv2KezPam81PtD3HtgaZcB5Z_ZEi6LMLzkvbCrFPlU"/>
+<div>
+<div class="font-title-lg text-title-lg text-primary">AgriMonitor Admin</div>
+<div class="font-label-md text-label-md text-on-surface-variant">Farm Manager</div>
+<div class="font-label-sm text-label-sm text-primary-fixed flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-primary inline-block"></span> Active Now
+                </div>
+</div>
+</div>
+<ul class="flex-1 flex flex-col gap-unit overflow-y-auto">
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md bg-primary-container text-on-primary-container rounded-full px-4 py-3 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+<span class="font-label-md text-label-md font-semibold">Pest Detection</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">downloading</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant hover:bg-surface-container-highest px-4 py-3 rounded-lg transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-72 mt-16 md:mt-0 p-container-margin md:p-section-gap flex flex-col gap-stack-lg max-w-7xl mx-auto w-full">
+<!-- Header & Search -->
+<div class="flex flex-col gap-stack-md lg:flex-row lg:items-center lg:justify-between w-full">
+<div>
+<h1 class="font-display-lg text-display-lg text-on-surface mb-unit md:text-[32px] text-headline-lg-mobile">Detection History</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Review recent pest activity and historical trends across all monitored zones.</p>
+</div>
+<div class="flex flex-col sm:flex-row gap-stack-sm w-full lg:w-auto">
+<div class="relative flex-1 sm:min-w-[300px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">search</span>
+<input class="w-full bg-surface-container-low border border-outline rounded-lg pl-10 pr-4 py-2.5 font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors placeholder:text-on-surface-variant/50" placeholder="Search detections, zones, or pests..." type="text"/>
+</div>
+<button class="flex items-center justify-center gap-2 bg-surface-container border border-outline hover:border-primary text-on-surface px-4 py-2.5 rounded-lg transition-colors duration-200 font-label-md text-label-md whitespace-nowrap">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">filter_list</span>
+                    Filter
+                </button>
+</div>
+</div>
+<!-- Charts Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-stack-lg w-full">
+<!-- Bar Chart: Pests by Type -->
+<div class="bg-surface border border-outline rounded-xl p-stack-md flex flex-col gap-stack-md shadow-sm h-80">
+<div class="flex items-center justify-between">
+<h2 class="font-title-lg text-title-lg text-on-surface">Pests by Type</h2>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="flex-1 relative flex items-end gap-gutter-grid pt-stack-md">
+<!-- Y-axis -->
+<div class="absolute left-0 top-0 bottom-8 w-8 flex flex-col justify-between text-on-surface-variant font-label-sm text-label-sm pb-1">
+<span>50</span>
+<span>25</span>
+<span>0</span>
+</div>
+<!-- Grid Lines -->
+<div class="absolute left-8 right-0 top-0 bottom-8 flex flex-col justify-between z-0">
+<div class="w-full border-b border-outline/30 h-0"></div>
+<div class="w-full border-b border-outline/30 h-0"></div>
+<div class="w-full border-b border-outline/30 h-0"></div>
+</div>
+<!-- Bars -->
+<div class="flex-1 flex justify-around items-end h-[calc(100%-32px)] ml-8 z-10 pb-1">
+<div class="w-12 bg-primary/20 border-2 border-primary rounded-t-md h-[80%] hover:bg-primary/40 transition-colors relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">42</div>
+</div>
+<div class="w-12 bg-info/20 border-2 border-info rounded-t-md h-[45%] hover:bg-info/40 transition-colors relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">24</div>
+</div>
+<div class="w-12 bg-risk-medium/20 border-2 border-risk-medium rounded-t-md h-[15%] hover:bg-risk-medium/40 transition-colors relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface-container-high text-on-surface font-label-sm text-label-sm px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">8</div>
+</div>
+</div>
+<!-- X-axis Labels -->
+<div class="absolute left-8 right-0 bottom-0 h-8 flex justify-around items-end text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-12 text-center truncate">Moth</span>
+<span class="w-12 text-center truncate">Aphid</span>
+<span class="w-12 text-center truncate">Worm</span>
+</div>
+</div>
+</div>
+<!-- Line Chart: Detection Frequency -->
+<div class="bg-surface border border-outline rounded-xl p-stack-md flex flex-col gap-stack-md shadow-sm h-80">
+<div class="flex items-center justify-between">
+<h2 class="font-title-lg text-title-lg text-on-surface">Detection Frequency</h2>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-on-surface-variant"><span class="w-2 h-2 rounded-full bg-primary inline-block"></span> 7 Days</span>
+</div>
+</div>
+<div class="flex-1 relative pt-stack-md">
+<!-- Y-axis -->
+<div class="absolute left-0 top-0 bottom-8 w-8 flex flex-col justify-between text-on-surface-variant font-label-sm text-label-sm pb-1">
+<span>15</span>
+<span>7</span>
+<span>0</span>
+</div>
+<!-- Grid Lines -->
+<div class="absolute left-8 right-0 top-0 bottom-8 flex flex-col justify-between z-0">
+<div class="w-full border-b border-outline/30 h-0"></div>
+<div class="w-full border-b border-outline/30 h-0"></div>
+<div class="w-full border-b border-outline/30 h-0"></div>
+</div>
+<!-- Line Chart SVG Approximation -->
+<div class="absolute left-8 right-0 top-0 bottom-8 z-10">
+<svg class="overflow-visible" height="100%" preserveaspectratio="none" width="100%">
+<polyline fill="none" points="0,150 50,120 100,160 150,80 200,90 250,30 300,50" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+<path d="M0,150 L50,120 L100,160 L150,80 L200,90 L250,30 L300,50 L300,200 L0,200 Z" fill="url(#primary-gradient)" opacity="0.1"></path>
+<defs>
+<lineargradient id="primary-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#4edea3" stop-opacity="1"></stop>
+<stop offset="100%" stop-color="#4edea3" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Data Points -->
+<circle cx="0" cy="150" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="50" cy="120" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="100" cy="160" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="150" cy="80" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="200" cy="90" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="250" cy="30" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+<circle cx="300" cy="50" fill="#0f172a" r="4" stroke="#4edea3" stroke-width="2" vector-effect="non-scaling-stroke"></circle>
+</svg>
+</div>
+<!-- X-axis Labels -->
+<div class="absolute left-8 right-0 bottom-0 h-8 flex justify-between items-end text-on-surface-variant font-label-sm text-label-sm px-1">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Detection List Section -->
+<div class="flex flex-col gap-stack-md w-full">
+<div class="flex items-center justify-between border-b border-outline pb-2">
+<h2 class="font-headline-md text-headline-md text-on-surface">Recent Detections</h2>
+<button class="font-label-md text-label-md text-primary hover:text-primary-fixed transition-colors">View All</button>
+</div>
+<div class="flex flex-col gap-unit w-full">
+<!-- Card 1: High Risk -->
+<div class="bg-surface border border-outline rounded-xl p-stack-md hover:border-risk-high/50 transition-colors flex flex-col sm:flex-row sm:items-center gap-stack-md">
+<div class="w-12 h-12 rounded-lg bg-risk-high/10 border border-risk-high/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-risk-high" style="font-variation-settings: 'FILL' 1;">bug_report</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Diamondback Moth</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-risk-high/20 text-risk-high whitespace-nowrap">High Risk</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 font-body-md text-body-md text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Zone Alpha-4</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 10 mins ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> Confidence: 94%</span>
+</div>
+</div>
+<div class="shrink-0 pt-2 sm:pt-0">
+<button class="w-full sm:w-auto px-4 py-2 bg-surface-container border border-outline hover:border-risk-high text-on-surface font-label-md text-label-md rounded-lg transition-colors">Review</button>
+</div>
+</div>
+<!-- Card 2: Medium Risk -->
+<div class="bg-surface border border-outline rounded-xl p-stack-md hover:border-risk-medium/50 transition-colors flex flex-col sm:flex-row sm:items-center gap-stack-md">
+<div class="w-12 h-12 rounded-lg bg-risk-medium/10 border border-risk-medium/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-risk-medium" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Aphids Cluster</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-risk-medium/20 text-risk-medium whitespace-nowrap">Medium Risk</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 font-body-md text-body-md text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Greenhouse B</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 2 hours ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> Confidence: 88%</span>
+</div>
+</div>
+<div class="shrink-0 pt-2 sm:pt-0">
+<button class="w-full sm:w-auto px-4 py-2 bg-surface-container border border-outline hover:border-risk-medium text-on-surface font-label-md text-label-md rounded-lg transition-colors">Review</button>
+</div>
+</div>
+<!-- Card 3: Low Risk -->
+<div class="bg-surface border border-outline rounded-xl p-stack-md hover:border-risk-low/50 transition-colors flex flex-col sm:flex-row sm:items-center gap-stack-md">
+<div class="w-12 h-12 rounded-lg bg-risk-low/10 border border-risk-low/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-risk-low" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-start justify-between gap-2">
+<h3 class="font-title-lg text-title-lg text-on-surface truncate">Corn Earworm</h3>
+<span class="inline-flex items-center px-2 py-0.5 rounded text-label-sm font-label-sm bg-risk-low/20 text-risk-low whitespace-nowrap">Low Risk</span>
+</div>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 font-body-md text-body-md text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">location_on</span> Field Sector 7</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">schedule</span> 5 hours ago</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">visibility</span> Confidence: 72%</span>
+</div>
+</div>
+<div class="shrink-0 pt-2 sm:pt-0">
+<button class="w-full sm:w-auto px-4 py-2 bg-surface-container border border-outline hover:border-risk-low text-on-surface font-label-md text-label-md rounded-lg transition-colors">Review</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

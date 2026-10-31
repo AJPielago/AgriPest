@@ -23,7 +23,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends BaseActivity {
 
     private EditText etEmail, etPassword;
     private MaterialButton btnLogin;
@@ -80,13 +80,13 @@ public class LoginActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (email.isEmpty()) {
-            etEmail.setError("Email address is required");
+            etEmail.setError(getString(R.string.error_email_required));
             etEmail.requestFocus();
             return;
         }
 
         if (password.isEmpty()) {
-            etPassword.setError("Password is required");
+            etPassword.setError(getString(R.string.error_password_required));
             etPassword.requestFocus();
             return;
         }
@@ -104,14 +104,14 @@ public class LoginActivity extends AppCompatActivity {
                     fetchUserProfile();
                 } else {
                     setLoading(false);
-                    Toast.makeText(LoginActivity.this, "Sign in failed: Invalid credentials (" + response.code() + ")", Toast.LENGTH_LONG).show();
+                    Toast.makeText(LoginActivity.this, getString(R.string.login_failed, response.code()), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
                 setLoading(false);
-                Toast.makeText(LoginActivity.this, "Network error: Unable to connect to " + sessionManager.getBaseUrl(), Toast.LENGTH_LONG).show();
+                Toast.makeText(LoginActivity.this, getString(R.string.network_error_connect, sessionManager.getBaseUrl()), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity {
                             : "farmer";
 
                     sessionManager.saveUserDetails(user.getId(), user.getEmail(), user.getFullName(), roleName);
-                    Toast.makeText(LoginActivity.this, "Welcome back, " + user.getFullName() + "!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, getString(R.string.welcome_back, user.getFullName()), Toast.LENGTH_SHORT).show();
                     navigateToMain();
                 } else {
                     sessionManager.saveUserDetails(1, etEmail.getText().toString(), "Agri Farmer", "farmer");
@@ -148,14 +148,14 @@ public class LoginActivity extends AppCompatActivity {
 
     private void showServerConfigDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Configure Server Endpoint");
+        builder.setTitle(getString(R.string.configure_server_title));
 
         final EditText input = new EditText(this);
-        input.setHint("e.g. http://10.0.2.2:8000/");
+        input.setHint(getString(R.string.server_url_hint));
         input.setText(sessionManager.getBaseUrl());
         builder.setView(input);
 
-        builder.setPositiveButton("Save", (dialog, which) -> {
+        builder.setPositiveButton(getString(R.string.save), (dialog, which) -> {
             String newUrl = input.getText().toString().trim();
             if (!newUrl.isEmpty()) {
                 if (!newUrl.startsWith("http://") && !newUrl.startsWith("https://")) {
@@ -166,10 +166,10 @@ public class LoginActivity extends AppCompatActivity {
                 }
                 sessionManager.saveBaseUrl(newUrl);
                 ApiClient.resetClient();
-                Toast.makeText(this, "Base URL updated to " + newUrl, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.base_url_updated), Toast.LENGTH_SHORT).show();
             }
         });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> dialog.cancel());
         builder.show();
     }
 

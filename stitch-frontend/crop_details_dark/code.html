@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriMonitor - Crop Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#171f33",
+                        "on-background": "#dae2fd",
+                        "surface-container-low": "#131b2e",
+                        "on-tertiary-container": "#711419",
+                        "secondary": "#b9c7e0",
+                        "surface": "#0f172a",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "outline": "#334155",
+                        "risk-high": "#fb7185",
+                        "info": "#60a5fa",
+                        "on-surface": "#f8fafc",
+                        "secondary-fixed": "#d5e3fd",
+                        "inverse-on-surface": "#283044",
+                        "on-primary-fixed": "#002113",
+                        "primary-container": "#10b981",
+                        "on-tertiary": "#650911",
+                        "on-secondary-container": "#abb9d2",
+                        "on-primary-fixed-variant": "#005236",
+                        "inverse-surface": "#dae2fd",
+                        "tertiary": "#ffb3af",
+                        "primary": "#4edea3",
+                        "risk-low": "#34d399",
+                        "surface-dim": "#0b1326",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-highest": "#2d3449",
+                        "outline-variant": "#3c4a42",
+                        "surface-bright": "#31394d",
+                        "primary-fixed": "#6ffbbe",
+                        "on-secondary": "#233144",
+                        "tertiary-container": "#fc7c78",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-high": "#222a3d",
+                        "on-error": "#690005",
+                        "secondary-container": "#3c4a5e",
+                        "surface-container-lowest": "#060e20",
+                        "inverse-primary": "#006c49",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#003824",
+                        "on-tertiary-fixed": "#410005",
+                        "risk-medium": "#fbbf24",
+                        "background": "#0b1326",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "surface-tint": "#4edea3",
+                        "on-primary-container": "#00422b",
+                        "on-surface-variant": "#94a3b8",
+                        "on-tertiary-fixed-variant": "#842225",
+                        "primary-fixed-dim": "#4edea3",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface-variant": "#2d3449",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "32px",
+                        "container-margin": "16px",
+                        "gutter-grid": "12px",
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-md": "16px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "title-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["11px", { "lineHeight": "14px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "title-lg": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col md:flex-row antialiased">
+<!-- TopAppBar (Mobile) -->
+<header class="md:hidden fixed top-0 w-full z-50 bg-surface dark:bg-surface border-b border-outline dark:border-outline flat no shadows transition-colors duration-200 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-stack-md">
+<button class="text-primary dark:text-primary hover:bg-surface-container dark:hover:bg-surface-container p-2 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary">AgriMonitor</span>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A small circular profile picture of an agricultural professional, warm lighting, outdoor setting, wearing a simple functional jacket, slightly blurred background of a field, modern corporate agricultural aesthetic, slate and emerald tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEYJ5f3_bRtyFa7EOV-IxJqthzkWtyb4XBV70cHuQ2z1sOY2CZXxpZG_0MHv5A9sjd6RpD__vxobnQ07sPeWxay-PzXBNEve8Q2wWd9CLWZLb-3QPVlrvmXdfdmW_CheUnhwvn6Pfi2Czyf-8vxfuIyNYNoEWe8lCMjthaBaTosccXVbRdLk2wToEXz23j4vth8lZ3xJeDdEEQIlHk5q-ucMkv2ZffGg9Sgs5ERSQUmGBOC10nLtBz"/>
+</div>
+</header>
+<!-- NavigationDrawer (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen w-72 bg-surface-container-low dark:bg-surface-container-low border-r border-outline dark:border-outline shadow-lg dark:shadow-none p-4 fixed left-0 top-0 overflow-y-auto">
+<div class="flex items-center gap-stack-md mb-section-gap px-4 py-2">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline shrink-0">
+<img alt="User avatar" class="w-full h-full object-cover" data-alt="A small circular profile picture of an agricultural professional, warm lighting, outdoor setting, wearing a simple functional jacket, slightly blurred background of a field, modern corporate agricultural aesthetic, slate and emerald tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1ATB_csjrYC1AMw6xrnutAFQPj2P-gmzQEQUvT5aMlSx3-PMkZxFf7Jokmmt-TkyYfg5lZcFQd_KOs9YrvNBWoU_MrXnPXaAxXZclAR-7CvZEp48DLJEr1zgazpV-wH_wy0JBOfyh58DGUkeRxE3kAtfg2pEhJwMV_Iv3QzFLyG-njE3oOJNsr0wp2PFm_Xv2EWwWZpwLYd5loH1TpgwBT4t_FRcWkyLZpfzMbhxTiass6F-sentj"/>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary truncate">AgriMonitor Admin</h2>
+<p class="font-label-md text-label-md text-on-surface-variant dark:text-on-surface-variant truncate">Farm Manager</p>
+</div>
+</div>
+<ul class="flex flex-col gap-unit">
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="pest_control">pest_control</span>
+<span class="font-label-md text-label-md">Pest Detection</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-3 hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="Psychology" data-weight="fill" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest dark:hover:bg-surface-container-highest transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 md:ml-72 mt-16 md:mt-0 p-container-margin md:p-section-gap flex flex-col gap-section-gap">
+<!-- Header Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-stack-md">
+<div>
+<div class="flex items-center gap-stack-sm text-on-surface-variant mb-unit">
+<a class="hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined text-sm">arrow_back</span> Back to Crops</a>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-[32px] font-bold text-on-surface">Cabbage - Field B2</h1>
+</div>
+<div class="flex gap-stack-sm w-full md:w-auto">
+<button class="flex-1 md:flex-none px-4 py-2 border border-outline rounded-lg text-on-surface hover:bg-surface-container-highest transition-colors font-label-md text-label-md">
+                    Update Status
+                </button>
+<button class="flex-1 md:flex-none px-4 py-2 bg-error-container text-on-error-container rounded-lg hover:bg-error transition-colors font-label-md text-label-md flex items-center justify-center gap-stack-sm">
+<span class="material-symbols-outlined text-sm">delete</span> Delete Crop
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter-grid">
+<!-- Crop Image & Basic Info (Span 4) -->
+<div class="md:col-span-4 bg-surface-container rounded-xl border border-outline overflow-hidden flex flex-col">
+<div class="h-48 relative">
+<img alt="Cabbage Crop" class="w-full h-full object-cover" data-alt="Close up photography of healthy cabbage plants growing in a dark rich soil agricultural field, high detail, sharp focus, slightly moody lighting suited for a modern slate dark theme, crisp vibrant green leaves contrasting with the deep dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLRxarHVL7kaXeG6eMoqrkPOeHK3ZgDrE3qG6D_5zhfQhrYns9C64Um0Iq1npJimiPZC63EMFTuTQ87iiLrSUbhRszerkH5s40Yqt8ZOn_cA7h_cs1iRuGU2Y4nKtiBC-MW0Jg5Zg5ARrCibmOzyyKd7ja1Dosdt4E9LR4ZQZ9KwNqZzwSq0sC4Wn1scJMmqUb7I4_ogXPw6HC_LJ1VIeOUHlP7OR63G_EeBFdIMSMPbdDozeOSuC-"/>
+<div class="absolute top-4 right-4 bg-surface-container/80 backdrop-blur-sm px-3 py-1 rounded-full border border-outline">
+<span class="font-label-md text-label-md text-primary flex items-center gap-unit"><span class="material-symbols-outlined text-sm">calendar_month</span> Day 45</span>
+</div>
+</div>
+<div class="p-container-margin flex flex-col gap-stack-md flex-1">
+<h3 class="font-title-lg text-title-lg text-on-surface">Crop Information</h3>
+<div class="grid grid-cols-2 gap-y-stack-md">
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-unit uppercase tracking-wider">Variety</p>
+<p class="font-body-md text-body-md text-on-surface">Green Express</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-unit uppercase tracking-wider">Planted</p>
+<p class="font-body-md text-body-md text-on-surface">Oct 12, 2023</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-unit uppercase tracking-wider">Expected Harvest</p>
+<p class="font-body-md text-body-md text-on-surface">Jan 15, 2024</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant mb-unit uppercase tracking-wider">Area</p>
+<p class="font-body-md text-body-md text-on-surface">2.5 Acres</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Health Overview & Metrics (Span 8) -->
+<div class="md:col-span-8 flex flex-col gap-gutter-grid">
+<!-- Metrics Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-grid">
+<div class="bg-surface-container p-container-margin rounded-xl border border-outline flex flex-col justify-between">
+<div class="flex items-center justify-between mb-stack-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant">Overall Health</h4>
+<span class="material-symbols-outlined text-primary">eco</span>
+</div>
+<div class="flex items-end gap-stack-sm">
+<span class="font-display-lg text-display-lg text-on-surface">85%</span>
+<span class="font-label-sm text-label-sm text-risk-low bg-risk-low/10 px-2 py-1 rounded mb-1">Optimal</span>
+</div>
+</div>
+<div class="bg-surface-container p-container-margin rounded-xl border border-outline flex flex-col justify-between">
+<div class="flex items-center justify-between mb-stack-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant">Soil Moisture</h4>
+<span class="material-symbols-outlined text-info">water_drop</span>
+</div>
+<div class="flex items-end gap-stack-sm">
+<span class="font-display-lg text-display-lg text-on-surface">42%</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-1">Target: 40-50%</span>
+</div>
+</div>
+<div class="bg-surface-container p-container-margin rounded-xl border border-outline flex flex-col justify-between">
+<div class="flex items-center justify-between mb-stack-md">
+<h4 class="font-label-md text-label-md text-on-surface-variant">Pest Risk</h4>
+<span class="material-symbols-outlined text-risk-medium">bug_report</span>
+</div>
+<div class="flex items-end gap-stack-sm">
+<span class="font-display-lg text-display-lg text-on-surface">Med</span>
+<span class="font-label-sm text-label-sm text-risk-medium bg-risk-medium/10 px-2 py-1 rounded mb-1">Monitor</span>
+</div>
+</div>
+</div>
+<!-- 7-Day Trend Chart -->
+<div class="bg-surface-container p-container-margin rounded-xl border border-outline flex-1 flex flex-col">
+<div class="flex justify-between items-center mb-stack-md">
+<h3 class="font-title-lg text-title-lg text-on-surface">7-Day Health Trend</h3>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button>
+</div>
+<div class="flex-1 min-h-[200px] flex items-end gap-2 relative mt-4">
+<!-- Simulated Chart grid lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="border-t border-outline w-full h-0"></div>
+<div class="border-t border-outline w-full h-0"></div>
+<div class="border-t border-outline w-full h-0"></div>
+<div class="border-t border-outline w-full h-0"></div>
+</div>
+<!-- Bars -->
+<div class="flex-1 bg-primary/20 hover:bg-primary/40 rounded-t-sm transition-colors relative group h-[70%]" style="height: 70%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">70%</div>
+</div>
+<div class="flex-1 bg-primary/40 hover:bg-primary/60 rounded-t-sm transition-colors relative group h-[75%]" style="height: 75%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">75%</div>
+</div>
+<div class="flex-1 bg-primary/60 hover:bg-primary/80 rounded-t-sm transition-colors relative group h-[82%]" style="height: 82%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">82%</div>
+</div>
+<div class="flex-1 bg-primary/80 hover:bg-primary rounded-t-sm transition-colors relative group h-[80%]" style="height: 80%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">80%</div>
+</div>
+<div class="flex-1 bg-primary/70 hover:bg-primary/90 rounded-t-sm transition-colors relative group h-[78%]" style="height: 78%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">78%</div>
+</div>
+<div class="flex-1 bg-primary/90 hover:bg-primary rounded-t-sm transition-colors relative group h-[85%]" style="height: 85%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">85%</div>
+</div>
+<div class="flex-1 bg-primary rounded-t-sm transition-colors relative group h-[88%]" style="height: 88%">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface text-on-surface text-xs py-1 px-2 rounded border border-outline opacity-0 group-hover:opacity-100 transition-opacity">88%</div>
+</div>
+</div>
+<div class="flex justify-between mt-stack-sm text-on-surface-variant font-label-sm text-label-sm">
+<span>Mon</span>
+<span>Tue</span>
+<span>Wed</span>
+<span>Thu</span>
+<span>Fri</span>
+<span>Sat</span>
+<span>Sun</span>
+</div>
+</div>
+</div>
+<!-- Recent Detection History (Full Span) -->
+<div class="md:col-span-12 bg-surface-container rounded-xl border border-outline p-container-margin">
+<h3 class="font-title-lg text-title-lg text-on-surface mb-stack-md">Recent Detection History</h3>
+<div class="flex flex-col gap-4 relative">
+<!-- Timeline Line -->
+<div class="absolute left-6 top-4 bottom-4 w-px bg-outline hidden md:block"></div>
+<!-- Event 1 -->
+<div class="flex gap-stack-md items-start relative z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest border-2 border-surface flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-primary">eco</span>
+</div>
+<div class="bg-surface p-4 rounded-lg border border-outline flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Health Check Passed</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Today, 08:30 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Automated drone scan completed. No anomalies detected. Canopy density optimal.</p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="flex gap-stack-md items-start relative z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest border-2 border-surface flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-risk-medium">bug_report</span>
+</div>
+<div class="bg-surface p-4 rounded-lg border border-outline flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Aphid Presence Detected</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nov 22, 14:15 PM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-3">Minor aphid activity spotted in Sector B2-North. Confidence level: 82%.</p>
+<div class="flex gap-stack-sm">
+<button class="px-3 py-1 bg-surface-container-highest border border-outline rounded text-label-md text-on-surface hover:bg-outline transition-colors">View Image</button>
+<button class="px-3 py-1 bg-primary text-surface rounded text-label-md font-medium hover:bg-primary-fixed transition-colors">Schedule Treatment</button>
+</div>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="flex gap-stack-md items-start relative z-10">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest border-2 border-surface flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-info">water_drop</span>
+</div>
+<div class="bg-surface p-4 rounded-lg border border-outline flex-1">
+<div class="flex justify-between items-start mb-1">
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Irrigation Adjusted</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Nov 20, 06:00 AM</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">Soil moisture fell below 38%. Automated irrigation system increased flow rate by 15% for 2 hours.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

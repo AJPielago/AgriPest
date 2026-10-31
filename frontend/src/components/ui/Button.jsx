@@ -14,8 +14,8 @@ export const Button = ({
   const base = "inline-flex items-center justify-center font-bold transition-all duration-100 rounded-md focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer border active:scale-[0.99]";
   
   const variants = {
-    primary: "bg-slate-900 hover:bg-slate-800 text-white border-slate-900 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 dark:border-white",
-    secondary: "bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700",
+    primary: "bg-primary hover:bg-primary/90 text-on-primary border-primary dark:bg-emerald-400 dark:hover:bg-emerald-300 dark:text-emerald-950 dark:border-emerald-400 shadow-sm",
+    secondary: "bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-50 border-slate-300 dark:border-slate-700 shadow-sm",
     danger: "bg-red-700 hover:bg-red-800 text-white border-red-800 focus-visible:ring-red-600",
     outline: "bg-transparent text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-300 dark:border-slate-700",
     ghost: "bg-transparent text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 border-transparent active:scale-100"

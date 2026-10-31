@@ -51,7 +51,7 @@ export const App = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <div className="min-h-screen app-viewport flex font-sans antialiased transition-colors duration-200">
+        <div className="min-h-screen app-viewport flex font-sans antialiased bg-surface text-on-surface transition-colors duration-200">
           
           {/* Sidebar for authenticated users */}
           {user && (

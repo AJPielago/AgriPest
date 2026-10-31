@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Detection History"
+            app:title="@string/title_history"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -54,7 +54,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Detection History"
+                    android:text="@string/title_history"
                     android:textSize="22sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary" />
@@ -63,7 +63,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="Comprehensive archive of pest diagnostics and field records."
+                    android:text="@string/history_subtitle"
                     android:textSize="13sp"
                     android:textColor="@color/on_surface_variant" />
 
@@ -88,7 +88,7 @@
                         android:layout_height="match_parent"
                         android:layout_marginStart="8dp"
                         android:background="@null"
-                        android:hint="Search by pest, crop, or location..."
+                        android:hint="@string/search_history"
                         android:textColor="@color/on_surface"
                         android:textColorHint="@color/outline"
                         android:textSize="13sp"
@@ -123,7 +123,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="No diagnostic records found"
+                    android:text="@string/no_history_records"
                     android:textColor="@color/on_surface_variant"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -151,7 +151,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:layout_marginTop="12dp"
-                    android:text="Retry"
+                    android:text="@string/retry"
                     android:textAllCaps="false"
                     app:cornerRadius="6dp"
                     app:backgroundTint="@color/primary" />

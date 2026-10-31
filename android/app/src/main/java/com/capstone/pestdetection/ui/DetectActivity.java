@@ -49,7 +49,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetectActivity extends AppCompatActivity {
+public class DetectActivity extends BaseActivity {
 
     private ImageView ivSpecimenPreview;
     private LinearLayout layoutUploadPlaceholder;
@@ -88,7 +88,7 @@ public class DetectActivity extends AppCompatActivity {
                 if (isGranted) {
                     launchCameraIntent();
                 } else {
-                    Toast.makeText(this, "Camera permission is required to capture field specimen photos", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.camera_permission_required), Toast.LENGTH_SHORT).show();
                 }
             }
     );
@@ -127,13 +127,13 @@ public class DetectActivity extends AppCompatActivity {
 
     private void runLivePreScreeningCheck() {
         if (selectedImageUri == null) {
-            Toast.makeText(this, "Select or capture a specimen photo first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.select_capture_specimen), Toast.LENGTH_SHORT).show();
             return;
         }
 
         File uploadFile = getFileFromUri(selectedImageUri);
         if (uploadFile == null || !uploadFile.exists()) {
-            Toast.makeText(this, "Failed to prepare specimen image file", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.prepare_image_failed), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -158,14 +158,14 @@ public class DetectActivity extends AppCompatActivity {
                     String msg = res.getMessage() + " (Confidence: " + (int)(res.getConfidence() * 100) + "%)";
                     Toast.makeText(DetectActivity.this, msg, Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(DetectActivity.this, "Pre-screening check failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetectActivity.this, getString(R.string.prescreen_check_failed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<com.capstone.pestdetection.models.LiveCheckResponse> call, Throwable t) {
                 setLoading(false);
-                Toast.makeText(DetectActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(DetectActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -186,13 +186,13 @@ public class DetectActivity extends AppCompatActivity {
                     ArrayAdapter<CropDto> cropAdapter = new ArrayAdapter<>(DetectActivity.this, android.R.layout.simple_spinner_dropdown_item, cropList);
                     spinnerCrops.setAdapter(cropAdapter);
                 } else {
-                    Toast.makeText(DetectActivity.this, "Unable to load crop catalog", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetectActivity.this, getString(R.string.load_crop_catalog_failed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<CropDto>> call, Throwable t) {
-                Toast.makeText(DetectActivity.this, "Network error loading crop list", Toast.LENGTH_SHORT).show();
+                Toast.makeText(DetectActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -214,7 +214,7 @@ public class DetectActivity extends AppCompatActivity {
                 takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                 cameraLauncher.launch(takePictureIntent);
             } catch (IOException ex) {
-                Toast.makeText(this, "Unable to create image file for photo", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.create_image_file_failed), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -233,13 +233,13 @@ public class DetectActivity extends AppCompatActivity {
 
     private void submitDiagnosticRequest() {
         if (selectedImageUri == null) {
-            Toast.makeText(this, "Please select or capture a crop specimen photo first", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.select_capture_specimen), Toast.LENGTH_LONG).show();
             return;
         }
 
         File uploadFile = getFileFromUri(selectedImageUri);
         if (uploadFile == null || !uploadFile.exists()) {
-            Toast.makeText(this, "Failed to prepare specimen image file", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.prepare_image_failed), Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -272,14 +272,14 @@ public class DetectActivity extends AppCompatActivity {
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(DetectActivity.this, "Diagnostic analysis failed (" + response.code() + ")", Toast.LENGTH_LONG).show();
+                    Toast.makeText(DetectActivity.this, getString(R.string.diagnostic_analysis_failed, response.code()), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<DetectionResponse> call, Throwable t) {
                 setLoading(false);
-                Toast.makeText(DetectActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(DetectActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_LONG).show();
             }
         });
     }

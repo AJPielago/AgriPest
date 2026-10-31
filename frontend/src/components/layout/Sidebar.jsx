@@ -76,7 +76,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
                     onClick={onClose}
                     className={`flex items-center gap-3 px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
                       active
-                        ? 'bg-secondary-container text-on-secondary-container dark:bg-secondary dark:text-on-secondary font-bold shadow-xs'
+                        ? 'bg-secondary-container text-on-secondary-container dark:bg-primary dark:text-on-primary font-bold shadow-xs'
                         : 'text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface'
                     }`}
                   >
@@ -100,7 +100,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
                   onClick={onClose}
                   className={`flex items-center gap-3 px-3.5 py-2 rounded-full text-xs font-semibold transition-all ${
                     isActive('/admin')
-                      ? 'bg-secondary-container text-on-secondary-container dark:bg-secondary dark:text-on-secondary font-bold shadow-xs'
+                      ? 'bg-secondary-container text-on-secondary-container dark:bg-primary dark:text-on-primary font-bold shadow-xs'
                       : 'text-on-surface-variant hover:bg-surface-variant/50 hover:text-on-surface'
                   }`}
                 >

@@ -102,7 +102,7 @@
             android:layout_width="match_parent"
             android:layout_height="36dp"
             android:layout_marginTop="10dp"
-            android:text="View Details"
+            android:text="@string/view_details"
             android:textAllCaps="false"
             android:textSize="12sp"
             android:textStyle="bold"

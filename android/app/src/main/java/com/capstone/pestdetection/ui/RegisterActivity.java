@@ -23,7 +23,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterActivity extends BaseActivity {
 
     private EditText etFullName, etEmail, etPassword;
     private Spinner spinnerRole;
@@ -64,19 +64,19 @@ public class RegisterActivity extends AppCompatActivity {
         String selectedRole = spinnerRole.getSelectedItem() != null ? spinnerRole.getSelectedItem().toString() : "Farmer";
 
         if (fullName.isEmpty()) {
-            etFullName.setError("Full name is required");
+            etFullName.setError(getString(R.string.error_fullname_required));
             etFullName.requestFocus();
             return;
         }
 
         if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            etEmail.setError("Valid email address is required");
+            etEmail.setError(getString(R.string.error_email_invalid));
             etEmail.requestFocus();
             return;
         }
 
         if (password.isEmpty() || password.length() < 4) {
-            etPassword.setError("Password must be at least 4 characters");
+            etPassword.setError(getString(R.string.error_password_short));
             etPassword.requestFocus();
             return;
         }
@@ -97,17 +97,17 @@ public class RegisterActivity extends AppCompatActivity {
             public void onResponse(Call<UserDto> call, Response<UserDto> response) {
                 setLoading(false);
                 if (response.isSuccessful()) {
-                    Toast.makeText(RegisterActivity.this, "Account created successfully! Please log in.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(RegisterActivity.this, getString(R.string.register_success), Toast.LENGTH_LONG).show();
                     finish();
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Registration failed. Email may already exist.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(RegisterActivity.this, getString(R.string.register_failed), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<UserDto> call, Throwable t) {
                 setLoading(false);
-                Toast.makeText(RegisterActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(RegisterActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }

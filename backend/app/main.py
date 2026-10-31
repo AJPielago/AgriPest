@@ -18,10 +18,11 @@ app = FastAPI(
     description="Backend API service for AI-Based Pest Detection System Capstone."
 )
 
-# Configure CORS (restricted to approved frontend origins)
+# Configure CORS (open for localhost and local network demo)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

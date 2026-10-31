@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pest Detection - AgriMonitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "surface-container": "#171f33",
+                            "on-background": "#dae2fd",
+                            "surface-container-low": "#131b2e",
+                            "on-tertiary-container": "#711419",
+                            "secondary": "#b9c7e0",
+                            "surface": "#0f172a",
+                            "error-container": "#93000a",
+                            "on-secondary-fixed": "#0d1c2f",
+                            "outline": "#334155",
+                            "risk-high": "#fb7185",
+                            "info": "#60a5fa",
+                            "on-surface": "#f8fafc",
+                            "secondary-fixed": "#d5e3fd",
+                            "inverse-on-surface": "#283044",
+                            "on-primary-fixed": "#002113",
+                            "primary-container": "#10b981",
+                            "on-tertiary": "#650911",
+                            "on-secondary-container": "#abb9d2",
+                            "on-primary-fixed-variant": "#005236",
+                            "inverse-surface": "#dae2fd",
+                            "tertiary": "#ffb3af",
+                            "primary": "#4edea3",
+                            "risk-low": "#34d399",
+                            "surface-dim": "#0b1326",
+                            "on-secondary-fixed-variant": "#3a485c",
+                            "surface-container-highest": "#2d3449",
+                            "outline-variant": "#3c4a42",
+                            "surface-bright": "#31394d",
+                            "primary-fixed": "#6ffbbe",
+                            "on-secondary": "#233144",
+                            "tertiary-container": "#fc7c78",
+                            "tertiary-fixed": "#ffdad7",
+                            "surface-container-high": "#222a3d",
+                            "on-error": "#690005",
+                            "secondary-container": "#3c4a5e",
+                            "surface-container-lowest": "#060e20",
+                            "inverse-primary": "#006c49",
+                            "on-error-container": "#ffdad6",
+                            "on-primary": "#003824",
+                            "on-tertiary-fixed": "#410005",
+                            "risk-medium": "#fbbf24",
+                            "background": "#0b1326",
+                            "secondary-fixed-dim": "#b9c7e0",
+                            "surface-tint": "#4edea3",
+                            "on-primary-container": "#00422b",
+                            "on-surface-variant": "#94a3b8",
+                            "on-tertiary-fixed-variant": "#842225",
+                            "primary-fixed-dim": "#4edea3",
+                            "tertiary-fixed-dim": "#ffb3af",
+                            "surface-variant": "#2d3449",
+                            "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "section-gap": "32px",
+                            "container-margin": "16px",
+                            "gutter-grid": "12px",
+                            "stack-sm": "8px",
+                            "unit": "4px",
+                            "stack-md": "16px",
+                            "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                            "body-md": [
+                                    "Inter"
+                            ],
+                            "display-lg": [
+                                    "Inter"
+                            ],
+                            "label-md": [
+                                    "Inter"
+                            ],
+                            "headline-sm": [
+                                    "Inter"
+                            ],
+                            "label-sm": [
+                                    "Inter"
+                            ],
+                            "headline-md": [
+                                    "Inter"
+                            ],
+                            "body-lg": [
+                                    "Inter"
+                            ],
+                            "title-lg": [
+                                    "Inter"
+                            ],
+                            "headline-lg-mobile": [
+                                    "Inter"
+                            ]
+                    },
+                    "fontSize": {
+                            "body-md": [
+                                    "14px",
+                                    {
+                                            "lineHeight": "20px",
+                                            "fontWeight": "400"
+                                    }
+                            ],
+                            "display-lg": [
+                                    "32px",
+                                    {
+                                            "lineHeight": "40px",
+                                            "letterSpacing": "-0.02em",
+                                            "fontWeight": "700"
+                                    }
+                            ],
+                            "label-md": [
+                                    "12px",
+                                    {
+                                            "lineHeight": "16px",
+                                            "letterSpacing": "0.02em",
+                                            "fontWeight": "500"
+                                    }
+                            ],
+                            "headline-sm": [
+                                    "20px",
+                                    {
+                                            "lineHeight": "28px",
+                                            "fontWeight": "600"
+                                    }
+                            ],
+                            "label-sm": [
+                                    "11px",
+                                    {
+                                            "lineHeight": "14px",
+                                            "fontWeight": "600"
+                                    }
+                            ],
+                            "headline-md": [
+                                    "24px",
+                                    {
+                                            "lineHeight": "32px",
+                                            "letterSpacing": "-0.01em",
+                                            "fontWeight": "600"
+                                    }
+                            ],
+                            "body-lg": [
+                                    "16px",
+                                    {
+                                            "lineHeight": "24px",
+                                            "fontWeight": "400"
+                                    }
+                            ],
+                            "title-lg": [
+                                    "18px",
+                                    {
+                                            "lineHeight": "24px",
+                                            "fontWeight": "600"
+                                    }
+                            ],
+                            "headline-lg-mobile": [
+                                    "28px",
+                                    {
+                                            "lineHeight": "36px",
+                                            "fontWeight": "700"
+                                    }
+                            ]
+                    }
+            },
+                },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen flex overflow-hidden">
+<!-- NavigationDrawer (Shared Component) -->
+<nav class="hidden md:flex flex-col h-full p-4 fixed left-0 top-0 w-72 bg-surface-container-low dark:bg-surface-container-low shadow-none transition-all duration-300 ease-in-out z-40">
+<!-- Header -->
+<div class="flex items-center gap-stack-md mb-8">
+<img alt="User profile avatar" class="w-12 h-12 rounded-full object-cover border border-outline" data-alt="A professional headshot of a farm manager wearing a casual collared shirt, set against a subtly blurred agricultural background. High quality, well-lit portrait suitable for a dashboard avatar in a modern dark-mode application." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXMzPMEhD54bXpANx0wdZxDcyB815x33U5P-8iRAugncVks_ttqMzgW-fEXM-C7rut70-YW-SyrTbnU4XlIZQUMAQttL1LAxGGXSSQhzFQpe9xsD0CkO6k3_zqcdfXFbYyKrwxOKZCImT31FmDqnNwgEkVpqnLYuaIrUz5HNEhFcTBbQZ8H2FcxvduZpO6lohVmwknUkyoGp-DRrsQss_cA6CxTzPd16EGNFqJ-7PSiHRq76Kr9R5l"/>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary">AgriMonitor Admin</span>
+<span class="font-label-md text-label-md text-on-surface-variant">Farm Manager</span>
+<span class="font-label-sm text-label-sm text-primary">Active Now</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-unit flex-1 overflow-y-auto">
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-stack-md bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container rounded-full px-4 py-3 transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="pest_control" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+<span class="font-label-md text-label-md">Pest Detection</span>
+</a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+<span class="font-label-md text-label-md">Farm Monitoring</span>
+</a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="Psychology">downloading</span>
+<span class="font-label-md text-label-md">Crops</span>
+</a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="assessment">assessment</span>
+<span class="font-label-md text-label-md">Reports</span>
+</a>
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-md text-label-md">Notifications</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-outline">
+<a class="flex items-center gap-stack-md text-on-surface-variant dark:text-on-surface-variant px-4 py-3 rounded-full hover:bg-surface-container-highest transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-md text-label-md">Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 ml-0 md:ml-72 flex flex-col h-full bg-surface">
+<!-- TopAppBar (Mobile Only - Web handles brand in Drawer) -->
+<header class="md:hidden flex items-center justify-between px-container-margin h-16 bg-surface dark:bg-surface fixed top-0 w-full z-50 border-b border-outline dark:border-outline">
+<button class="text-on-surface-variant p-2 rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary tracking-tight">AgriMonitor</span>
+<button class="w-8 h-8 rounded-full overflow-hidden border border-outline">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="A small user profile avatar showing a farm manager. Dark mode friendly, high contrast, professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEvOQsMdkMqiA-ZfgbhnWcsZE6iWeOlxZJ9kF98NzL9N1qr06SGO0Qq4NSMLzMws8OiG9GaP1hMXo3U8m-KA77cX1m8KtFsyY2NZYyBZYP4bPTCpYGOWb_sJDe2fnbXpUxXH5CNPlk_euxUiTEFu-Mc2dhSQVHktmQeTezBY_0-LfbqMiU_oIiWuZwirS_qBwG5rrDD2NJp6QA5kQsAed7bnzlVPsle-vi3dBqPcm1tJz-pu1NVzks"/>
+</button>
+</header>
+<!-- Content Canvas -->
+<div class="flex-1 overflow-y-auto p-container-margin md:p-section-gap mt-16 md:mt-0 relative">
+<!-- Page Header -->
+<div class="mb-stack-lg">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-unit">Pest Detection</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Upload or capture an image to identify crop pests and diseases using AI analysis.</p>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-grid">
+<!-- Upload/Capture Module (Left Column) -->
+<div class="lg:col-span-7 flex flex-col gap-gutter-grid">
+<!-- Drag & Drop Area -->
+<div class="bg-surface-container rounded-xl border border-dashed border-outline hover:border-primary transition-colors duration-300 p-8 flex flex-col items-center justify-center min-h-[320px] relative group overflow-hidden">
+<!-- Decorative background element -->
+<div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+<span class="material-symbols-outlined text-4xl text-on-surface-variant mb-4 group-hover:text-primary transition-colors duration-300" data-icon="cloud_upload">cloud_upload</span>
+<h3 class="font-title-lg text-title-lg text-on-surface mb-2">Drag &amp; Drop Image</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-sm mb-6">Support for high-resolution JPG, PNG formats up to 10MB.</p>
+<div class="flex gap-4 w-full max-w-xs justify-center relative z-10">
+<button class="flex-1 bg-surface-bright border border-outline text-on-surface font-label-md text-label-md py-3 px-4 rounded-lg hover:border-primary hover:text-primary transition-all duration-200">
+                                Browse Files
+                            </button>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="flex items-center justify-between bg-surface-container rounded-xl border border-outline p-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="photo_camera">photo_camera</span>
+<span class="font-body-md text-body-md text-on-surface-variant">Use device camera for real-time analysis</span>
+</div>
+<button class="bg-primary text-surface-container-lowest font-label-md text-label-md font-bold py-2.5 px-6 rounded-lg hover:bg-primary-fixed transition-colors flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+<span class="material-symbols-outlined text-[20px]" data-icon="camera">camera</span>
+                            Capture Photo
+                        </button>
+</div>
+</div>
+<!-- Analysis Result Module (Right Column) -->
+<div class="lg:col-span-5 flex flex-col h-full">
+<div class="bg-surface-container rounded-xl border border-outline flex flex-col h-full overflow-hidden relative">
+<!-- Header -->
+<div class="p-4 border-b border-outline flex justify-between items-center bg-surface-container/50 backdrop-blur-sm z-10">
+<div class="flex items-center gap-2">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+</span>
+<span class="font-label-md text-label-md text-primary tracking-wider uppercase">Analysis Complete</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<!-- Image Preview with overlay -->
+<div class="relative w-full h-64 bg-surface-dim">
+<img alt="Analyzed crop image" class="w-full h-full object-cover" data-alt="A macro photograph of a bright green cabbage leaf in a dark agricultural setting. A distinct green caterpillar is visible on the leaf, surrounded by minor leaf damage. High resolution, dramatic lighting suitable for a dark UI dashboard analysis panel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRqOlnA-UaGE2n_t02pK2z96IBLg2f-hRiUM9H3f8w_ksQepOmersnoHBBN9zWZPJGziMYi77sAN0Vr7d8R9DDvdXJ1rQJsft6-GesuR6SFQaWzDJ-6hCQbPXCpUe-6CGSGvBf-q8yoRwZ8k-vneFzoiljrCUsV4D9qN6JOyTUyPXhKFYfaQLbgNM6d77UZKrVZ_PRXeNrG318gjtI3YOkINVwLDB1KSjVOuFFu27-oaemEomSa8JH"/>
+<!-- Bounding Box Overlay -->
+<div class="absolute top-1/4 left-1/4 w-1/3 h-1/3 border-2 border-risk-high rounded-sm shadow-[0_0_10px_rgba(251,113,133,0.5)] bg-risk-high/10 animate-pulse">
+<div class="absolute -top-6 left-[-2px] bg-risk-high text-on-error font-label-sm text-label-sm px-2 py-1 rounded-t-sm">
+                                    98% Match
+                                </div>
+</div>
+</div>
+<!-- Data Panel -->
+<div class="p-6 flex-1 flex flex-col gap-stack-md bg-surface-container">
+<div>
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Cabbage Looper</h3>
+<span class="bg-risk-high/20 text-risk-high font-label-sm text-label-sm px-3 py-1 rounded-full border border-risk-high/30">High Risk</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant italic">Trichoplusia ni</p>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-2">
+<div class="bg-surface p-3 rounded-lg border border-outline">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Affected Crop</span>
+<span class="font-label-md text-label-md text-on-surface">Cabbage (Brassica)</span>
+</div>
+<div class="bg-surface p-3 rounded-lg border border-outline">
+<span class="font-label-sm text-label-sm text-on-surface-variant block mb-1">Confidence Score</span>
+<span class="font-label-md text-label-md text-on-surface flex items-center gap-1">
+                                        98.4%
+                                        <span class="material-symbols-outlined text-[14px] text-primary" data-icon="check_circle">check_circle</span>
+</span>
+</div>
+</div>
+<div class="mt-auto pt-4 border-t border-outline flex gap-3">
+<button class="flex-1 bg-surface border border-outline text-on-surface font-label-md text-label-md py-2 rounded-lg hover:bg-surface-bright transition-colors">
+                                    View Details
+                                </button>
+<button class="flex-1 bg-risk-high/10 border border-risk-high/30 text-risk-high font-label-md text-label-md py-2 rounded-lg hover:bg-risk-high/20 transition-colors">
+                                    Treatment Plan
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface dark:bg-surface border-t border-outline dark:border-outline flex justify-around items-center h-16 z-50">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant w-16 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary w-16" href="#">
+<div class="bg-primary-container/20 p-1 rounded-full mb-0.5">
+<span class="material-symbols-outlined text-primary" data-icon="pest_control" data-weight="fill" style="font-variation-settings: 'FILL' 1;">pest_control</span>
+</div>
+<span class="font-label-sm text-label-sm">Detect</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant w-16 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="sensors">sensors</span>
+<span class="font-label-sm text-label-sm">Fields</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant w-16 group" href="#">
+<span class="material-symbols-outlined group-hover:text-primary transition-colors" data-icon="notifications">notifications</span>
+<span class="font-label-sm text-label-sm">Alerts</span>
+</a>
+</nav>
+</body></html>

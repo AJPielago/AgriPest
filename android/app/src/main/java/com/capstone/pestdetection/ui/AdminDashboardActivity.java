@@ -17,7 +17,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class AdminDashboardActivity extends AppCompatActivity {
+public class AdminDashboardActivity extends BaseActivity {
 
     private TextView tvAdminEngineMode, tvAdminTotalUsers, tvAdminTotalCrops, tvAdminTotalPests, tvAdminTotalDetections;
 

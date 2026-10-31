@@ -28,7 +28,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+import com.capstone.pestdetection.utils.LocaleHelper;
+import androidx.appcompat.app.AppCompatDelegate;
+import android.content.SharedPreferences;
+import android.widget.Toast;
+
+public class MainActivity extends BaseActivity {
 
     private SessionManager sessionManager;
     private SwipeRefreshLayout swipeRefresh;
@@ -76,11 +81,38 @@ public class MainActivity extends AppCompatActivity {
         rvRecentDetections.setAdapter(detectionsAdapter);
 
         String fullName = sessionManager.getFullName();
-        String firstName = !fullName.isEmpty() ? fullName.split(" ")[0] : "Alex";
-        tvWelcomeUser.setText("Good morning, " + firstName);
+        String currentLang = LocaleHelper.getLanguage(this);
+        String defaultName = "tl".equals(currentLang) ? "Magsasaka" : "Alex";
+        String firstName = !fullName.isEmpty() ? fullName.split(" ")[0] : defaultName;
+        tvWelcomeUser.setText(getString(R.string.good_morning_user, firstName));
+        tvFarmStatusMessage.setText(getString(R.string.farm_status_optimal, 2));
         tvHeaderAvatar.setText(!fullName.isEmpty() ? String.valueOf(fullName.charAt(0)).toUpperCase() : "A");
 
         // Action Triggers
+        View btnLang = findViewById(R.id.btnHeaderLanguage);
+        if (btnLang != null) {
+            btnLang.setOnClickListener(v -> {
+                String curLang = LocaleHelper.getLanguage(this);
+                String newLang = "tl".equals(curLang) ? "en" : "tl";
+                LocaleHelper.setLocale(this, newLang);
+                Toast.makeText(this, newLang.equals("tl") ? getString(R.string.lang_switched_fil) : getString(R.string.lang_switched_en), Toast.LENGTH_SHORT).show();
+                recreate();
+            });
+        }
+
+        View btnTheme = findViewById(R.id.btnHeaderTheme);
+        if (btnTheme != null) {
+            btnTheme.setOnClickListener(v -> {
+                SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+                boolean isDark = prefs.getBoolean("dark_mode", false);
+                boolean newDark = !isDark;
+                prefs.edit().putBoolean("dark_mode", newDark).apply();
+                AppCompatDelegate.setDefaultNightMode(
+                        newDark ? AppCompatDelegate.MODE_NIGHT_YES : AppCompatDelegate.MODE_NIGHT_NO
+                );
+            });
+        }
+
         findViewById(R.id.btnHeaderNotifications).setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, NotificationsActivity.class));
         });

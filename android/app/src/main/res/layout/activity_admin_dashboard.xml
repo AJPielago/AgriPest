@@ -9,14 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:background="#F8FAFC">
+        android:background="@color/surface">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/adminToolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="Admin Portal"
+            app:title="@string/title_admin"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -41,11 +41,11 @@
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="6dp"
+                    app:cardCornerRadius="8dp"
                     app:cardElevation="0dp"
-                    app:strokeColor="#1E293B"
+                    app:strokeColor="@color/outline_variant"
                     app:strokeWidth="1dp"
-                    app:cardBackgroundColor="#020617">
+                    app:cardBackgroundColor="@color/surface_container_lowest">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -64,16 +64,16 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="SYSTEM HEALTH &amp; TELEMETRY MONITOR"
+                                android:text="@string/admin_system_health"
                                 android:textSize="11sp"
                                 android:textStyle="bold"
-                                android:textColor="#E2E8F0"
+                                android:textColor="@color/on_surface"
                                 android:letterSpacing="0.05" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="HEALTHY"
+                                android:text="@string/admin_healthy"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
                                 android:textColor="#34D399"
@@ -94,16 +94,16 @@
                                 android:layout_columnWeight="1"
                                 android:layout_margin="3dp"
                                 android:padding="10dp"
-                                android:background="#0F172A"
+                                android:background="@color/surface"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="DB CONNECTIVITY"
+                                    android:text="@string/admin_db_connectivity"
                                     android:textSize="9sp"
                                     android:textStyle="bold"
-                                    android:textColor="#94A3B8" />
+                                    android:textColor="@color/on_surface_variant" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -121,16 +121,16 @@
                                 android:layout_columnWeight="1"
                                 android:layout_margin="3dp"
                                 android:padding="10dp"
-                                android:background="#0F172A"
+                                android:background="@color/surface"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="ENGINE PIPELINE"
+                                    android:text="@string/admin_engine_pipeline"
                                     android:textSize="9sp"
                                     android:textStyle="bold"
-                                    android:textColor="#94A3B8" />
+                                    android:textColor="@color/on_surface_variant" />
 
                                 <TextView
                                     android:id="@+id/tvAdminEngineMode"
@@ -149,16 +149,16 @@
                                 android:layout_columnWeight="1"
                                 android:layout_margin="3dp"
                                 android:padding="10dp"
-                                android:background="#0F172A"
+                                android:background="@color/surface"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="UPLOAD STORAGE"
+                                    android:text="@string/admin_upload_storage"
                                     android:textSize="9sp"
                                     android:textStyle="bold"
-                                    android:textColor="#94A3B8" />
+                                    android:textColor="@color/on_surface_variant" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -167,7 +167,7 @@
                                     android:text="Files Stored"
                                     android:textSize="12sp"
                                     android:textStyle="bold"
-                                    android:textColor="#E2E8F0" />
+                                    android:textColor="@color/on_surface" />
                             </LinearLayout>
 
                             <LinearLayout
@@ -176,16 +176,16 @@
                                 android:layout_columnWeight="1"
                                 android:layout_margin="3dp"
                                 android:padding="10dp"
-                                android:background="#0F172A"
+                                android:background="@color/surface"
                                 android:orientation="vertical">
 
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="PYTHON RUNTIME"
+                                    android:text="@string/admin_python_runtime"
                                     android:textSize="9sp"
                                     android:textStyle="bold"
-                                    android:textColor="#94A3B8" />
+                                    android:textColor="@color/on_surface_variant" />
 
                                 <TextView
                                     android:layout_width="wrap_content"
@@ -194,7 +194,7 @@
                                     android:text="v3.14 Active"
                                     android:textSize="12sp"
                                     android:textStyle="bold"
-                                    android:textColor="#E2E8F0" />
+                                    android:textColor="@color/on_surface" />
                             </LinearLayout>
 
                         </GridLayout>
@@ -214,11 +214,11 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:layout_margin="4dp"
-                        app:cardCornerRadius="6dp"
+                        app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="#CBD5E1"
+                        app:strokeColor="@color/outline_variant"
                         app:strokeWidth="1dp"
-                        app:cardBackgroundColor="#FFFFFF">
+                        app:cardBackgroundColor="@color/surface_container_lowest">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -229,10 +229,10 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="USER DIRECTORY"
+                                android:text="@string/admin_user_directory"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
-                                android:textColor="#64748B" />
+                                android:textColor="@color/on_surface_variant" />
 
                             <TextView
                                 android:id="@+id/tvAdminTotalUsers"
@@ -242,7 +242,7 @@
                                 android:text="--"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="#0F172A" />
+                                android:textColor="@color/on_surface" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -251,11 +251,11 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:layout_margin="4dp"
-                        app:cardCornerRadius="6dp"
+                        app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="#CBD5E1"
+                        app:strokeColor="@color/outline_variant"
                         app:strokeWidth="1dp"
-                        app:cardBackgroundColor="#FFFFFF">
+                        app:cardBackgroundColor="@color/surface_container_lowest">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -266,10 +266,10 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="CROP CATALOG"
+                                android:text="@string/admin_crop_catalog"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
-                                android:textColor="#64748B" />
+                                android:textColor="@color/on_surface_variant" />
 
                             <TextView
                                 android:id="@+id/tvAdminTotalCrops"
@@ -279,7 +279,7 @@
                                 android:text="--"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="#047857" />
+                                android:textColor="@color/primary" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -288,11 +288,11 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:layout_margin="4dp"
-                        app:cardCornerRadius="6dp"
+                        app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="#CBD5E1"
+                        app:strokeColor="@color/outline_variant"
                         app:strokeWidth="1dp"
-                        app:cardBackgroundColor="#FFFFFF">
+                        app:cardBackgroundColor="@color/surface_container_lowest">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -303,10 +303,10 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="PEST ENTRIES"
+                                android:text="@string/admin_pest_entries"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
-                                android:textColor="#64748B" />
+                                android:textColor="@color/on_surface_variant" />
 
                             <TextView
                                 android:id="@+id/tvAdminTotalPests"
@@ -316,7 +316,7 @@
                                 android:text="--"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="#D97706" />
+                                android:textColor="@color/amber_accent" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -325,11 +325,11 @@
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"
                         android:layout_margin="4dp"
-                        app:cardCornerRadius="6dp"
+                        app:cardCornerRadius="8dp"
                         app:cardElevation="0dp"
-                        app:strokeColor="#CBD5E1"
+                        app:strokeColor="@color/outline_variant"
                         app:strokeWidth="1dp"
-                        app:cardBackgroundColor="#FFFFFF">
+                        app:cardBackgroundColor="@color/surface_container_lowest">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -340,10 +340,10 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TOTAL DIAGNOSES"
+                                android:text="@string/admin_total_diagnoses"
                                 android:textSize="10sp"
                                 android:textStyle="bold"
-                                android:textColor="#64748B" />
+                                android:textColor="@color/on_surface_variant" />
 
                             <TextView
                                 android:id="@+id/tvAdminTotalDetections"
@@ -353,7 +353,7 @@
                                 android:text="--"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
-                                android:textColor="#2563EB" />
+                                android:textColor="@color/blue_accent" />
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
@@ -364,10 +364,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:text="ADMINISTRATIVE CONSOLE ACTIONS"
+                    android:text="@string/admin_console_actions"
                     android:textSize="11sp"
                     android:textStyle="bold"
-                    android:textColor="#334155"
+                    android:textColor="@color/on_surface"
                     android:letterSpacing="0.05" />
 
                 <com.google.android.material.button.MaterialButton
@@ -375,25 +375,26 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:layout_marginTop="10dp"
-                    android:text="Manage User Directory"
+                    android:text="@string/admin_manage_users_btn"
                     android:textAllCaps="false"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     app:cornerRadius="6dp"
-                    app:backgroundTint="#0F172A" />
+                    app:backgroundTint="@color/primary"
+                    android:textColor="@color/on_primary" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnManageCrops"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:layout_marginTop="8dp"
-                    android:text="Manage Host Crop Catalog"
+                    android:text="@string/admin_manage_crops_btn"
                     android:textAllCaps="false"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="#0F172A"
-                    app:strokeColor="#CBD5E1"
+                    android:textColor="@color/on_surface"
+                    app:strokeColor="@color/outline_variant"
                     app:cornerRadius="6dp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -401,13 +402,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:layout_marginTop="8dp"
-                    android:text="Manage Pest Registry &amp; Rules"
+                    android:text="@string/admin_manage_pests_btn"
                     android:textAllCaps="false"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="#0F172A"
-                    app:strokeColor="#CBD5E1"
+                    android:textColor="@color/on_surface"
+                    app:strokeColor="@color/outline_variant"
                     app:cornerRadius="6dp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -415,13 +416,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:layout_marginTop="8dp"
-                    android:text="View System Audit Trail"
+                    android:text="@string/admin_view_audit_btn"
                     android:textAllCaps="false"
                     android:textSize="12sp"
                     android:textStyle="bold"
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:textColor="#0F172A"
-                    app:strokeColor="#CBD5E1"
+                    android:textColor="@color/on_surface"
+                    app:strokeColor="@color/outline_variant"
                     app:cornerRadius="6dp" />
 
             </LinearLayout>

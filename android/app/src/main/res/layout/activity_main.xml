@@ -30,7 +30,43 @@
                 android:layout_gravity="end"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingEnd="16dp">
+                android:paddingEnd="12dp">
+
+                <!-- Language Toggle Button -->
+                <FrameLayout
+                    android:id="@+id/btnHeaderLanguage"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="@string/toggle_language">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_translate"
+                        app:tint="@color/on_surface_variant" />
+                </FrameLayout>
+
+                <!-- Theme Toggle Button -->
+                <FrameLayout
+                    android:id="@+id/btnHeaderTheme"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:contentDescription="@string/toggle_theme">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_theme_mode"
+                        app:tint="@color/on_surface_variant" />
+                </FrameLayout>
 
                 <!-- Notifications Icon with Alert Red Badge -->
                 <FrameLayout
@@ -39,7 +75,8 @@
                     android:layout_height="36dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:clickable="true"
-                    android:focusable="true">
+                    android:focusable="true"
+                    android:contentDescription="@string/title_notifications">
 
                     <ImageView
                         android:layout_width="22dp"
@@ -62,7 +99,7 @@
                     android:id="@+id/tvHeaderAvatar"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="6dp"
                     android:background="@drawable/bg_avatar_circle"
                     android:gravity="center"
                     android:text="A"
@@ -155,7 +192,7 @@
                                         android:layout_width="0dp"
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
-                                        android:text="TOTAL CROPS"
+                                        android:text="@string/total_crops"
                                         android:textSize="10sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/outline" />
@@ -206,7 +243,7 @@
                                         android:layout_width="0dp"
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
-                                        android:text="ACTIVE AREAS"
+                                        android:text="@string/active_areas"
                                         android:textSize="10sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/outline" />
@@ -257,7 +294,7 @@
                                         android:layout_width="0dp"
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
-                                        android:text="PEST SCANS"
+                                        android:text="@string/pest_detections"
                                         android:textSize="10sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/outline" />
@@ -288,7 +325,7 @@
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
                                         android:layout_marginStart="6dp"
-                                        android:text="High Risk"
+                                        android:text="@string/risk_high"
                                         android:textSize="9sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/error"
@@ -326,7 +363,7 @@
                                         android:layout_width="0dp"
                                         android:layout_height="wrap_content"
                                         android:layout_weight="1"
-                                        android:text="ALERTS"
+                                        android:text="@string/alerts"
                                         android:textSize="10sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/outline" />
@@ -363,7 +400,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Recent Pest Detections"
+                            android:text="@string/recent_pest_detections"
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="@color/on_surface" />
@@ -372,7 +409,7 @@
                             android:id="@+id/btnViewAllDetections"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="View All"
+                            android:text="@string/view_all_records"
                             android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="@color/primary"
@@ -402,7 +439,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:padding="20dp"
-                            android:text="No recent detections recorded. Tap 'New Diagnostic Scan' to capture a specimen."
+                            android:text="@string/no_recent_detections"
                             android:textColor="@color/on_surface_variant"
                             android:textSize="12sp"
                             android:gravity="center" />
@@ -412,7 +449,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Crop Health Overview"
+                        android:text="@string/crop_health_overview"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
@@ -631,7 +668,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Recent Activity"
+                        android:text="@string/recent_activity"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@color/on_surface"
@@ -663,7 +700,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="New high-risk detection in North Sector"
+                                    android:text="@string/activity_act_1"
                                     android:textSize="12sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -693,7 +730,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="Irrigation cycle completed (East Sector)"
+                                    android:text="@string/activity_act_2"
                                     android:textSize="12sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -722,7 +759,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="System AI inference models active &amp; ready"
+                                    android:text="@string/activity_act_3"
                                     android:textSize="12sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -744,7 +781,7 @@
                         android:id="@+id/btnNewDiagnosticScanDashboard"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
-                        android:text="New Diagnostic Scan"
+                        android:text="@string/btn_new_scan"
                         android:textAllCaps="false"
                         android:textSize="14sp"
                         android:textStyle="bold"

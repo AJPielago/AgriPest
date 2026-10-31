@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManagePestsActivity extends AppCompatActivity {
+public class ManagePestsActivity extends BaseActivity {
 
     private RecyclerView rvManagePests;
     private ProgressBar managePestsProgressBar;
@@ -40,7 +40,7 @@ public class ManagePestsActivity extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.managePestsToolbar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
-        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_pests);
+        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_dashboard);
 
         rvManagePests = findViewById(R.id.rvManagePests);
         managePestsProgressBar = findViewById(R.id.managePestsProgressBar);
@@ -62,14 +62,14 @@ public class ManagePestsActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     adapter.setPests(response.body());
                 } else {
-                    Toast.makeText(ManagePestsActivity.this, "Failed to load pest entries (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManagePestsActivity.this, getString(R.string.load_failed_code, response.code()), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<PestDto>> call, Throwable t) {
                 managePestsProgressBar.setVisibility(View.GONE);
-                Toast.makeText(ManagePestsActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManagePestsActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }

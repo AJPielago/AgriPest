@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="User Directory"
+            app:title="@string/title_admin_users"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="User Directory"
+                android:text="@string/title_admin_users"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary" />
@@ -56,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Manage operator accounts and role-based permissions."
+                android:text="@string/manage_users_subtitle"
                 android:textSize="13sp"
                 android:textColor="@color/on_surface_variant" />
 

@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class DetectionResultActivity extends AppCompatActivity {
+public class DetectionResultActivity extends BaseActivity {
 
     private ImageView ivResultImage;
     private BoundingBoxOverlayView overlayBoundingBox;
@@ -69,7 +69,7 @@ public class DetectionResultActivity extends AppCompatActivity {
         if (detectionResult != null) {
             displayResults();
         } else {
-            Toast.makeText(this, "Diagnostic data unavailable", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.diagnostic_data_unavailable), Toast.LENGTH_SHORT).show();
             finish();
         }
 
@@ -90,7 +90,18 @@ public class DetectionResultActivity extends AppCompatActivity {
         tvScientificName.setText(sciName != null ? sciName : "Identified Host Pathogen");
 
         String severity = detectionResult.getSeverity() != null ? detectionResult.getSeverity() : "Low";
-        tvSeverityBadge.setText(severity.toUpperCase());
+        String severityKey = severity.toLowerCase();
+        String localizedSeverity;
+        if (severityKey.contains("crit")) {
+            localizedSeverity = getString(R.string.risk_critical);
+        } else if (severityKey.contains("high")) {
+            localizedSeverity = getString(R.string.risk_high);
+        } else if (severityKey.contains("mod")) {
+            localizedSeverity = getString(R.string.risk_moderate);
+        } else {
+            localizedSeverity = getString(R.string.risk_low);
+        }
+        tvSeverityBadge.setText(localizedSeverity.toUpperCase());
 
         boolean isCritical = "Critical".equalsIgnoreCase(severity) || "High".equalsIgnoreCase(severity);
         if (isCritical) {
@@ -166,17 +177,17 @@ public class DetectionResultActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<DetectionResponse> call, Response<DetectionResponse> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(DetectionResultActivity.this, "Feedback recorded successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetectionResultActivity.this, getString(R.string.feedback_recorded_success), Toast.LENGTH_SHORT).show();
                     btnFeedbackAccurate.setEnabled(false);
                     btnFeedbackInaccurate.setEnabled(false);
                 } else {
-                    Toast.makeText(DetectionResultActivity.this, "Feedback submission failed", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DetectionResultActivity.this, getString(R.string.feedback_submission_failed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<DetectionResponse> call, Throwable t) {
-                Toast.makeText(DetectionResultActivity.this, "Network error submitting feedback", Toast.LENGTH_SHORT).show();
+                Toast.makeText(DetectionResultActivity.this, getString(R.string.feedback_network_error), Toast.LENGTH_SHORT).show();
             }
         });
     }

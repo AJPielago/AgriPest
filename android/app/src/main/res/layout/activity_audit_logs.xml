@@ -17,7 +17,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/surface"
-            app:title="System Audit Logs"
+            app:title="@string/title_admin_audit"
             app:titleTextColor="@color/primary"
             app:navigationIcon="@drawable/ic_menu"
             app:navigationIconTint="@color/primary"
@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="System Audit Trail"
+                android:text="@string/audit_trail_title"
                 android:textSize="22sp"
                 android:textStyle="bold"
                 android:textColor="@color/primary" />
@@ -56,7 +56,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Immutable security, telemetry, and administrative event logs."
+                android:text="@string/audit_trail_subtitle"
                 android:textSize="13sp"
                 android:textColor="@color/on_surface_variant" />
 

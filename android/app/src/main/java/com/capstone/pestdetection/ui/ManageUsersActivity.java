@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManageUsersActivity extends AppCompatActivity {
+public class ManageUsersActivity extends BaseActivity {
 
     private RecyclerView rvManageUsers;
     private ProgressBar usersProgressBar;
@@ -40,7 +40,7 @@ public class ManageUsersActivity extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.usersToolbar);
         DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
-        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_users);
+        NavigationDrawerHelper.setupDrawer(this, drawerLayout, toolbar, R.id.nav_admin_dashboard);
 
         rvManageUsers = findViewById(R.id.rvManageUsers);
         usersProgressBar = findViewById(R.id.usersProgressBar);
@@ -62,14 +62,14 @@ public class ManageUsersActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     adapter.setUsers(response.body());
                 } else {
-                    Toast.makeText(ManageUsersActivity.this, "Failed to load users (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManageUsersActivity.this, getString(R.string.load_failed_code, response.code()), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<UserDto>> call, Throwable t) {
                 usersProgressBar.setVisibility(View.GONE);
-                Toast.makeText(ManageUsersActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManageUsersActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -27,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PestLibraryActivity extends AppCompatActivity {
+public class PestLibraryActivity extends BaseActivity {
 
     private RecyclerView rvPestLibrary;
     private ProgressBar pestProgressBar;
@@ -62,14 +62,14 @@ public class PestLibraryActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     adapter.setPests(response.body());
                 } else {
-                    Toast.makeText(PestLibraryActivity.this, "Failed to load pest catalog", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(PestLibraryActivity.this, getString(R.string.load_pest_catalog_failed), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<PestDto>> call, Throwable t) {
                 pestProgressBar.setVisibility(View.GONE);
-                Toast.makeText(PestLibraryActivity.this, "Network error: " + t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PestLibraryActivity.this, getString(R.string.network_error_generic, t.getLocalizedMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }
