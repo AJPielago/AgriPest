@@ -1,7 +1,18 @@
 import axios from 'axios';
 
+// Automatically detect remote backend URL in production, or fallback to relative proxy for local dev
+const backendBase = import.meta.env.VITE_API_BASE_URL
+  ? import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '')
+  : '';
+
+export const resolveImageUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  return `${backendBase}${path.startsWith('/') ? path : '/' + path}`;
+};
+
 const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: backendBase ? `${backendBase}/api/v1` : '/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },

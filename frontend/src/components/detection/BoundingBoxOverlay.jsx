@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveImageUrl } from '../../services/api';
 
 export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
   if (!imagePath) return null;
@@ -6,7 +7,7 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
   return (
     <div className="relative rounded overflow-hidden bg-slate-900 border border-slate-300 flex items-center justify-center">
       <img
-        src={imagePath}
+        src={resolveImageUrl(imagePath)}
         alt="Specimen output"
         className="w-full h-auto max-h-[400px] object-contain block"
       />
