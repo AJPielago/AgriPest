@@ -6,7 +6,7 @@
     <string name="navigation_drawer_open">Open Navigation Drawer</string>
     <string name="navigation_drawer_close">Close Navigation Drawer</string>
     <string name="nav_workstation">Agricultural Workstation</string>
-    <string name="nav_user_north_sector">North Sector</string>
+    <string name="nav_user_north_sector">Costales Nature Farms (Majayjay, Laguna)</string>
     <string name="nav_sign_out">Sign Out</string>
 
     <string name="title_dashboard">Dashboard</string>
@@ -27,7 +27,7 @@
 
     <!-- Dashboard -->
     <string name="good_morning_user">Good morning, %1$s</string>
-    <string name="farm_status_optimal">Optimal conditions across North Sector. %1$d action items pending.</string>
+    <string name="farm_status_optimal">Optimal conditions across Costales Nature Farms, Majayjay. %1$d action items pending.</string>
     <string name="total_crops">TOTAL CROPS</string>
     <string name="active_areas">ACTIVE AREAS</string>
     <string name="pest_detections">PEST DETECTIONS</string>
@@ -41,8 +41,8 @@
     <string name="btn_new_scan">New Diagnostic Scan</string>
     <string name="view_details">View Details</string>
     <string name="view_all_records">View All Records</string>
-    <string name="activity_act_1">New high-risk detection in North Sector</string>
-    <string name="activity_act_2">Irrigation cycle completed (East Sector)</string>
+    <string name="activity_act_1">New high-risk detection in Zone 2 (Brassica Plot)</string>
+    <string name="activity_act_2">Springwater irrigation completed (Zone 1 Hydroponics)</string>
     <string name="activity_act_3">System AI inference models active</string>
 
     <!-- Pest Detection -->
@@ -65,7 +65,7 @@
     <string name="weather_rainy">Rainy / Wet</string>
     <string name="weather_humid">Humid / Foggy</string>
     <string name="field_sector_location">Field Sector / Plot Location</string>
-    <string name="field_location_hint">e.g. North Sector, Plot A2</string>
+    <string name="field_location_hint">e.g. Zone 2: Pechay Plot, Brgy. Gagalot</string>
     <string name="analyze_specimen">Analyze Specimen</string>
     <string name="analyzing_image">AI Model Analyzing Specimen...</string>
     <string name="clear_specimen">Clear Specimen</string>
@@ -286,5 +286,5 @@
     <string name="severity_low">Low</string>
     <string name="time_recent">Recent</string>
     <string name="crop_cabbage_default">Cabbage</string>
-    <string name="default_sector_location">North Sector, Plot A2</string>
+    <string name="default_sector_location">Zone 2: Pechay Plot, Brgy. Gagalot</string>
 </resources>

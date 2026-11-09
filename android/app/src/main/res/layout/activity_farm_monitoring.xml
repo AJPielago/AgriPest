@@ -135,7 +135,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="1,250 ha"
+                                android:text="8.0 ha"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />
@@ -185,7 +185,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="6dp"
-                                android:text="3 Monitored"
+                                android:text="4 Zones"
                                 android:textSize="20sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />
@@ -331,7 +331,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Zone A — North Ridge"
+                                android:text="Zone 1 — Greenhouse Hydroponics"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />
@@ -352,7 +352,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Host Crop: Cabbage • 450 ha"
+                            android:text="Host Crop: Lettuce (Romaine &amp; Green Ice) • 1.5 ha"
                             android:textSize="12sp"
                             android:textColor="@color/on_surface_variant" />
 
@@ -385,7 +385,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="92%"
+                                    android:text="96%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/secondary" />
@@ -407,7 +407,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="78%"
+                                    android:text="85%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -429,7 +429,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="26°C"
+                                    android:text="23°C"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -440,7 +440,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:text="Last Inspected: Today, 08:30 AM • Low pest risk"
+                            android:text="Last Inspected: Today, 08:30 AM • Optimal microclimate"
                             android:textSize="11sp"
                             android:textColor="@color/outline" />
                     </LinearLayout>
@@ -472,7 +472,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Zone B — East Valley"
+                                android:text="Zone 2 — Open-Field Brassicas"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />
@@ -493,7 +493,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Host Crop: Corn • 520 ha"
+                            android:text="Host Crops: Bok Choy &amp; Mustard • 2.5 ha"
                             android:textSize="12sp"
                             android:textColor="@color/on_surface_variant" />
 
@@ -526,7 +526,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="68%"
+                                    android:text="64%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/error" />
@@ -548,7 +548,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="64%"
+                                    android:text="76%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -570,7 +570,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="28°C"
+                                    android:text="25°C"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -581,7 +581,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:text="Alert: Elevated pest incident detected • Inspection required"
+                            android:text="Alert: Elevated pest incident detected • Apply organic Bt spray"
                             android:textSize="11sp"
                             android:textColor="@color/error" />
                     </LinearLayout>
@@ -613,7 +613,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Zone C — South Plateau"
+                                android:text="Zone 3 — Culinary &amp; Medicinal Herbs"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />
@@ -634,7 +634,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Host Crops: Corn &amp; Cabbage • 280 ha"
+                            android:text="Host Crops: Sweet Basil &amp; Rosemary • 1.8 ha"
                             android:textSize="12sp"
                             android:textColor="@color/on_surface_variant" />
 
@@ -667,7 +667,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="88%"
+                                    android:text="94%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/secondary" />
@@ -689,7 +689,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="72%"
+                                    android:text="70%"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -711,7 +711,7 @@
                                 <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
-                                    android:text="27°C"
+                                    android:text="24°C"
                                     android:textSize="14sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -722,7 +722,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="10dp"
-                            android:text="Last Inspected: Yesterday • Pest traps active"
+                            android:text="Last Inspected: Yesterday, 02:40 PM • Mt. Banahaw Spring Fed"
                             android:textSize="11sp"
                             android:textColor="@color/outline" />
                     </LinearLayout>

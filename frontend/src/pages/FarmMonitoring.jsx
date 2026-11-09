@@ -102,37 +102,37 @@ export const FarmMonitoring = () => {
 
   const zonesData = [
     {
-      name: lang === 'tl' ? 'Sona A' : 'Zone A',
-      crop: lang === 'tl' ? 'Repolyo' : 'Cabbage',
+      name: lang === 'tl' ? 'Sona 1: Greenhouse Hydroponics' : 'Zone 1: Greenhouse Hydroponics',
+      crop: lang === 'tl' ? 'Litsugas (Romaine at Green Ice)' : 'Lettuce (Romaine & Green Ice)',
       icon: 'eco',
-      health: 95,
+      health: 96,
       isHealthy: true,
       lastMonitored: lang === 'tl' ? 'Ngayong Araw, 08:30 AM' : 'Today, 08:30 AM',
       alerts: 0
     },
     {
-      name: lang === 'tl' ? 'Sona B' : 'Zone B',
-      crop: lang === 'tl' ? 'Mais' : 'Corn',
+      name: lang === 'tl' ? 'Sona 2: Bukid ng mga Brassica' : 'Zone 2: Open-Field Brassicas',
+      crop: lang === 'tl' ? 'Pechay at Mustasa' : 'Bok Choy & Mustard Greens',
       icon: 'grass',
-      health: 60,
+      health: 64,
       isHealthy: false,
       lastMonitored: lang === 'tl' ? 'Ngayong Araw, 11:15 AM' : 'Today, 11:15 AM',
       alerts: criticalRecords.length > 0 ? criticalRecords.length : 2
     },
     {
-      name: lang === 'tl' ? 'Sona C' : 'Zone C',
-      crop: lang === 'tl' ? 'Soybean' : 'Soybean',
+      name: lang === 'tl' ? 'Sona 3: Halamang Gamot at Panimpla' : 'Zone 3: Culinary & Medicinal Herbs',
+      crop: lang === 'tl' ? 'Sweet Basil at Rosemary' : 'Sweet Basil & Rosemary',
       icon: 'psychology',
-      health: 88,
+      health: 94,
       isHealthy: true,
       lastMonitored: lang === 'tl' ? 'Kahapon, 02:40 PM' : 'Yesterday, 02:40 PM',
       alerts: 0
     },
     {
-      name: lang === 'tl' ? 'Sona D' : 'Zone D',
-      crop: lang === 'tl' ? 'Kamatis' : 'Tomato',
+      name: lang === 'tl' ? 'Sona 4: Bio-Dynamic at Vermiculture' : 'Zone 4: Bio-Dynamic & Vermiculture',
+      crop: lang === 'tl' ? 'Organikong Pataba at IMO' : 'Organic Compost & IMO Beds',
       icon: 'local_florist',
-      health: 92,
+      health: 98,
       isHealthy: true,
       lastMonitored: lang === 'tl' ? 'Kahapon, 04:10 PM' : 'Yesterday, 04:10 PM',
       alerts: 0
@@ -167,13 +167,13 @@ export const FarmMonitoring = () => {
       <div className="print-header">
         <div>
           <h1 className="text-2xl font-bold text-primary">{t('farmMonitoringReportTitle')}</h1>
-          <p className="text-xs text-on-surface-variant">AgriMonitor · Precision Agricultural Management</p>
+          <p className="text-xs text-on-surface-variant">Costales Nature Farms · Brgy. Gagalot, Majayjay, Laguna</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-on-surface-variant font-medium">
             {t('printDate')}: {new Date().toLocaleDateString(lang === 'tl' ? 'fil-PH' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
-          <p className="text-xs font-bold text-secondary">4 Monitored Sectors</p>
+          <p className="text-xs font-bold text-secondary">8.0 ha Certified Organic Farm · 4 Zones</p>
         </div>
       </div>
 
@@ -214,7 +214,7 @@ export const FarmMonitoring = () => {
             <span className="material-symbols-outlined text-outline text-[20px]">landscape</span>
           </div>
           <p className="font-headline-md text-2xl sm:text-3xl font-bold text-on-surface dark:text-inverse-on-surface">
-            1,250 <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">ha</span>
+            8.0 <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">ha (Organic)</span>
           </p>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
         </div>
@@ -307,12 +307,12 @@ export const FarmMonitoring = () => {
             {lang === 'tl' ? 'Mga Detalye ng Sona' : 'Zone Details'}
           </h3>
 
-          {/* Card Zone A (Healthy) */}
+          {/* Card Zone 1 (Healthy) */}
           <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm hover:border-primary transition-colors flex flex-col gap-2">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-outline text-[20px]">eco</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{t('zoneA')}</h4>
+                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 1: Greenhouse Hydroponics' : 'Zone 1: Greenhouse Hydroponics'}</h4>
               </div>
               <span className="bg-secondary/10 text-secondary px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-secondary/20 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">check</span> {t('healthy')}
@@ -321,7 +321,7 @@ export const FarmMonitoring = () => {
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">{t('cabbage')}</p>
+                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Lettuce (Romaine)</p>
               </div>
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
@@ -333,13 +333,13 @@ export const FarmMonitoring = () => {
             </Link>
           </div>
 
-          {/* Card Zone B (Needs Attention / Alert State) */}
+          {/* Card Zone 2 (Needs Attention / Alert State) */}
           <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline border-l-4 border-l-error rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-16 h-16 bg-error/5 rounded-bl-full pointer-events-none"></div>
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-outline text-[20px]">grass</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{t('zoneB')}</h4>
+                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 2: Bukid ng mga Brassica' : 'Zone 2: Open-Field Brassicas'}</h4>
               </div>
               <span className="bg-error/10 text-error px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-error/20 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">error</span> {t('needsAttention')}
@@ -348,7 +348,7 @@ export const FarmMonitoring = () => {
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">{t('corn')}</p>
+                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Bok Choy &amp; Pechay</p>
               </div>
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
@@ -370,12 +370,12 @@ export const FarmMonitoring = () => {
             </Link>
           </div>
 
-          {/* Card Zone C */}
+          {/* Card Zone 3 */}
           <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm hover:border-primary transition-colors flex flex-col gap-2">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-outline text-[20px]">psychology</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{t('zoneC')}</h4>
+                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 3: Halamang Gamot at Panimpla' : 'Zone 3: Culinary Herbs'}</h4>
               </div>
               <span className="bg-secondary/10 text-secondary px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-secondary/20 flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">check</span> {t('healthy')}
@@ -384,7 +384,7 @@ export const FarmMonitoring = () => {
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Soybean</p>
+                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Sweet Basil &amp; Rosemary</p>
               </div>
               <div>
                 <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>

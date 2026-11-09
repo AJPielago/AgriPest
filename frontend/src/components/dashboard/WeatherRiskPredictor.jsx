@@ -4,9 +4,10 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Badge } from '../ui/Badge';
 
 const PH_REGIONS = [
-  { id: 'luzon', name: 'Luzon', lat: 15.4827, lon: 120.9699 },
-  { id: 'visayas', name: 'Visayas', lat: 10.7202, lon: 122.5621 },
-  { id: 'mindanao', name: 'Mindanao', lat: 7.1907, lon: 125.4553 }
+  { id: 'costales', name: 'Costales Nature Farms (Majayjay, Laguna)', lat: 14.1436, lon: 121.5137 },
+  { id: 'luzon', name: 'Luzon (Regional)', lat: 15.4827, lon: 120.9699 },
+  { id: 'visayas', name: 'Visayas (Regional)', lat: 10.7202, lon: 122.5621 },
+  { id: 'mindanao', name: 'Mindanao (Regional)', lat: 7.1907, lon: 125.4553 }
 ];
 
 export const WeatherRiskPredictor = () => {
@@ -49,8 +50,8 @@ export const WeatherRiskPredictor = () => {
         riskLevel: Math.min(88, Math.round(temp * 2.8)),
         severity: 'Critical',
         advisory: lang === 'tl'
-          ? 'Umuulan sa rehiyon. Ang basang dahon ay madaling pangitlogan ng uod. Bantayan ang mga usbong ng mais at palay.'
-          : 'Active rainfall detected in the region. Wet foliage promotes larval egg hatch. Inspect young whorls for armyworm activity.'
+          ? 'May pag-ulan sa paanan ng Mt. Banahaw. Ang basang dahon ay madaling pamugaran ng peste. Suriin ang taniman ng litsugas at brassicas. Mag-spray ng FPJ at Bacillus thuringiensis (Bt).'
+          : 'Active rainfall detected in Mt. Banahaw foothills microclimate. Wet foliage promotes larval hatch. Inspect organic lettuce and brassica canopies. Apply biological Bt and FPJ.'
       };
     }
     // Warm / Sunny (codes 0-1 & temp > 30)
@@ -61,20 +62,20 @@ export const WeatherRiskPredictor = () => {
         riskLevel: Math.min(82, Math.round(temp * 2.5)),
         severity: 'High',
         advisory: lang === 'tl'
-          ? `Mataas ang temperatura sa Rehiyon (${temp}°C). Mabilis magparami ang mga peste sa gulayan. Mag-spray ng Neem oil o biological control.`
-          : `High ambient temperature in Region (${temp}°C). Accelerates pest reproduction cycles in vegetable crops. Apply biological neem spray.`
+          ? `Mataas ang temperatura sa Majayjay (${temp}°C). Mabilis magparami ang mga peste sa gulayan. Mag-spray ng neem oil o magpakawala ng parasitoid biological controls.`
+          : `High ambient temperature in Majayjay (${temp}°C). Accelerates pest reproduction in organic brassicas. Apply cold-pressed neem oil or release Trichogramma.`
       };
     }
     // Humid / Overcast / Moderate (codes 2-48)
     else {
       return {
         conditionLabel: lang === 'tl' ? 'Makulimlim / Humid' : 'Humid & Overcast',
-        threat: lang === 'tl' ? 'Mantsa sa Palay (Rice Blast)' : 'Rice Blast (Pyricularia oryzae)',
+        threat: lang === 'tl' ? 'Amag sa Dahon (Downy Mildew & Blast)' : 'Downy Mildew & Foliar Blight',
         riskLevel: 75,
         severity: 'High',
         advisory: lang === 'tl'
-          ? `Makulimlim at katamtamang lamig (${temp}°C). Pumapabor sa fungal spores ng Rice Blast. Panatilihing maayos ang daloy ng tubig.`
-          : `Overcast conditions and moderate temp (${temp}°C). Favorable for fungal blast spore dispersal. Maintain optimal field water management.`
+          ? `Malamig at mahalumigmig sa paanan ng Mt. Banahaw (${temp}°C). Pumapabor sa fungal spores sa hydroponics at gulayan. Panatilihing maayos ang bentilasyon at mag-apply ng Trichoderma.`
+          : `Highland humidity near Mt. Banahaw (${temp}°C). Favorable for foliar fungal spore dispersal in hydroponics. Ensure canopy spacing and apply bio-fungicide (Trichoderma).`
       };
     }
   };

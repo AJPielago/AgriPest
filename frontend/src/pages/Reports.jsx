@@ -188,13 +188,13 @@ export const Reports = () => {
       <div className="print-header">
         <div>
           <h1 className="text-2xl font-bold text-primary">{t('reportsAnalyticsReportTitle')}</h1>
-          <p className="text-xs text-on-surface-variant">AgriMonitor · Precision Agricultural Management</p>
+          <p className="text-xs text-on-surface-variant">Costales Nature Farms · Precision Organic Agriculture</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-on-surface-variant font-medium">
             {t('printDate')}: {new Date().toLocaleDateString(lang === 'tl' ? 'fil-PH' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
-          <p className="text-xs font-bold text-primary">Comprehensive Farm Summary</p>
+          <p className="text-xs font-bold text-primary">Certified Organic Farm Summary · Majayjay, Laguna</p>
         </div>
       </div>
 

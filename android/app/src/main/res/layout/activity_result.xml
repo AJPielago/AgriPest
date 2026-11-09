@@ -448,7 +448,7 @@
                                 android:id="@+id/tvResultLocation"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="North Sector, Plot A2"
+                                android:text="Zone 2: Pechay Plot, Brgy. Gagalot"
                                 android:textSize="12sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />

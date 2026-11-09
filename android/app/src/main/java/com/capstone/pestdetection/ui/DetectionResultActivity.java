@@ -132,7 +132,7 @@ public class DetectionResultActivity extends BaseActivity {
         String action = detectionResult.getRecommendedAction();
         tvRecommendation.setText(action != null ? action : "Apply biological controls. Remove heavily infested outer leaves and consult agricultural extension guidelines.");
 
-        tvResultLocation.setText(detectionResult.getFieldLocation() != null ? detectionResult.getFieldLocation() : "North Sector, Plot A2");
+        tvResultLocation.setText(detectionResult.getFieldLocation() != null ? detectionResult.getFieldLocation() : getString(R.string.default_sector_location));
         tvResultWeather.setText(detectionResult.getWeatherCondition() != null ? detectionResult.getWeatherCondition() : "Sunny / Clear");
 
         String dateStr = detectionResult.getCreatedAt() != null ? detectionResult.getCreatedAt().replace("T", " ").substring(0, Math.min(16, detectionResult.getCreatedAt().length())) : "Recent";

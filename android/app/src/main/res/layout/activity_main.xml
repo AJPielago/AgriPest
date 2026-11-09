@@ -152,7 +152,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Optimal conditions across North Sector. 2 action items pending."
+                            android:text="Optimal conditions across Costales Nature Farms, Majayjay."
                             android:textSize="13sp"
                             android:textColor="@color/on_surface_variant" />
                     </LinearLayout>

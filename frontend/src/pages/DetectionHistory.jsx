@@ -299,7 +299,7 @@ export const DetectionHistory = () => {
       <div className="print-header">
         <div>
           <h1 className="text-2xl font-bold text-primary">{t('pestDetectionReportTitle')}</h1>
-          <p className="text-xs text-on-surface-variant">AgriMonitor · Precision Agricultural Management</p>
+          <p className="text-xs text-on-surface-variant">Costales Nature Farms · Brgy. Gagalot, Majayjay, Laguna</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-on-surface-variant font-medium">
@@ -465,7 +465,7 @@ export const DetectionHistory = () => {
                     </div>
                     <p className="font-body-md text-xs text-on-surface-variant flex items-center gap-1 mb-1">
                       <span className="material-symbols-outlined text-[16px] text-primary">downloading</span>
-                      <span>{rec.crop_name || (lang === 'tl' ? 'Hindi Naitakda' : 'General Crop')} · {rec.field_location || (lang === 'tl' ? 'Hilagang Sona' : 'North Sector')}</span>
+                      <span>{rec.crop_name || (lang === 'tl' ? 'Hindi Naitakda' : 'General Crop')} · {rec.field_location || (lang === 'tl' ? 'Zone 2: Taniman ng Pechay' : 'Zone 2: Pechay Plot')}</span>
                     </p>
                     <p className="font-label-sm text-[11px] text-outline flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">schedule</span>

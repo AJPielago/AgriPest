@@ -331,7 +331,7 @@ export const Dashboard = () => {
                       </span>
                     </div>
                     <span className="font-body-md text-xs text-on-surface-variant">
-                      {rec.field_location || (lang === 'tl' ? 'Hilagang Sona, Plot A2' : 'North Sector, Plot A2')}
+                      {rec.field_location || (lang === 'tl' ? 'Zone 2: Taniman ng Pechay, Brgy. Gagalot' : 'Zone 2: Pechay Plot, Brgy. Gagalot')}
                     </span>
                     <span className="font-label-md text-[11px] text-outline mt-0.5">
                       {t('detected')}: {new Date(rec.created_at || Date.now()).toLocaleDateString(lang === 'tl' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric' })}, {new Date(rec.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

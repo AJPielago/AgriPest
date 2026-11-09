@@ -82,7 +82,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:text="North Sector, Plot A2"
+                    android:text="Zone 2: Pechay Plot, Brgy. Gagalot"
                     android:textSize="12sp"
                     android:textColor="@color/on_surface_variant" />
 

@@ -6,7 +6,7 @@
     <string name="navigation_drawer_open">Buksan ang Navigation Drawer</string>
     <string name="navigation_drawer_close">Isara ang Navigation Drawer</string>
     <string name="nav_workstation">Workstation sa Pagsasaka</string>
-    <string name="nav_user_north_sector">Hilagang Sona</string>
+    <string name="nav_user_north_sector">Costales Nature Farms (Majayjay, Laguna)</string>
     <string name="nav_sign_out">Lumabas</string>
 
     <string name="title_dashboard">Dashboard</string>
@@ -27,7 +27,7 @@
 
     <!-- Dashboard -->
     <string name="good_morning_user">Magandang umaga, %1$s</string>
-    <string name="farm_status_optimal">Maayos ang kondisyon sa buong Hilagang Sona. %1$d aksyon ang kailangan asikasuhin.</string>
+    <string name="farm_status_optimal">Maayos ang kondisyon sa Costales Nature Farms, Majayjay. %1$d aksyon ang kailangan asikasuhin.</string>
     <string name="total_crops">KABUUANG PANANIM</string>
     <string name="active_areas">AKTIBONG SONA</string>
     <string name="pest_detections">NATUKOY NA PESTE</string>
@@ -41,8 +41,8 @@
     <string name="btn_new_scan">Bagong Pagsusuri ng Peste</string>
     <string name="view_details">Tingnan ang Detalye</string>
     <string name="view_all_records">Tingnan Lahat ng Tala</string>
-    <string name="activity_act_1">Bagong mataas na banta ng peste sa Hilagang Sona</string>
-    <string name="activity_act_2">Natapos ang pagpapatubig (Silangang Sona)</string>
+    <string name="activity_act_1">Bagong banta na natukoy sa Zone 2 (Taniman ng Pechay)</string>
+    <string name="activity_act_2">Natapos ang patubig buhat sa Mt. Banahaw spring (Zone 1)</string>
     <string name="activity_act_3">Aktibo ang mga AI model ng sistema</string>
 
     <!-- Pest Detection -->
@@ -65,7 +65,7 @@
     <string name="weather_rainy">Maulan / Basa</string>
     <string name="weather_humid">Mahalumigmig / Maalinsangan</string>
     <string name="field_sector_location">Lokasyon ng Sona / Plot sa Bukid</string>
-    <string name="field_location_hint">hal. Hilagang Sona, Plot A2</string>
+    <string name="field_location_hint">hal. Zone 2: Taniman ng Pechay, Brgy. Gagalot</string>
     <string name="analyze_specimen">Suriin ang Halaman</string>
     <string name="analyzing_image">Sinusuri ng AI Model ang Larawan...</string>
     <string name="clear_specimen">Alisin ang Larawan</string>
@@ -286,5 +286,5 @@
     <string name="severity_low">Mababa</string>
     <string name="time_recent">Kamakailan</string>
     <string name="crop_cabbage_default">Repolyo</string>
-    <string name="default_sector_location">Hilagang Sona, Plot A2</string>
+    <string name="default_sector_location">Zone 2: Taniman ng Pechay, Brgy. Gagalot</string>
 </resources>

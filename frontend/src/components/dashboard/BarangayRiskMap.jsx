@@ -8,10 +8,11 @@ export const BarangayRiskMap = ({ locationData = [] }) => {
   const { lang } = useLanguage();
 
   const sampleData = locationData.length > 0 ? locationData : [
-    { location: 'Brgy. San Jose', count: 5 },
-    { location: 'Brgy. Poblacion', count: 3 },
-    { location: 'Brgy. Sta. Maria', count: 2 },
-    { location: 'Brgy. Maligaya', count: 1 }
+    { location: 'Brgy. Gagalot (Costales Main Farm)', count: 6 },
+    { location: 'Brgy. Bukal (Agro-Tourism Corridor)', count: 4 },
+    { location: 'Brgy. Suba (Lower Horticultural Sector)', count: 2 },
+    { location: 'Brgy. Malinao (Highland Sector)', count: 1 },
+    { location: 'Brgy. Botocan (River & Foothill Zone)', count: 1 }
   ];
 
   const maxCount = Math.max(...sampleData.map(d => d.count || 1), 1);

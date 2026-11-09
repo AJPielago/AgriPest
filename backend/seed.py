@@ -676,7 +676,7 @@ def seed_db():
                     disease_severity="High",
                     disease_recommended_action="Ensure 30cm spacing for canopy aeration and apply protectant potassium phosphite fungicide.",
                     weather_condition="High Humidity / 26°C",
-                    field_location="Lettuce Hydroponics Unit 2",
+                    field_location="Zone 1: Greenhouse Hydroponics #2, Brgy. Gagalot",
                     disease_details={
                         "name": "Downy Mildew of Lettuce",
                         "scientific_name": "Bremia lactucae",
@@ -707,7 +707,7 @@ def seed_db():
                     disease_severity="Critical",
                     disease_recommended_action="Remove and incinerate rotten heads. Disinfect harvesting knives in bleach.",
                     weather_condition="Rainy Spell / 24°C",
-                    field_location="Salad Greens Raised Bed #4",
+                    field_location="Zone 1: Salad Greens Raised Bed #4, Brgy. Gagalot",
                     disease_details={
                         "name": "Bacterial Soft Rot",
                         "scientific_name": "Pectobacterium carotovorum",
@@ -746,7 +746,7 @@ def seed_db():
                     disease_severity="Moderate",
                     disease_recommended_action="Practice 3-year rotation with non-brassicas. Spray preventative copper hydroxide during rain.",
                     weather_condition="Warm / Overcast / 28°C",
-                    field_location="Pechay Lowland Plot C",
+                    field_location="Zone 2: Pechay Bio-Dynamic Plot, Mt. Banahaw Slope",
                     disease_details={
                         "name": "Black Rot of Cabbage & Brassicas",
                         "scientific_name": "Xanthomonas campestris pv. campestris",
@@ -777,7 +777,7 @@ def seed_db():
                     disease_severity="Moderate",
                     disease_recommended_action="Remove infected outer leaves. Spray contact protectant Mancozeb 80% WP.",
                     weather_condition="Sunny / Humid / 29°C",
-                    field_location="Pechay Sector 1",
+                    field_location="Zone 2: Pechay Sector 1, Brgy. Gagalot",
                     disease_details={
                         "name": "Alternaria Leaf Spot of Brassicas",
                         "scientific_name": "Alternaria brassicae",
@@ -814,7 +814,7 @@ def seed_db():
                     disease_severity="Moderate",
                     disease_recommended_action="Eradicate wild crucifer weed hosts nearby and apply systemic Metalaxyl-M + Mancozeb.",
                     weather_condition="Morning Dew / 25°C",
-                    field_location="Mustasa Bed #3",
+                    field_location="Zone 2: Mustasa Bed #3, Brgy. Gagalot",
                     disease_details={
                         "name": "White Rust of Crucifers",
                         "scientific_name": "Albugo candida",

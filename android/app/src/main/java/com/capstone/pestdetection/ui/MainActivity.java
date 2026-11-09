@@ -190,7 +190,7 @@ public class MainActivity extends BaseActivity {
                             }
                         }
                         tvStatAlerts.setText(String.valueOf(alertsCount > 0 ? alertsCount : 2));
-                        tvFarmStatusMessage.setText("Optimal conditions across North Sector. " + alertsCount + " action items pending.");
+                        tvFarmStatusMessage.setText(getString(R.string.farm_status_optimal, alertsCount));
                     } else {
                         rvRecentDetections.setVisibility(View.GONE);
                         layoutEmptyDetections.setVisibility(View.VISIBLE);
