@@ -17,27 +17,34 @@ def get_dashboard_stats(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    user_detections = db.query(Detection).filter(Detection.user_id == current_user.id)
+    is_admin = getattr(current_user, "role", None) and getattr(current_user.role, "name", "") == "admin"
+    
+    user_detections = db.query(Detection)
+    if not is_admin:
+        user_detections = user_detections.filter(Detection.user_id == current_user.id)
+        
     total_count = user_detections.count()
 
     # Average confidence
-    avg_conf_res = db.query(func.avg(Detection.confidence_score)).filter(Detection.user_id == current_user.id).scalar()
+    avg_conf_query = db.query(func.avg(Detection.confidence_score))
+    if not is_admin:
+        avg_conf_query = avg_conf_query.filter(Detection.user_id == current_user.id)
+    avg_conf_res = avg_conf_query.scalar()
     avg_confidence = round(float(avg_conf_res), 2) if avg_conf_res is not None else 0.0
 
     # Severity distribution counts
-    severity_query = (
-        db.query(Detection.severity, func.count(Detection.id))
-        .filter(Detection.user_id == current_user.id)
-        .group_by(Detection.severity)
-        .all()
-    )
+    sev_q = db.query(Detection.severity, func.count(Detection.id))
+    if not is_admin:
+        sev_q = sev_q.filter(Detection.user_id == current_user.id)
+    severity_query = sev_q.group_by(Detection.severity).all()
     severity_dist = {sev: count for sev, count in severity_query}
 
     # Top detected pests
+    top_pests_q = db.query(Detection.detected_pest_name, func.count(Detection.id).label("count"))
+    if not is_admin:
+        top_pests_q = top_pests_q.filter(Detection.user_id == current_user.id)
     top_pests_query = (
-        db.query(Detection.detected_pest_name, func.count(Detection.id).label("count"))
-        .filter(Detection.user_id == current_user.id)
-        .group_by(Detection.detected_pest_name)
+        top_pests_q.group_by(Detection.detected_pest_name)
         .order_by(desc("count"))
         .limit(5)
         .all()
@@ -45,10 +52,11 @@ def get_dashboard_stats(
     top_pests = [{"pest_name": name, "count": count} for name, count in top_pests_query]
 
     # Top detected plant diseases
+    top_dis_q = db.query(Detection.detected_disease_name, func.count(Detection.id).label("count")).filter(Detection.detected_disease_name.isnot(None))
+    if not is_admin:
+        top_dis_q = top_dis_q.filter(Detection.user_id == current_user.id)
     top_diseases_query = (
-        db.query(Detection.detected_disease_name, func.count(Detection.id).label("count"))
-        .filter(Detection.user_id == current_user.id, Detection.detected_disease_name.isnot(None))
-        .group_by(Detection.detected_disease_name)
+        top_dis_q.group_by(Detection.detected_disease_name)
         .order_by(desc("count"))
         .limit(5)
         .all()
@@ -56,13 +64,14 @@ def get_dashboard_stats(
     top_diseases = [{"disease_name": name, "count": count} for name, count in top_diseases_query if name]
 
     # Time series breakdown (Monthly detections)
+    monthly_q = db.query(
+        func.strftime("%Y-%m", Detection.created_at).label("month"),
+        func.count(Detection.id).label("count")
+    )
+    if not is_admin:
+        monthly_q = monthly_q.filter(Detection.user_id == current_user.id)
     monthly_query = (
-        db.query(
-            func.strftime("%Y-%m", Detection.created_at).label("month"),
-            func.count(Detection.id).label("count")
-        )
-        .filter(Detection.user_id == current_user.id)
-        .group_by("month")
+        monthly_q.group_by("month")
         .order_by("month")
         .limit(6)
         .all()
@@ -70,10 +79,11 @@ def get_dashboard_stats(
     monthly_trends = [{"month": m or "2026-08", "count": c} for m, c in monthly_query]
 
     # Location / Barangay breakdown for Outbreak Heatmap
+    loc_q = db.query(Detection.field_location, func.count(Detection.id).label("count"))
+    if not is_admin:
+        loc_q = loc_q.filter(Detection.user_id == current_user.id)
     location_query = (
-        db.query(Detection.field_location, func.count(Detection.id).label("count"))
-        .filter(Detection.user_id == current_user.id)
-        .group_by(Detection.field_location)
+        loc_q.group_by(Detection.field_location)
         .order_by(desc("count"))
         .limit(6)
         .all()

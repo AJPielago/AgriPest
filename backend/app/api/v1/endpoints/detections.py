@@ -178,8 +178,14 @@ def list_detection_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Retrieve user's detection records."""
-    query = db.query(Detection).filter(Detection.user_id == current_user.id)
+    """Retrieve detection records (Administrators see all farm detections; farmers see their own)."""
+    query = db.query(Detection)
+    
+    # Non-admin users only see their own detections
+    is_admin = getattr(current_user, "role", None) and getattr(current_user.role, "name", "") == "admin"
+    if not is_admin:
+        query = query.filter(Detection.user_id == current_user.id)
+
     if crop_id:
         query = query.filter(Detection.crop_id == crop_id)
     
