@@ -183,7 +183,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="2dp"
-                                android:text="Cabbage"
+                                android:text="Lettuce"
                                 android:textSize="15sp"
                                 android:textStyle="bold"
                                 android:textColor="@color/on_surface" />

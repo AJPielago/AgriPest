@@ -86,13 +86,13 @@ class AIDetectionService(BaseDetectionService):
         pest_records = db.query(Pest).all() if db else []
         selected_pest = random.choice(pest_records) if pest_records else None
 
-        pest_name = selected_pest.name if selected_pest else "Fall Armyworm"
-        scientific_name = selected_pest.scientific_name if selected_pest else "Spodoptera frugiperda"
-        description = selected_pest.description if selected_pest else "Severe defoliating crop pest."
+        pest_name = selected_pest.name if selected_pest else "Green Peach Aphid"
+        scientific_name = selected_pest.scientific_name if selected_pest else "Myzus persicae"
+        description = selected_pest.description if selected_pest else "Sap-sucking pest attacking leafy salad greens."
         pest_id = selected_pest.id if selected_pest else None
 
         rec = db.query(Recommendation).filter(Recommendation.pest_id == pest_id).first() if (db and pest_id) else None
-        rec_action = rec.action_title + ": " + rec.description if rec else "Apply biological Bacillus thuringiensis spray."
+        rec_action = rec.action_title + ": " + rec.description if rec else "Apply cold-pressed neem oil spray (5ml/L) focusing on leaf undersides."
 
         conf = round(random.uniform(0.82, 0.97), 2)
         severity = "Critical" if conf > 0.92 else "High" if conf > 0.86 else "Moderate"
@@ -101,11 +101,11 @@ class AIDetectionService(BaseDetectionService):
         disease_records = db.query(Disease).all() if db else []
         selected_disease = random.choice(disease_records) if disease_records else None
 
-        dis_name = selected_disease.name if selected_disease else "Northern Corn Leaf Blight"
-        dis_scientific = selected_disease.scientific_name if selected_disease else "Exserohilum turcicum"
+        dis_name = selected_disease.name if selected_disease else "Downy Mildew of Lettuce"
+        dis_scientific = selected_disease.scientific_name if selected_disease else "Bremia lactucae"
         dis_pathogen = selected_disease.pathogen_type if selected_disease else "Fungal"
-        dis_symptoms = selected_disease.symptoms if selected_disease else "Elliptical grayish-green lesions on leaves."
-        dis_desc = selected_disease.description if selected_disease else "Foliar pathogen causing premature leaf death."
+        dis_symptoms = selected_disease.symptoms if selected_disease else "Pale yellow angular chlorotic spots on upper leaf surfaces."
+        dis_desc = selected_disease.description if selected_disease else "Aggressive oomycete foliar pathogen attacking leafy greens."
         dis_id = selected_disease.id if selected_disease else None
 
         dis_rec = db.query(DiseaseRecommendation).filter(DiseaseRecommendation.disease_id == dis_id).first() if (db and dis_id) else None

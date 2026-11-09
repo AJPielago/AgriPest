@@ -60,13 +60,16 @@ export const Crops = () => {
 
   const getCropImage = (cropName) => {
     const name = cropName.toLowerCase();
-    if (name.includes('cabbage')) {
+    if (name.includes('lettuce') || name.includes('litsugas')) {
+      return 'https://images.unsplash.com/photo-1556801712-76c8eb07bbc9?auto=format&fit=crop&w=800&q=80';
+    }
+    if (name.includes('bok') || name.includes('choy') || name.includes('petsay') || name.includes('pechay')) {
       return 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?auto=format&fit=crop&w=800&q=80';
     }
-    if (name.includes('corn')) {
-      return 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80';
+    if (name.includes('mustard') || name.includes('mustasa')) {
+      return 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&w=800&q=80';
     }
-    return 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80';
+    return 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=800&q=80';
   };
 
   return (
@@ -116,13 +119,13 @@ export const Crops = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCrops.map(crop => {
-            const isCorn = crop.name.toLowerCase().includes('corn');
+            const hasAlert = crop.name.toLowerCase().includes('bok') || crop.name.toLowerCase().includes('petsay');
             return (
               <Link
                 key={crop.id}
                 to={`/crops/${crop.id}`}
                 className={`group bg-surface-container-lowest dark:bg-surface-container-low rounded-xl border overflow-hidden hover:border-primary transition-all duration-300 flex flex-col shadow-sm cursor-pointer ${
-                  isCorn ? 'border-l-[4px] border-l-error border-outline-variant' : 'border-outline-variant'
+                  hasAlert ? 'border-l-[4px] border-l-error border-outline-variant' : 'border-outline-variant'
                 }`}
               >
                 {/* Image Cover */}
@@ -133,7 +136,7 @@ export const Crops = () => {
                     alt={crop.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  {isCorn && (
+                  {hasAlert && (
                     <div className="absolute top-3 right-3 z-20">
                       <span className="px-2.5 py-1 bg-error text-white font-label-sm text-[11px] font-bold rounded-full shadow-sm">
                         {lang === 'tl' ? 'Alerto' : 'Alert'}
@@ -167,11 +170,11 @@ export const Crops = () => {
                         {lang === 'tl' ? 'Kalagayan ng Kalusugan' : 'Health Status'}
                       </span>
                       <span className={`px-2.5 py-0.5 rounded-full font-label-sm text-[11px] font-bold inline-flex items-center ${
-                        isCorn
+                        hasAlert
                           ? 'bg-error-container text-on-error-container'
                           : 'bg-secondary-container text-on-secondary-container'
                       }`}>
-                        <span>{isCorn ? t('needsAttention') : t('healthy')}</span>
+                        <span>{hasAlert ? t('needsAttention') : t('healthy')}</span>
                       </span>
                     </div>
 
@@ -226,7 +229,7 @@ export const Crops = () => {
               required
               value={newCropName}
               onChange={(e) => setNewCropName(e.target.value)}
-              placeholder="e.g. Cabbage, Corn, Tomato"
+              placeholder="e.g. Lettuce, Bok Choy, Mustard Greens"
               className="w-full bg-surface dark:bg-surface-container border border-outline-variant rounded-lg px-3.5 py-2 text-xs font-semibold text-on-surface outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>

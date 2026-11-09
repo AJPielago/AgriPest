@@ -285,6 +285,9 @@
     <string name="severity_moderate">Moderate</string>
     <string name="severity_low">Low</string>
     <string name="time_recent">Recent</string>
-    <string name="crop_cabbage_default">Cabbage</string>
+    <string name="crop_cabbage_default">Lettuce</string>
+    <string name="crop_lettuce">Lettuce</string>
+    <string name="crop_bok_choy">Bok Choy</string>
+    <string name="crop_mustard_greens">Mustard Greens</string>
     <string name="default_sector_location">Zone 2: Pechay Plot, Brgy. Gagalot</string>
 </resources>

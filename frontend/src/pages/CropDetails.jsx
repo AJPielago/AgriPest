@@ -63,7 +63,7 @@ export const CropDetails = () => {
     );
   }
 
-  const isCorn = crop.name.toLowerCase().includes('corn');
+  const hasAlert = crop.name.toLowerCase().includes('bok') || crop.name.toLowerCase().includes('petsay');
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -169,24 +169,24 @@ export const CropDetails = () => {
               </p>
             </div>
             <span className={`px-2.5 py-1 rounded-full text-xs font-bold inline-flex items-center ${
-              isCorn ? 'bg-error-container text-on-error-container' : 'bg-secondary-container text-on-secondary-container'
+              hasAlert ? 'bg-error-container text-on-error-container' : 'bg-secondary-container text-on-secondary-container'
             }`}>
-              <span>{isCorn ? t('needsAttention') : t('healthy')}</span>
+              <span>{hasAlert ? t('needsAttention') : t('healthy')}</span>
             </span>
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between text-xs font-bold">
               <span className="text-secondary dark:text-secondary-fixed">
-                {isCorn ? (lang === 'tl' ? '72% Malusog' : '72% Healthy') : (lang === 'tl' ? '88% Malusog' : '88% Healthy')}
+                {hasAlert ? (lang === 'tl' ? '72% Malusog' : '72% Healthy') : (lang === 'tl' ? '88% Malusog' : '88% Healthy')}
               </span>
               <span className="text-error">
-                {isCorn ? (lang === 'tl' ? '28% Apektado / May Banta' : '28% Affected / Vulnerable') : (lang === 'tl' ? '12% Binabantayan' : '12% Monitored')}
+                {hasAlert ? (lang === 'tl' ? '28% Apektado / May Banta' : '28% Affected / Vulnerable') : (lang === 'tl' ? '12% Binabantayan' : '12% Monitored')}
               </span>
             </div>
             <div className="w-full bg-surface-variant dark:bg-surface-container rounded-full h-3 overflow-hidden flex">
-              <div className="bg-secondary h-full" style={{ width: isCorn ? '72%' : '88%' }}></div>
-              <div className="bg-error h-full" style={{ width: isCorn ? '28%' : '12%' }}></div>
+              <div className="bg-secondary h-full" style={{ width: hasAlert ? '72%' : '88%' }}></div>
+              <div className="bg-error h-full" style={{ width: hasAlert ? '28%' : '12%' }}></div>
             </div>
           </div>
 

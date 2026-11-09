@@ -315,7 +315,7 @@ export const ManageDiseases = () => {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Northern Corn Leaf Blight"
+              placeholder="e.g. Downy Mildew of Lettuce"
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-xs outline-none"
             />
           </div>

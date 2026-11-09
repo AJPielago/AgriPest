@@ -14,80 +14,87 @@ class MockDetectionService(BaseDetectionService):
 
     DEFAULT_SAMPLE_PESTS = [
         {
-            "name": "Fall Armyworm",
-            "scientific_name": "Spodoptera frugiperda",
+            "name": "Green Peach Aphid",
+            "scientific_name": "Myzus persicae",
+            "severity": "Moderate",
+            "description": "Small sap-sucking insects colonizing the undersides of lettuce and brassica leaves, causing leaf curling and soot mold.",
+            "recommended_action": "Apply cold-pressed neem oil spray (5ml/L) or potassium salts of fatty acids. Conserve predatory ladybugs."
+        },
+        {
+            "name": "Diamondback Moth",
+            "scientific_name": "Plutella xylostella",
             "severity": "High",
-            "description": "Larvae attack foliage, stems, and reproductive structures of host plants.",
-            "recommended_action": "Inspect plant whorls immediately. Apply biological control (Bacillus thuringiensis) or recommended bio-pesticides early in infestation."
+            "description": "Slender pale green caterpillar larvae chewing windowpane holes in bok choy and mustard greens foliage.",
+            "recommended_action": "Deploy sticky pheromone delta traps and spray selective Bacillus thuringiensis (Bt) kurstaki at dusk."
         },
         {
-            "name": "Corn Earworm / Tomato Fruitworm",
-            "scientific_name": "Helicoverpa zea",
+            "name": "Striped Flea Beetle",
+            "scientific_name": "Phyllotreta striolata",
+            "severity": "High",
+            "description": "Small jumping beetles puncturing young seedlings and foliage of bok choy and mustard greens with sieve-like shot-holes.",
+            "recommended_action": "Install 32-mesh fine insect netting over beds and dust food-grade diatomaceous earth around seedling stems."
+        },
+        {
+            "name": "Cabbage Looper",
+            "scientific_name": "Trichoplusia ni",
             "severity": "Moderate",
-            "description": "Feeds on leaves, buds, and fruits causing severe cosmetic and yield loss.",
-            "recommended_action": "Remove affected fruits/leaves. Utilize pheromone traps and target young larvae before fruit entry."
+            "description": "Smooth green inchworm caterpillar devouring irregular ragged chew holes across salad green foliage.",
+            "recommended_action": "Apply biological Bacillus thuringiensis (Bt) spray thoroughly to both leaf surfaces during evening twilight."
         },
         {
-            "name": "Aphids (Plant Lice)",
-            "scientific_name": "Aphidoidea spp.",
-            "severity": "Moderate",
-            "description": "Small sap-sucking insects that cause leaf curling, stunting, and soot mold growth.",
-            "recommended_action": "Apply insecticidal soap or neem oil spray. Encourage natural predators like ladybugs."
-        },
-        {
-            "name": "Leafminer",
-            "scientific_name": "Liriomyza spp.",
+            "name": "Serpentine Leafminer",
+            "scientific_name": "Liriomyza trifolii",
             "severity": "Low",
-            "description": "Larvae bore winding trails inside leaves, reducing photosynthesis capacity.",
-            "recommended_action": "Pick off affected leaves with visible trails. Use yellow sticky traps to monitor adult flies."
+            "description": "Larvae boring winding silvery-white trails inside lettuce and brassica leaf tissue, reducing photosynthetic capacity.",
+            "recommended_action": "Manually prune early mined leaves and deploy yellow sticky card traps at canopy height."
         }
     ]
 
     DEFAULT_SAMPLE_DISEASES = [
         {
-            "name": "Northern Corn Leaf Blight",
-            "scientific_name": "Exserohilum turcicum",
+            "name": "Downy Mildew of Lettuce",
+            "scientific_name": "Bremia lactucae",
             "pathogen_type": "Fungal",
             "severity": "High",
-            "symptoms": "Long, elliptical grayish-green or tan lesions running parallel to leaf veins.",
-            "description": "Destructive foliar fungal disease causing premature leaf death and yield reduction in humid weather.",
-            "recommended_action": "Apply targeted foliar fungicide (Azoxystrobin + Difenoconazole) at first sign of lower canopy lesions. Ensure adequate row spacing and crop residue management."
+            "symptoms": "Pale yellow angular chlorotic spots bounded sharply by veins with white downy mold underneath.",
+            "description": "Aggressive oomycete foliar disease thriving in humid highland microclimates.",
+            "recommended_action": "Ensure 30cm spacing for canopy airflow; irrigate with drip systems and apply protectant bio-fungicide (Trichoderma)."
         },
         {
-            "name": "Rice Blast",
-            "scientific_name": "Magnaporthe oryzae",
-            "pathogen_type": "Fungal",
-            "severity": "Critical",
-            "symptoms": "Spindle-shaped or diamond leaf spots with grey or white centers and reddish-brown borders.",
-            "description": "Severe fungal pathogen affecting rice foliage, collars, and panicle necks under prolonged leaf wetness.",
-            "recommended_action": "Maintain continuous shallow flooding in paddies. Apply systemic fungicide (Tricyclazole) at tillering and early heading."
-        },
-        {
-            "name": "Bacterial Leaf Blight of Rice",
-            "scientific_name": "Xanthomonas oryzae pv. oryzae",
-            "pathogen_type": "Bacterial",
-            "severity": "High",
-            "symptoms": "Water-soaked lesions on leaf tips merging into wavy, yellow-white necrotic streaks.",
-            "description": "Vascular bacterial infection transmitted through water droplets and wounds during stormy weather.",
-            "recommended_action": "Drain excess standing paddy water. Avoid high nitrogen fertilizer during outbreak. Spray copper hydroxide bactericide."
-        },
-        {
-            "name": "Black Rot of Cabbage",
+            "name": "Black Rot of Brassicas",
             "scientific_name": "Xanthomonas campestris pv. campestris",
             "pathogen_type": "Bacterial",
             "severity": "Moderate",
-            "symptoms": "Distinct V-shaped yellow chlorotic lesions starting at leaf margins with darkened leaf veins.",
-            "description": "Seed-borne bacterial pathogen entering hydathodes along leaf margins, spreading via rain splash.",
-            "recommended_action": "Practice minimum 2-year crop rotation with non-crucifers. Apply copper hydroxide spray and sanitize field tools."
+            "symptoms": "Distinct V-shaped yellow chlorotic lesions starting at leaf margins with blackened veins.",
+            "description": "Destructive seed-borne bacterial pathogen entering hydathodes along leaf margins of bok choy and mustard greens.",
+            "recommended_action": "Practice crop rotation with non-brassicas. Apply preventative copper hydroxide spray and sanitize tools."
         },
         {
-            "name": "Common Rust of Corn",
-            "scientific_name": "Puccinia sorghi",
+            "name": "Bacterial Soft Rot",
+            "scientific_name": "Pectobacterium carotovorum",
+            "pathogen_type": "Bacterial",
+            "severity": "Critical",
+            "symptoms": "Water-soaked translucent lesions on petioles rapidly advancing into slimy liquefied plant tissue.",
+            "description": "Fast-moving bacterial disease causing foul-smelling collapse of succulent leafy green crowns.",
+            "recommended_action": "Improve drainage; harvest only dry heads; disinfect harvest knives in bleach solution."
+        },
+        {
+            "name": "Alternaria Leaf Spot of Brassicas",
+            "scientific_name": "Alternaria brassicae",
             "pathogen_type": "Fungal",
             "severity": "Moderate",
-            "symptoms": "Small cinnamon-brown to golden powdery pustules scattered across both upper and lower leaf surfaces.",
-            "description": "Airborne fungal spore pathogen favored by cool, moist conditions with heavy dew formation.",
-            "recommended_action": "Plant resistant hybrid varieties. Apply foliar triazole fungicide if pustules reach upper leaves before tasseling."
+            "symptoms": "Concentric target-like circular necrotic brown lesions surrounded by yellow halos.",
+            "description": "Airborne fungal pathogen producing expanding spots on bok choy and mustard greens.",
+            "recommended_action": "Remove affected outer foliage. Apply preventative copper or contact protectant sprays."
+        },
+        {
+            "name": "White Rust of Crucifers",
+            "scientific_name": "Albugo candida",
+            "pathogen_type": "Fungal",
+            "severity": "Moderate",
+            "symptoms": "Raised porcelain-white chalky blisters on leaf undersides with corresponding pale yellow patches above.",
+            "description": "Oomycete pathogen affecting mustard greens and Asian crucifers in cool dewy mornings.",
+            "recommended_action": "Eradicate wild weed hosts. Maintain canopy air circulation and spray approved bio-fungicides."
         }
     ]
 

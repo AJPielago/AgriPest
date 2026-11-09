@@ -77,7 +77,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Host Crop: Cabbage • Plot A2"
+                android:text="Host Crop: Lettuce • Zone 1 Hydroponics"
                 android:textSize="12sp"
                 android:textColor="@color/on_surface_variant" />
 

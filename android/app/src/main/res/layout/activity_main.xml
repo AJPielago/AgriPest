@@ -456,9 +456,9 @@
                         android:layout_marginTop="8dp"
                         android:layout_marginBottom="12dp" />
 
-                    <!-- Cabbage Card -->
+                    <!-- Bok Choy Card -->
                     <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/cardCabbageHealth"
+                        android:id="@+id/cardBokChoyHealth"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="10dp"
@@ -483,7 +483,7 @@
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="Cabbage"
+                                    android:text="Bok Choy"
                                     android:textSize="15sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -529,7 +529,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="4 Plots"
+                                        android:text="Zone 2 (2.5 ha)"
                                         android:textSize="13sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/on_surface" />
@@ -560,9 +560,9 @@
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
-                    <!-- Corn Card -->
+                    <!-- Lettuce Card -->
                     <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/cardCornHealth"
+                        android:id="@+id/cardLettuceHealth"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="20dp"
@@ -587,7 +587,7 @@
                                     android:layout_width="0dp"
                                     android:layout_height="wrap_content"
                                     android:layout_weight="1"
-                                    android:text="Corn"
+                                    android:text="Lettuce"
                                     android:textSize="15sp"
                                     android:textStyle="bold"
                                     android:textColor="@color/on_surface" />
@@ -633,7 +633,7 @@
                                     <TextView
                                         android:layout_width="wrap_content"
                                         android:layout_height="wrap_content"
-                                        android:text="6 Plots"
+                                        android:text="Zone 1 (1.5 ha)"
                                         android:textSize="13sp"
                                         android:textStyle="bold"
                                         android:textColor="@color/on_surface" />

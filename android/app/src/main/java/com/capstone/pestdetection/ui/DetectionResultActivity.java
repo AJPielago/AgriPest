@@ -126,7 +126,7 @@ public class DetectionResultActivity extends BaseActivity {
         int confPercent = Math.round(detectionResult.getConfidenceScore() * 100);
         tvConfidenceScore.setText(confPercent + "%");
 
-        String cropName = detectionResult.getCropName() != null ? detectionResult.getCropName() : "Cabbage";
+        String cropName = detectionResult.getCropName() != null ? detectionResult.getCropName() : getString(R.string.crop_cabbage_default);
         tvResultCropName.setText(cropName);
 
         String action = detectionResult.getRecommendedAction();

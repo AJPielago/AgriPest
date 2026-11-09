@@ -63,51 +63,40 @@ def seed_db():
 
         db.commit()
 
-        # 3. Create Target Crops (Including Lettuce, Bok Choy, and Mustard Greens)
+        # 3. Create Target Leafy Green Crops (System strictly revolves around Lettuce, Bok Choy, Mustard Greens)
         crops_data = [
-            {
-                "name": "Corn",
-                "name_tl": "Mais",
-                "scientific_name": "Zea mays",
-                "description": "Cereal grain widely cultivated for grain, silage, and staple carbohydrates.",
-                "description_tl": "Halamang cereal na malawakang itinatanim para sa binhi, silage, at pagkain."
-            },
-            {
-                "name": "Rice",
-                "name_tl": "Palay",
-                "scientific_name": "Oryza sativa",
-                "description": "Staple food grain cultivated across lowland flooded paddies and upland terraced fields.",
-                "description_tl": "Pangunahing pagkain na itinatanim sa tubigan o tuyong lupain sa buong Pilipinas."
-            },
-            {
-                "name": "Cabbage",
-                "name_tl": "Repolyo",
-                "scientific_name": "Brassica oleracea var. capitata",
-                "description": "Highland and lowland cruciferous vegetable forming dense, layered heads.",
-                "description_tl": "Halamang gulay na bumubuo ng masinsing bilog na mga dahon, paborito sa mga lutuin."
-            },
             {
                 "name": "Lettuce",
                 "name_tl": "Litsugas",
                 "scientific_name": "Lactuca sativa",
-                "description": "Crisp annual leafy salad vegetable cultivated in soil beds and hydroponic vertical farm systems.",
-                "description_tl": "Luntiang malulutong na gulay na itinatanim sa lupang kamada o sa hydroponics para sa sariwang ensalada."
+                "description": "Crisp annual leafy salad vegetable cultivated in soil beds and hydroponic vertical farm systems at Costales Nature Farms.",
+                "description_tl": "Luntiang malulutong na gulay na itinatanim sa lupang kamada o sa hydroponics para sa sariwang ensalada sa Costales Nature Farms."
             },
             {
                 "name": "Bok Choy",
                 "name_tl": "Petsay",
                 "scientific_name": "Brassica rapa subsp. chinensis",
-                "description": "Fast-growing Asian cruciferous leafy vegetable featuring tender dark-green leaf blades and succulent white petioles.",
-                "description_tl": "Mabilis tumubong gulay na may mapuputing makatas na tangkay at berdeng dahon, pangunahing gulay sa sabaw at ginisang ulam."
+                "description": "Fast-growing Asian cruciferous leafy green featuring tender dark-green leaf blades and succulent white petioles, widely grown in Costales open-field plots.",
+                "description_tl": "Mabilis tumubong gulay na may mapuputing makatas na tangkay at berdeng dahon, pangunahing gulay sa mga organikong taniman ng Costales."
             },
             {
                 "name": "Mustard Greens",
                 "name_tl": "Mustasa",
                 "scientific_name": "Brassica juncea",
-                "description": "Nutrient-dense cruciferous green with mildly peppery, serrated foliage, favored for pickling (buro) and stir-fries.",
-                "description_tl": "Masustansyang madahong gulay na may bahagyang maanghang na lasa, kilalang-kilala sa pagbuburo at paggisa."
+                "description": "Nutrient-dense cruciferous green with mildly peppery, serrated foliage, grown under strict organic integrated pest management.",
+                "description_tl": "Masustansyang madahong gulay na may bahagyang maanghang na lasa, kilalang-kilala sa pagbuburo at organiko at natural na pagtatanim."
             }
         ]
+
+        # Purge legacy non-leafy crops (Corn, Rice, Cabbage, etc.) to ensure complete system focus on leafy greens
+        allowed_crop_names = [c["name"] for c in crops_data]
+        legacy_crops = db.query(Crop).filter(~Crop.name.in_(allowed_crop_names)).all()
+        for lc in legacy_crops:
+            db.query(CropPest).filter(CropPest.crop_id == lc.id).delete(synchronize_session=False)
+            db.query(CropDisease).filter(CropDisease.crop_id == lc.id).delete(synchronize_session=False)
+            db.query(Detection).filter(Detection.crop_id == lc.id).delete(synchronize_session=False)
+            db.delete(lc)
+        db.commit()
 
         created_crops = {}
         for c in crops_data:
@@ -126,35 +115,15 @@ def seed_db():
                 db.refresh(crop)
             created_crops[c["name"]] = crop
 
-        # 4. Create Pests (Including Leafy Greens Pests)
+        # 4. Create Pests for Leafy Greens
         pests_data = [
             {
-                "name": "Fall Armyworm",
-                "name_tl": "Uod na Harabas",
-                "scientific_name": "Spodoptera frugiperda",
-                "severity_default": "High",
-                "description": "Destructive noctuid pest attacking foliage, whorls, and growing points.",
-                "description_tl": "Mapinsalang peste na umatake sa mga dahon, tangkay, at puso ng halaman.",
-                "symptoms": "Ragged holes on leaves, whorl devastation, sawdust-like frass.",
-                "symptoms_tl": "Mapanirang butas sa dahon, pinsala sa puso ng tanim, at dumi ng uod.",
-                "recommendations": [
-                    {
-                        "action_title": "Biological Control",
-                        "action_title_tl": "Biyolohikal na Pagsugpo",
-                        "description": "Apply Bacillus thuringiensis (Bt) or neem-based biopesticides in early larval instars.",
-                        "description_tl": "Mag-spray ng Bacillus thuringiensis (Bt) o Neem solution sa maagang yugto ng uod.",
-                        "management_type": "Biological"
-                    }
-                ],
-                "crops": ["Corn", "Rice"]
-            },
-            {
                 "name": "Diamondback Moth",
-                "name_tl": "Uod ng Repolyo (Diamondback)",
+                "name_tl": "Uod ng Repolyo at Petsay (Diamondback)",
                 "scientific_name": "Plutella xylostella",
                 "severity_default": "Moderate",
                 "description": "Key lepidopteran pest of crucifers; slender pale green larvae skeletonize brassica foliage.",
-                "description_tl": "Maliit na berdeng uod na kumakain sa ilalim ng dahon ng repolyo, petsay, at mustasa.",
+                "description_tl": "Maliit na berdeng uod na kumakain sa ilalim ng dahon ng petsay at mustasa.",
                 "symptoms": "Window-pane translucent feeding scars on leaf undersides, progressing into shot-holes.",
                 "symptoms_tl": "Nipis na parang salaming bintana sa ilalim ng dahon na nagiging maliliit na butas.",
                 "recommendations": [
@@ -173,7 +142,7 @@ def seed_db():
                         "management_type": "Cultural"
                     }
                 ],
-                "crops": ["Cabbage", "Bok Choy", "Mustard Greens"]
+                "crops": ["Bok Choy", "Mustard Greens"]
             },
             {
                 "name": "Green Peach Aphid",
@@ -227,7 +196,7 @@ def seed_db():
                         "management_type": "Chemical"
                     }
                 ],
-                "crops": ["Bok Choy", "Mustard Greens", "Cabbage"]
+                "crops": ["Bok Choy", "Mustard Greens"]
             },
             {
                 "name": "Cabbage Looper",
@@ -235,7 +204,7 @@ def seed_db():
                 "scientific_name": "Trichoplusia ni",
                 "severity_default": "Moderate",
                 "description": "Smooth green caterpillar that arches its back in a looping inchworm motion while devouring leafy greens.",
-                "description_tl": "Berdeng uod na sumusukat kung gumapang na masibang ngumangatngat ng dahon ng litsugas, repolyo, at petsay.",
+                "description_tl": "Berdeng uod na sumusukat kung gumapang na masibang ngumangatngat ng dahon ng litsugas at petsay.",
                 "symptoms": "Large, ragged irregular chew holes throughout foliage, with coarse greenish-black fecal pellets left in leaf axils.",
                 "symptoms_tl": "Malalaki at hindi pantay na butas sa buong dahon na may kasamang maiitim na dumi ng uod sa singit ng tangkay.",
                 "recommendations": [
@@ -247,7 +216,7 @@ def seed_db():
                         "management_type": "Biological"
                     }
                 ],
-                "crops": ["Lettuce", "Bok Choy", "Mustard Greens", "Cabbage"]
+                "crops": ["Lettuce", "Bok Choy", "Mustard Greens"]
             },
             {
                 "name": "Serpentine Leafminer",
@@ -287,9 +256,19 @@ def seed_db():
                         "management_type": "Cultural"
                     }
                 ],
-                "crops": ["Lettuce", "Bok Choy", "Mustard Greens", "Cabbage"]
+                "crops": ["Lettuce", "Bok Choy", "Mustard Greens"]
             }
         ]
+
+        # Purge legacy pests not attacking target leafy greens
+        allowed_pest_names = [p["name"] for p in pests_data]
+        legacy_pests = db.query(Pest).filter(~Pest.name.in_(allowed_pest_names)).all()
+        for lp in legacy_pests:
+            db.query(Recommendation).filter(Recommendation.pest_id == lp.id).delete(synchronize_session=False)
+            db.query(CropPest).filter(CropPest.pest_id == lp.id).delete(synchronize_session=False)
+            db.query(Detection).filter(Detection.pest_id == lp.id).delete(synchronize_session=False)
+            db.delete(lp)
+        db.commit()
 
         for p in pests_data:
             pest = db.query(Pest).filter(Pest.name == p["name"]).first()
@@ -329,108 +308,24 @@ def seed_db():
                         db.add(CropPest(crop_id=crop_obj.id, pest_id=pest.id, notes="Primary host crop"))
             db.commit()
 
-        # 5. Create Plant Diseases (Including Leafy Greens Diseases)
+        # 5. Create Plant Diseases for Leafy Greens
         diseases_data = [
             {
-                "name": "Northern Corn Leaf Blight",
-                "name_tl": "Blight sa Dahon ng Mais",
-                "scientific_name": "Exserohilum turcicum",
-                "pathogen_type": "Fungal",
-                "severity_default": "High",
-                "description": "Severe foliar fungal disease causing long grayish-green or tan lesions that parallel leaf margins.",
-                "description_tl": "Mapanirang sakit na dulot ng fungus na lumilikha ng pahabang kulay-abong berde o kayumangging sugat sa dahon ng mais.",
-                "symptoms": "Cigar-shaped elliptical lesions (1 to 6 inches long) starting on lower leaves and spreading upward to the canopy.",
-                "symptoms_tl": "Hugis-tabakong elliptical na mantsa sa mga dahon sa ibaba na umaakyat hanggang sa itaas na dahon.",
-                "recommendations": [
-                    {
-                        "action_title": "Foliar Fungicide Application",
-                        "action_title_tl": "Pag-spray ng Fungicide",
-                        "description": "Apply systemic strobilurin or triazole fungicides at VT stage if lesions appear near ear leaves.",
-                        "description_tl": "Mag-spray ng systemic fungicide sa maagang pamumulaklak kapag may sugat na malapit sa puso ng mais.",
-                        "management_type": "Chemical"
-                    }
-                ],
-                "crops": ["Corn"]
-            },
-            {
-                "name": "Common Rust of Corn",
-                "name_tl": "Kalawang sa Mais",
-                "scientific_name": "Puccinia sorghi",
-                "pathogen_type": "Fungal",
-                "severity_default": "Moderate",
-                "description": "Airborne fungal pathogen producing powdery golden-brown pustules on both leaf surfaces.",
-                "description_tl": "Sakit na nagmumula sa hangin na nagdudulot ng pulbos na kulay-kalawang na mga bukol sa mga dahon.",
-                "symptoms": "Small, powdery circular to elongate cinnamon-brown pustules that rupture leaf epidermis.",
-                "symptoms_tl": "Maliliit na butil na parang pulbos na kulay kayumanggi o kalawang sa mga dahon.",
-                "recommendations": [
-                    {
-                        "action_title": "Resistant Hybrid Cultivars",
-                        "action_title_tl": "Paggamit ng Matibay na Binhi",
-                        "description": "Plant certified rust-resistant hybrid varieties suited for highland microclimates.",
-                        "description_tl": "Magtanim ng sertipikadong binhi ng mais na may panlaban sa kalawang.",
-                        "management_type": "Preventative"
-                    }
-                ],
-                "crops": ["Corn"]
-            },
-            {
-                "name": "Rice Blast",
-                "name_tl": "Mantsa sa Palay (Rice Blast)",
-                "scientific_name": "Magnaporthe oryzae",
-                "pathogen_type": "Fungal",
-                "severity_default": "Critical",
-                "description": "Devastating fungal pathogen causing diamond-shaped leaf lesions, collar rot, and panicle neck blast.",
-                "description_tl": "Napakapinsalang sakit na nagiging sanhi ng hugis-brilyanteng sugat sa dahon at pagkasira ng leeg ng uhay.",
-                "symptoms": "Spindle-shaped lesions with grayish-white centers and dark brown margins; black rot on panicle necks causing empty grains.",
-                "symptoms_tl": "Spindle-shaped na sugat na may abuhin o puting gitna at pulang-tsokolateng gilid sa dahon; pangingitim ng leeg ng uhay.",
-                "recommendations": [
-                    {
-                        "action_title": "Systemic Fungicide Spray",
-                        "action_title_tl": "Pag-spray ng Systemic Fungicide",
-                        "description": "Apply Tricyclazole 75% WP or Azoxystrobin during late tillering and repeated before heading.",
-                        "description_tl": "Mag-spray ng Tricyclazole sa huling yugto ng pagsusuwi at bago mag-50% ang paglilihi ng palay.",
-                        "management_type": "Chemical"
-                    }
-                ],
-                "crops": ["Rice"]
-            },
-            {
-                "name": "Bacterial Leaf Blight of Rice",
-                "name_tl": "Bacterial Blight ng Palay",
-                "scientific_name": "Xanthomonas oryzae pv. oryzae",
-                "pathogen_type": "Bacterial",
-                "severity_default": "High",
-                "description": "Vascular bacterial infection producing water-soaked stripes drying into wavy yellow-white paper-like lesions.",
-                "description_tl": "Sakit na dulot ng bacteria na nagsisimula sa basang guhit sa dulo ng dahon at natutuyo na parang papel.",
-                "symptoms": "Lesions begin at leaf tips as water-soaked stripes, enlarging with wavy margins and drying to whitish-gray with amber bacterial ooze.",
-                "symptoms_tl": "Pagsisimula ng basang mantsa sa dulo ng dahon, kumakalat nang pakurba at natutuyo na parang papel.",
-                "recommendations": [
-                    {
-                        "action_title": "Copper Bactericide Application",
-                        "action_title_tl": "Pagsugpo gamit ang Copper Bactericide",
-                        "description": "Spray copper oxychloride or copper hydroxide to halt bacterial multiplication across wounds.",
-                        "description_tl": "Mag-spray ng copper bactericide upang mapigilan ang pagkalat ng bakterya sa mga nasugatang dahon.",
-                        "management_type": "Chemical"
-                    }
-                ],
-                "crops": ["Rice"]
-            },
-            {
-                "name": "Black Rot of Cabbage & Brassicas",
-                "name_tl": "Itim na Bulok sa Repolyo at Petsay",
+                "name": "Black Rot of Brassicas",
+                "name_tl": "Itim na Bulok sa Petsay at Mustasa",
                 "scientific_name": "Xanthomonas campestris pv. campestris",
                 "pathogen_type": "Bacterial",
                 "severity_default": "Moderate",
-                "description": "Most destructive worldwide bacterial disease of crucifers, causing characteristic V-shaped marginal chlorosis and blackened veins.",
-                "description_tl": "Pangunahing sakit sa repolyo, petsay, at mustasa na lumilikha ng hugis-V na paninilaw mula sa gilid ng dahon at itim na ugat.",
+                "description": "Most destructive bacterial disease of crucifers, causing characteristic V-shaped marginal chlorosis and blackened veins.",
+                "description_tl": "Pangunahing sakit sa petsay at mustasa na lumilikha ng hugis-V na paninilaw mula sa gilid ng dahon at itim na ugat.",
                 "symptoms": "Yellow V-shaped lesions on leaf margins pointing toward the leaf midrib; blackened vascular veins visible upon leaf cross-section.",
                 "symptoms_tl": "Hugis-V na dilaw na mantsa sa gilid ng dahon at pangingitim ng mga ugat ng dahon.",
                 "recommendations": [
                     {
                         "action_title": "Multi-Year Crop Rotation",
                         "action_title_tl": "Pagpapalit-Tanim sa Bukid",
-                        "description": "Do not plant crucifers (cabbage, bok choy, mustard) in the same soil for at least 3 years.",
-                        "description_tl": "Huwag magtanim ng repolyo, petsay, o mustasa sa parehong lugar sa loob ng 3 taon.",
+                        "description": "Do not plant crucifers (bok choy, mustard) in the same soil for at least 3 years.",
+                        "description_tl": "Huwag magtanim ng petsay o mustasa sa parehong lugar sa loob ng 3 taon.",
                         "management_type": "Cultural"
                     },
                     {
@@ -441,11 +336,11 @@ def seed_db():
                         "management_type": "Preventative"
                     }
                 ],
-                "crops": ["Cabbage", "Bok Choy", "Mustard Greens"]
+                "crops": ["Bok Choy", "Mustard Greens"]
             },
             {
-                "name": "Downy Mildew of Cabbage & Brassicas",
-                "name_tl": "Downy Mildew sa Repolyo at Petsay",
+                "name": "Downy Mildew of Brassicas",
+                "name_tl": "Downy Mildew sa Petsay at Mustasa",
                 "scientific_name": "Peronospora parasitica",
                 "pathogen_type": "Fungal",
                 "severity_default": "Moderate",
@@ -457,12 +352,12 @@ def seed_db():
                     {
                         "action_title": "Targeted Oomycete Spray",
                         "action_title_tl": "Pag-spray laban sa Mildew",
-                        "description": "Apply protectant or systemic fungicides such as Metalaxyl-M or Mancozeb on seedlings and developing heads.",
+                        "description": "Apply protectant or systemic fungicides such as Metalaxyl-M or Mancozeb on seedlings and developing foliage.",
                         "description_tl": "Mag-spray ng Mancozeb o Metalaxyl sa punla at habang lumalaki ang mga dahon.",
                         "management_type": "Chemical"
                     }
                 ],
-                "crops": ["Cabbage", "Bok Choy", "Mustard Greens"]
+                "crops": ["Bok Choy", "Mustard Greens"]
             },
             {
                 "name": "Downy Mildew of Lettuce",
@@ -574,7 +469,7 @@ def seed_db():
                         "management_type": "Chemical"
                     }
                 ],
-                "crops": ["Bok Choy", "Mustard Greens", "Cabbage"]
+                "crops": ["Bok Choy", "Mustard Greens"]
             },
             {
                 "name": "White Rust of Crucifers",
@@ -605,6 +500,16 @@ def seed_db():
                 "crops": ["Mustard Greens", "Bok Choy"]
             }
         ]
+
+        # Purge legacy non-leafy green diseases from DB
+        allowed_disease_names = [d["name"] for d in diseases_data]
+        legacy_diseases = db.query(Disease).filter(~Disease.name.in_(allowed_disease_names)).all()
+        for ld in legacy_diseases:
+            db.query(DiseaseRecommendation).filter(DiseaseRecommendation.disease_id == ld.id).delete(synchronize_session=False)
+            db.query(CropDisease).filter(CropDisease.disease_id == ld.id).delete(synchronize_session=False)
+            db.query(Detection).filter(Detection.disease_id == ld.id).delete(synchronize_session=False)
+            db.delete(ld)
+        db.commit()
 
         for d in diseases_data:
             disease = db.query(Disease).filter(Disease.name == d["name"]).first()
@@ -741,14 +646,14 @@ def seed_db():
                     severity="High",
                     detected_pest_name="Striped Flea Beetle",
                     recommended_action="Install 32-mesh insect netting over nursery rows and dust food-grade diatomaceous earth around stems.",
-                    detected_disease_name="Black Rot of Cabbage & Brassicas",
+                    detected_disease_name="Black Rot of Brassicas",
                     disease_confidence_score=0.88,
                     disease_severity="Moderate",
                     disease_recommended_action="Practice 3-year rotation with non-brassicas. Spray preventative copper hydroxide during rain.",
                     weather_condition="Warm / Overcast / 28°C",
                     field_location="Zone 2: Pechay Bio-Dynamic Plot, Mt. Banahaw Slope",
                     disease_details={
-                        "name": "Black Rot of Cabbage & Brassicas",
+                        "name": "Black Rot of Brassicas",
                         "scientific_name": "Xanthomonas campestris pv. campestris",
                         "pathogen_type": "Bacterial",
                         "severity": "Moderate",

@@ -125,8 +125,8 @@ export const Reports = () => {
       ],
       datasets: [
         {
-          label: t('cabbage'),
-          data: [90, 85, 88, 92, 86],
+          label: t('lettuce') || 'Lettuce',
+          data: [94, 92, 90, 95, 88],
           backgroundColor: STITCH_COLORS.primary + '40', // 25% opacity
           borderColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
           pointBackgroundColor: isDark ? '#7bd8b1' : STITCH_COLORS.primary,
@@ -135,8 +135,8 @@ export const Reports = () => {
           pointRadius: 3
         },
         {
-          label: t('corn'),
-          data: [82, 95, 75, 88, 90],
+          label: t('bokChoy') || 'Bok Choy',
+          data: [82, 88, 72, 85, 84],
           backgroundColor: STITCH_COLORS.secondary + '40', // 25% opacity
           borderColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
           pointBackgroundColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,

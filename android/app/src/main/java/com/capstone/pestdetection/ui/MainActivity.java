@@ -121,11 +121,11 @@ public class MainActivity extends BaseActivity {
             startActivity(new Intent(MainActivity.this, HistoryActivity.class));
         });
 
-        findViewById(R.id.cardCabbageHealth).setOnClickListener(v -> {
+        findViewById(R.id.cardBokChoyHealth).setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, ManageCropsActivity.class));
         });
 
-        findViewById(R.id.cardCornHealth).setOnClickListener(v -> {
+        findViewById(R.id.cardLettuceHealth).setOnClickListener(v -> {
             startActivity(new Intent(MainActivity.this, ManageCropsActivity.class));
         });
 

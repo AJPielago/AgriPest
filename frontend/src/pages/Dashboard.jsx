@@ -37,8 +37,8 @@ export const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  const totalCropsCount = crops.length > 0 ? crops.length : 12;
-  const activeAreasCount = 8;
+  const totalCropsCount = crops.length > 0 ? crops.length : 3;
+  const activeAreasCount = 4;
   const pestDetectionsCount = stats?.total_detections !== undefined ? stats.total_detections : 3;
   const criticalRecords = (stats?.recent_records || []).filter(
     r => r.severity === 'Critical' || r.severity === 'High'
@@ -318,7 +318,7 @@ export const Dashboard = () => {
                   <div className="flex-1 flex flex-col gap-1 min-w-0">
                     <div className="flex items-center justify-between w-full gap-2">
                       <span className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate">
-                        {rec.pest_name} {t('onCrop')} {rec.crop_name || (lang === 'tl' ? 'Repolyo' : 'Cabbage')}
+                        {rec.pest_name} {t('onCrop')} {rec.crop_name || (lang === 'tl' ? 'Petsay' : 'Bok Choy')}
                       </span>
                       <span
                         className={`font-label-sm text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${
@@ -363,12 +363,12 @@ export const Dashboard = () => {
               {t('cropHealthOverview')}
             </h3>
 
-            {/* Cabbage Card */}
+            {/* Bok Choy Card */}
             <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-2">
               <div className="flex justify-between items-center pb-2 border-b border-surface-variant dark:border-outline-variant/40">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary text-[20px]">local_florist</span>
-                  <span className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface">{t('cabbage')}</span>
+                  <span className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface">{t('bokChoy') || 'Bok Choy'}</span>
                 </div>
                 <span className="font-label-sm text-[10px] font-bold text-error bg-error/10 px-2 py-0.5 rounded-full">
                   {t('needsAttention')}
@@ -377,7 +377,7 @@ export const Dashboard = () => {
               <div className="grid grid-cols-2 gap-2 mt-1">
                 <div className="flex flex-col">
                   <span className="font-label-sm text-[10px] text-outline">{t('areas')}</span>
-                  <span className="font-body-md text-xs text-on-surface dark:text-inverse-on-surface font-semibold">4 {t('plots')}</span>
+                  <span className="font-body-md text-xs text-on-surface dark:text-inverse-on-surface font-semibold">Zone 2 (2.5 ha)</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="font-label-sm text-[10px] text-outline">{t('riskLevel')}</span>
@@ -386,12 +386,12 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Corn Card */}
+            {/* Lettuce Card */}
             <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-[0px_1px_3px_rgba(15,23,42,0.08)] flex flex-col gap-2">
               <div className="flex justify-between items-center pb-2 border-b border-surface-variant dark:border-outline-variant/40">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-secondary text-[20px]">grass</span>
-                  <span className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface">{t('corn')}</span>
+                  <span className="material-symbols-outlined text-secondary text-[20px]">eco</span>
+                  <span className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface">{t('lettuce') || 'Lettuce'}</span>
                 </div>
                 <span className="font-label-sm text-[10px] font-bold text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">
                   {t('healthy')}
@@ -400,7 +400,7 @@ export const Dashboard = () => {
               <div className="grid grid-cols-2 gap-2 mt-1">
                 <div className="flex flex-col">
                   <span className="font-label-sm text-[10px] text-outline">{t('areas')}</span>
-                  <span className="font-body-md text-xs text-on-surface dark:text-inverse-on-surface font-semibold">6 {t('plots')}</span>
+                  <span className="font-body-md text-xs text-on-surface dark:text-inverse-on-surface font-semibold">Zone 1 (1.5 ha)</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="font-label-sm text-[10px] text-outline">{t('riskLevel')}</span>

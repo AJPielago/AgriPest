@@ -196,7 +196,7 @@ export const ManageCrops = () => {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Corn, Rice, Onion, Cabbage"
+              placeholder="e.g. Lettuce, Bok Choy, Mustard Greens"
               className="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 font-bold min-h-[38px]"
             />
           </div>

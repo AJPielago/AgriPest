@@ -285,6 +285,9 @@
     <string name="severity_moderate">Katamtaman</string>
     <string name="severity_low">Mababa</string>
     <string name="time_recent">Kamakailan</string>
-    <string name="crop_cabbage_default">Repolyo</string>
+    <string name="crop_cabbage_default">Litsugas</string>
+    <string name="crop_lettuce">Litsugas</string>
+    <string name="crop_bok_choy">Petsay</string>
+    <string name="crop_mustard_greens">Mustasa</string>
     <string name="default_sector_location">Zone 2: Taniman ng Pechay, Brgy. Gagalot</string>
 </resources>

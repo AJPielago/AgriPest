@@ -138,7 +138,7 @@ export const DetectionHistory = () => {
     const entries = Object.entries(counts);
     const labels = entries.length > 0
       ? entries.map(e => e[0])
-      : ['Diamondback Moth', 'Aphids', 'Corn Earworm', 'Spider Mites'];
+      : ['Diamondback Moth', 'Aphids', 'Striped Flea Beetle', 'Cabbage Looper'];
     const dataValues = entries.length > 0
       ? entries.map(e => e[1])
       : [45, 82, 29, 15];

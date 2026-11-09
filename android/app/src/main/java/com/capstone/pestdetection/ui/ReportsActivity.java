@@ -90,9 +90,10 @@ public class ReportsActivity extends BaseActivity {
         spinnerReportTimeframe.setAdapter(timeAdapter);
 
         List<String> defaultCrops = new ArrayList<>();
-        defaultCrops.add("All Host Crops (Cabbage, Corn)");
-        defaultCrops.add("Cabbage (Brassica oleracea)");
-        defaultCrops.add("Corn (Zea mays)");
+        defaultCrops.add("All Leafy Green Crops");
+        defaultCrops.add("Lettuce (Lactuca sativa)");
+        defaultCrops.add("Bok Choy (Brassica rapa)");
+        defaultCrops.add("Mustard Greens (Brassica juncea)");
         ArrayAdapter<String> cropAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, defaultCrops);
         spinnerReportCrop.setAdapter(cropAdapter);
     }

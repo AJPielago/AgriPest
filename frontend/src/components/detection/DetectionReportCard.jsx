@@ -44,12 +44,12 @@ export const DetectionReportCard = ({ detection }) => {
   const pestConfPercent = Math.round((confidence_score || 0) * 100);
   const diseaseConfPercent = Math.round((disease_confidence_score || (confidence_score ? confidence_score - 0.03 : 0.88)) * 100);
   const hasDisease = !!(detected_disease_name || disease_details?.name);
-  const resolvedDiseaseName = detected_disease_name || disease_details?.name || "Northern Corn Leaf Blight";
-  const resolvedDiseaseSci = disease_scientific_name || disease_details?.scientific_name || "Exserohilum turcicum";
+  const resolvedDiseaseName = detected_disease_name || disease_details?.name || "Downy Mildew of Lettuce";
+  const resolvedDiseaseSci = disease_scientific_name || disease_details?.scientific_name || "Bremia lactucae";
   const resolvedDiseasePathogen = disease_pathogen_type || disease_details?.pathogen_type || "Fungal";
   const resolvedDiseaseSev = disease_severity || disease_details?.severity || "High";
-  const resolvedDiseaseSymptoms = disease_symptoms || disease_details?.symptoms || "Long elliptical grayish-green or tan lesions.";
-  const resolvedDiseaseAction = disease_recommended_action || disease_details?.recommended_action || "Apply targeted foliar fungicide and ensure crop residue sanitation.";
+  const resolvedDiseaseSymptoms = disease_symptoms || disease_details?.symptoms || "Angular pale yellow chlorotic lesions with white downy mold underneath.";
+  const resolvedDiseaseAction = disease_recommended_action || disease_details?.recommended_action || "Ensure 30cm spacing for canopy airflow and apply protectant bio-fungicide.";
 
   const getSeverityBadge = (level) => {
     switch (level?.toLowerCase()) {

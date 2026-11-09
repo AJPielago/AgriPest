@@ -59,7 +59,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
 
         holder.tvPestName.setText(item.getDetectedPestName() != null ? item.getDetectedPestName() : "Pest Detected");
 
-        String crop = item.getCropName() != null ? item.getCropName() : "Cabbage";
+        String crop = item.getCropName() != null ? item.getCropName() : context.getString(R.string.crop_cabbage_default);
         String location = item.getFieldLocation() != null ? item.getFieldLocation() : "Field #1";
         holder.tvCropName.setText(context.getString(R.string.host_crop_tag) + ": " + crop + " • " + location);
 
