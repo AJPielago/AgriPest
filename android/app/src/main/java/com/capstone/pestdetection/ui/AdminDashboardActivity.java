@@ -48,6 +48,10 @@ public class AdminDashboardActivity extends BaseActivity {
             startActivity(new android.content.Intent(this, ManagePestsActivity.class));
         });
 
+        findViewById(R.id.btnManageDiseases).setOnClickListener(v -> {
+            startActivity(new android.content.Intent(this, ManageDiseasesActivity.class));
+        });
+
         findViewById(R.id.btnViewAuditLogs).setOnClickListener(v -> {
             startActivity(new android.content.Intent(this, AuditLogsActivity.class));
         });

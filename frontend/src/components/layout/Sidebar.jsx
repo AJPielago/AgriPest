@@ -21,6 +21,7 @@ export const Sidebar = ({ isOpen, onClose }) => {
     { label: t('farmMonitoring'), path: '/monitoring', icon: 'sensors' },
     { label: t('crops'), path: '/crops', icon: 'downloading' },
     { label: t('pestCatalog'), path: '/pests', icon: 'menu_book' },
+    { label: t('diseaseCatalog'), path: '/diseases', icon: 'coronavirus' },
     { label: t('reports'), path: '/reports', icon: 'assessment' },
     { label: t('notifications'), path: '/notifications', icon: 'notifications' },
     { label: t('settings'), path: '/settings', icon: 'settings' },

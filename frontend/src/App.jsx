@@ -14,6 +14,7 @@ import { Dashboard } from './pages/Dashboard';
 import { DetectPest } from './pages/DetectPest';
 import { DetectionHistory } from './pages/DetectionHistory';
 import { PestLibrary } from './pages/PestLibrary';
+import { DiseaseLibrary } from './pages/DiseaseLibrary';
 import { FarmMonitoring } from './pages/FarmMonitoring';
 import { Crops } from './pages/Crops';
 import { CropDetails } from './pages/CropDetails';
@@ -25,6 +26,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { ManageUsers } from './pages/admin/ManageUsers';
 import { ManageCrops } from './pages/admin/ManageCrops';
 import { ManagePests } from './pages/admin/ManagePests';
+import { ManageDiseases } from './pages/admin/ManageDiseases';
 import { AuditLogs } from './pages/admin/AuditLogs';
 
 // Protected Route Guard for Farmers & Admins
@@ -89,12 +91,15 @@ export const App = () => {
                 <Route path="/history" element={<RequireAuth><DetectionHistory /></RequireAuth>} />
                 <Route path="/pests" element={<RequireAuth><PestLibrary /></RequireAuth>} />
                 <Route path="/library" element={<RequireAuth><PestLibrary /></RequireAuth>} />
+                <Route path="/diseases" element={<RequireAuth><DiseaseLibrary /></RequireAuth>} />
+                <Route path="/disease-catalog" element={<RequireAuth><DiseaseLibrary /></RequireAuth>} />
 
                 {/* Administration Routes */}
                 <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
                 <Route path="/admin/users" element={<RequireAdmin><ManageUsers /></RequireAdmin>} />
                 <Route path="/admin/crops" element={<RequireAdmin><ManageCrops /></RequireAdmin>} />
                 <Route path="/admin/pests" element={<RequireAdmin><ManagePests /></RequireAdmin>} />
+                <Route path="/admin/diseases" element={<RequireAdmin><ManageDiseases /></RequireAdmin>} />
                 <Route path="/admin/audit" element={<RequireAdmin><AuditLogs /></RequireAdmin>} />
 
                 {/* Fallback Redirect */}

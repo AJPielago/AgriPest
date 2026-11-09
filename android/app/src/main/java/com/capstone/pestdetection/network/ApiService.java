@@ -103,4 +103,37 @@ public interface ApiService {
 
     @retrofit2.http.DELETE("api/v1/detections/{detection_id}")
     Call<okhttp3.ResponseBody> deleteDetection(@Path("detection_id") int detectionId);
+
+    // Disease Endpoints
+    @GET("api/v1/diseases")
+    Call<List<com.capstone.pestdetection.models.DiseaseDto>> getDiseases(
+            @Query("crop_id") Integer cropId,
+            @Query("pathogen_type") String pathogenType
+    );
+
+    @GET("api/v1/diseases/{disease_id}")
+    Call<com.capstone.pestdetection.models.DiseaseDto> getDiseaseById(@Path("disease_id") int diseaseId);
+
+    @POST("api/v1/diseases")
+    Call<com.capstone.pestdetection.models.DiseaseDto> createDisease(@Body com.capstone.pestdetection.models.DiseaseDto disease);
+
+    @retrofit2.http.DELETE("api/v1/diseases/{disease_id}")
+    Call<okhttp3.ResponseBody> deleteDisease(@Path("disease_id") int diseaseId);
+
+    // Crops Endpoints
+    @GET("api/v1/crops/{crop_id}")
+    Call<CropDto> getCropById(@Path("crop_id") int cropId);
+
+    @POST("api/v1/crops")
+    Call<CropDto> createCrop(@Body CropDto crop);
+
+    @retrofit2.http.DELETE("api/v1/crops/{crop_id}")
+    Call<okhttp3.ResponseBody> deleteCrop(@Path("crop_id") int cropId);
+
+    // Pests Endpoints
+    @POST("api/v1/pests")
+    Call<com.capstone.pestdetection.models.PestDto> createPest(@Body com.capstone.pestdetection.models.PestDto pest);
+
+    @retrofit2.http.DELETE("api/v1/pests/{pest_id}")
+    Call<okhttp3.ResponseBody> deletePest(@Path("pest_id") int pestId);
 }

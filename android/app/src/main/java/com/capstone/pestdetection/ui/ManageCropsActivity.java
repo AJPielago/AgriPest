@@ -174,6 +174,15 @@ public class ManageCropsActivity extends BaseActivity {
             String statusStr = crop.getStatus() != null ? crop.getStatus().toUpperCase() : "ACTIVE";
             holder.tvCropItemStatus.setText(statusStr);
             holder.tvCropItemDesc.setText(crop.getDescription() != null ? crop.getDescription() : "Active field plot monitoring");
+
+            holder.itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), CropDetailsActivity.class);
+                intent.putExtra("CROP_ID", crop.getId());
+                intent.putExtra("CROP_NAME", crop.getName());
+                intent.putExtra("CROP_SCIENTIFIC", crop.getScientificName());
+                intent.putExtra("CROP_DESCRIPTION", crop.getDescription());
+                v.getContext().startActivity(intent);
+            });
         }
 
         @Override

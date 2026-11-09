@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Sprout, Bug, ShieldCheck, FileText, UserCheck, PenTool, Printer } from 'lucide-react';
+import { Sprout, Bug, ShieldCheck, FileText, UserCheck, PenTool, Printer, Activity } from 'lucide-react';
 import { BoundingBoxOverlay } from './BoundingBoxOverlay';
 import { SignaturePad } from '../ui/SignaturePad';
 import { useLanguage } from '../../context/LanguageContext';
@@ -30,10 +30,18 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
     field_location,
     created_at,
     feedback_accurate,
-    feedback_notes
+    feedback_notes,
+    detected_disease_name,
+    disease_scientific_name,
+    disease_pathogen_type,
+    disease_confidence_score,
+    disease_severity,
+    disease_symptoms,
+    disease_recommended_action,
   } = detection;
 
   const confPercent = Math.round((confidence_score || 0) * 100);
+  const diseaseConfPercent = disease_confidence_score ? Math.round(disease_confidence_score * 100) : null;
 
   const formattedDate = created_at 
     ? new Date(created_at).toLocaleString(lang === 'tl' ? 'fil-PH' : undefined, { 
@@ -170,40 +178,78 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
                 />
               </div>
               <p className="text-[10px] text-slate-600 italic font-mono text-center">
-                {lang === 'tl' ? 'Larawan 1: Sinuring dahon na nagpapakita ng natukoy na rehiyon ng peste.' : 'Figure 1: Analyzed crop specimen showing detected bounding region.'}
+                {lang === 'tl' ? 'Larawan 1: Sinuring dahon na nagpapakita ng natukoy na peste at sakit ng halaman.' : 'Figure 1: Analyzed crop specimen showing detected pest & disease bounding regions.'}
               </p>
             </div>
 
             {/* Right Column: Diagnostic Findings & Evaluation */}
             <div className="md:col-span-7 space-y-3 text-xs">
               
-              {/* Species Box */}
-              <div className="p-3 bg-slate-100 border border-slate-900 rounded-sm space-y-1">
+              {/* Species Box - Pest */}
+              <div className="p-3 bg-emerald-50/70 border border-emerald-900 rounded-sm space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                     {detected_pest_name}
                   </span>
-                  <span className="px-2 py-0.5 rounded border border-slate-900 font-mono font-bold text-xs uppercase bg-white">
-                    {t('severity')}: {severity}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-1.5 py-0.5 rounded border border-emerald-700 font-mono font-bold text-[10px] uppercase bg-emerald-100 text-emerald-900">
+                      {confPercent}%
+                    </span>
+                    <span className="px-2 py-0.5 rounded border border-slate-900 font-mono font-bold text-xs uppercase bg-white">
+                      {t('severity')}: {severity}
+                    </span>
+                  </div>
                 </div>
                 {scientific_name && (
                   <p className="text-xs text-slate-700 italic font-mono font-bold">
                     {lang === 'tl' ? 'Siyentipikong Pangalan:' : 'Scientific Name:'} {scientific_name}
                   </p>
                 )}
+                {pest_description && (
+                  <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-emerald-200">
+                    {pest_description}
+                  </p>
+                )}
               </div>
 
-              {/* Field Symptoms */}
-              <div className="space-y-1">
-                <span className="font-bold uppercase tracking-wider text-[11px] text-slate-900 block flex items-center gap-1 font-mono">
-                  <FileText className="w-3.5 h-3.5 text-slate-800" />
-                  {lang === 'tl' ? 'Paglalarawan at Sintomas sa Bukid:' : 'Field Description & Symptoms:'}
-                </span>
-                <p className="text-xs text-slate-800 leading-relaxed font-medium bg-slate-50 p-2.5 border border-slate-300 rounded-sm">
-                  {pest_description || (lang === 'tl' ? 'Walang nakatalang paglalarawan ng peste sa database.' : 'No species description recorded in database.')}
-                </p>
-              </div>
+              {/* Plant Disease Box (If detected) */}
+              {detected_disease_name && (
+                <div className="p-3 bg-amber-50/70 border border-amber-900 rounded-sm space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-600"></span>
+                      {detected_disease_name}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {disease_pathogen_type && (
+                        <span className="px-1.5 py-0.5 rounded border border-amber-700 font-mono font-bold text-[10px] uppercase bg-amber-100 text-amber-900">
+                          {disease_pathogen_type}
+                        </span>
+                      )}
+                      {diseaseConfPercent && (
+                        <span className="px-1.5 py-0.5 rounded border border-amber-700 font-mono font-bold text-[10px] uppercase bg-amber-100 text-amber-900">
+                          {diseaseConfPercent}%
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded border border-slate-900 font-mono font-bold text-xs uppercase bg-white">
+                        {t('severity')}: {disease_severity || severity}
+                      </span>
+                    </div>
+                  </div>
+                  {disease_scientific_name && (
+                    <p className="text-xs text-slate-700 italic font-mono font-bold">
+                      {lang === 'tl' ? 'Patógeno:' : 'Pathogen:'} {disease_scientific_name}
+                    </p>
+                  )}
+                  {disease_symptoms && (
+                    <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-amber-200">
+                      <span className="font-bold">{lang === 'tl' ? 'Sintomas sa Dahon: ' : 'Foliar Symptoms: '}</span>
+                      {disease_symptoms}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Farmer Feedback Ground Truth (If Recorded) */}
               {feedback_accurate !== null && feedback_accurate !== undefined && (
@@ -222,22 +268,40 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
 
           </div>
 
-          {/* Department of Agriculture Recommended Protocol */}
-          <div className="space-y-1.5">
+          {/* Department of Agriculture Recommended Protocols */}
+          <div className="space-y-3">
             <span className="font-bold uppercase tracking-wider text-xs text-slate-950 block flex items-center gap-1.5 font-mono">
               <ShieldCheck className="w-4 h-4 text-slate-950" />
-              {lang === 'tl' ? 'Inirerekomendang Aksyon at Paraan ng Pagsugpo:' : 'Recommended Action / Treatment Protocol:'}
+              {lang === 'tl' ? 'Inirerekomendang Aksyon at Paraan ng Pagsugpo (IPM & IDM):' : 'Recommended Action / Integrated Pest & Disease Protocols (IPM/IDM):'}
             </span>
-            <div className="p-4 bg-slate-50 border-2 border-slate-900 rounded-sm text-xs text-slate-950 space-y-1">
-              <p className="leading-relaxed font-bold">
-                {recommended_action}
-              </p>
-              <p className="text-[11px] text-slate-600 font-medium italic pt-1 border-t border-slate-300">
-                {lang === 'tl'
-                  ? 'Paalala: Magsagawa ng biological control measures bago gumamit ng kemikal alinsunod sa DA Good Agricultural Practices (GAP).'
-                  : 'Note: Execute biological control measures prior to chemical intervention in compliance with DA Good Agricultural Practices (GAP).'}
-              </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* IPM Protocol */}
+              <div className="p-3 bg-emerald-50/50 border-2 border-emerald-900 rounded-sm text-xs text-slate-950 space-y-1">
+                <span className="font-mono font-bold text-[10px] uppercase text-emerald-950 block">
+                  {lang === 'tl' ? 'Protokol sa Peste (IPM):' : 'Pest Management Protocol (IPM):'}
+                </span>
+                <p className="leading-relaxed font-bold">
+                  {recommended_action}
+                </p>
+              </div>
+
+              {/* IDM Protocol */}
+              <div className="p-3 bg-amber-50/50 border-2 border-amber-900 rounded-sm text-xs text-slate-950 space-y-1">
+                <span className="font-mono font-bold text-[10px] uppercase text-amber-950 block">
+                  {lang === 'tl' ? 'Protokol sa Sakit (IDM):' : 'Disease Management Protocol (IDM):'}
+                </span>
+                <p className="leading-relaxed font-bold">
+                  {disease_recommended_action || (lang === 'tl' ? 'Isagawa ang sanitation at tanggalin ang apektadong dahon.' : 'Isolate infected foliage and maintain proper canopy aeration.')}
+                </p>
+              </div>
             </div>
+
+            <p className="text-[11px] text-slate-600 font-medium italic pt-1 border-t border-slate-300">
+              {lang === 'tl'
+                ? 'Paalala: Magsagawa ng biological control measures bago gumamit ng kemikal alinsunod sa DA Good Agricultural Practices (GAP).'
+                : 'Note: Execute biological control measures prior to chemical intervention in compliance with DA Good Agricultural Practices (GAP).'}
+            </p>
           </div>
 
           {/* Official Sign-off & Inspection Verification Block */}

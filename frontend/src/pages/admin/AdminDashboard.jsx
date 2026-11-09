@@ -153,7 +153,7 @@ export const AdminDashboard = () => {
       </div>
 
       {/* Navigation Modules Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card 
           title={t('userDirectory')} 
           subtitle={lang === 'tl' ? 'Pamahalaan ang mga account at tungkulin' : 'Manage accounts & role permissions'}
@@ -188,7 +188,7 @@ export const AdminDashboard = () => {
 
         <Card 
           title={t('pestRulesEditor')} 
-          subtitle={lang === 'tl' ? 'Panatilihin ang impormasyon ng mga peste' : 'Maintain species information'}
+          subtitle={lang === 'tl' ? 'Panatilihin ang impormasyon ng mga peste' : 'Maintain pest species'}
         >
           <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 font-medium">
             {lang === 'tl' 
@@ -198,6 +198,22 @@ export const AdminDashboard = () => {
           <Link to="/admin/pests" className="block">
             <Button variant="secondary" size="sm" fullWidth icon={ArrowRight}>
               {lang === 'tl' ? 'Buksan ang Pamamahala ng Peste' : 'Open Pest Manager'}
+            </Button>
+          </Link>
+        </Card>
+
+        <Card 
+          title={t('diseaseRulesEditor')} 
+          subtitle={lang === 'tl' ? 'Pamahalaan ang mga sakit sa pananim' : 'Maintain disease catalog'}
+        >
+          <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 font-medium">
+            {lang === 'tl' 
+              ? 'Magdagdag ng uri ng sakit, taxonomy ng pathogen, sintomas, at mga pamamaraan sa paggamot.' 
+              : 'Add plant disease species, pathogen taxonomy, symptoms, and treatment protocols.'}
+          </p>
+          <Link to="/admin/diseases" className="block">
+            <Button variant="secondary" size="sm" fullWidth icon={ArrowRight}>
+              {lang === 'tl' ? 'Buksan ang Pamamahala ng Sakit' : 'Open Disease Manager'}
             </Button>
           </Link>
         </Card>

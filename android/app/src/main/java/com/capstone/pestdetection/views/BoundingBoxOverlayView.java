@@ -81,6 +81,18 @@ public class BoundingBoxOverlayView extends View {
             float right = box.getXMax() * width;
             float bottom = box.getYMax() * height;
 
+            // Check if this box is for a plant disease
+            boolean isDisease = "disease".equalsIgnoreCase(box.getType()) 
+                    || (box.getLabel() != null && box.getLabel().toLowerCase().startsWith("disease"));
+
+            if (isDisease) {
+                boxPaint.setColor(Color.parseColor("#F59E0B")); // Amber 500
+                labelBgPaint.setColor(Color.parseColor("#E678350F")); // Amber 900
+            } else {
+                boxPaint.setColor(Color.parseColor("#10B981")); // Emerald 500
+                labelBgPaint.setColor(Color.parseColor("#E6064E3B")); // Emerald 900
+            }
+
             // Draw bounding box rectangle
             RectF rect = new RectF(left, top, right, bottom);
             canvas.drawRect(rect, boxPaint);

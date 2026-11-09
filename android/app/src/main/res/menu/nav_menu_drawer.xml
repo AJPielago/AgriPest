@@ -27,6 +27,10 @@
             android:icon="@drawable/ic_bug_report"
             android:title="@string/title_pest_library" />
         <item
+            android:id="@+id/nav_diseases"
+            android:icon="@drawable/ic_warning"
+            android:title="Plant Diseases" />
+        <item
             android:id="@+id/nav_reports"
             android:icon="@drawable/ic_assessment"
             android:title="@string/title_reports" />

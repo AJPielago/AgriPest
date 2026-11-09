@@ -104,7 +104,13 @@ public class LoginActivity extends BaseActivity {
                     fetchUserProfile();
                 } else {
                     setLoading(false);
-                    Toast.makeText(LoginActivity.this, getString(R.string.login_failed, response.code()), Toast.LENGTH_LONG).show();
+                    if (response.code() == 401) {
+                        Toast.makeText(LoginActivity.this, "Sign in failed: Incorrect email or password (401)", Toast.LENGTH_LONG).show();
+                    } else if (response.code() == 404) {
+                        Toast.makeText(LoginActivity.this, "Server not found (404): Check Server URL under 'Configure Server'", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(LoginActivity.this, getString(R.string.login_failed, response.code()), Toast.LENGTH_LONG).show();
+                    }
                 }
             }
 

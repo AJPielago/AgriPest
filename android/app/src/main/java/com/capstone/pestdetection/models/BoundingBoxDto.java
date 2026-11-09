@@ -19,6 +19,9 @@ public class BoundingBoxDto implements Serializable {
     @SerializedName("label")
     private String label;
 
+    @SerializedName("type")
+    private String type;
+
     @SerializedName("confidence")
     private float confidence;
 
@@ -27,5 +30,6 @@ public class BoundingBoxDto implements Serializable {
     public float getXMax() { return xMax; }
     public float getYMax() { return yMax; }
     public String getLabel() { return label; }
+    public String getType() { return type; }
     public float getConfidence() { return confidence; }
 }

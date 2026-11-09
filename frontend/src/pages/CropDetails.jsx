@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { cropService } from '../services/cropService';
 import { pestService } from '../services/pestService';
+import { diseaseService } from '../services/diseaseService';
 import { detectionService } from '../services/detectionService';
 import { useLanguage } from '../context/LanguageContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
@@ -12,19 +13,22 @@ export const CropDetails = () => {
   const { lang, t } = useLanguage();
   const [crop, setCrop] = useState(null);
   const [pests, setPests] = useState([]);
+  const [diseases, setDiseases] = useState([]);
   const [detections, setDetections] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        const [cropData, pestsData, historyData] = await Promise.all([
+        const [cropData, pestsData, diseasesData, historyData] = await Promise.all([
           cropService.getCropById(id),
           pestService.getPests(id),
+          diseaseService.getDiseases({ cropId: id }).catch(() => []),
           detectionService.getHistory(id ? parseInt(id) : null)
         ]);
         setCrop(cropData);
         setPests(pestsData || []);
+        setDiseases(diseasesData || []);
         setDetections(historyData?.items || []);
       } catch (err) {
         console.error("Error fetching crop details:", err);
@@ -119,7 +123,14 @@ export const CropDetails = () => {
             <div className="flex justify-between items-center pt-2">
               <span className="text-on-surface-variant font-medium">{t('linkedPests')}</span>
               <span className="font-bold text-primary dark:text-primary-fixed">
-                {pests.length} {lang === 'tl' ? 'mga Uri' : 'Known Species'}
+                {pests.length} {lang === 'tl' ? 'mga Peste' : 'Pest Species'}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
+              <span className="text-on-surface-variant font-medium">{lang === 'tl' ? 'Naiugnay na Sakit' : 'Linked Diseases'}</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">
+                {diseases.length} {lang === 'tl' ? 'mga Sakit' : 'Disease Types'}
               </span>
             </div>
 
@@ -258,7 +269,16 @@ export const CropDetails = () => {
                   className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm hover:border-primary transition-all flex flex-col justify-between gap-3"
                 >
                   <div className="flex justify-between items-start">
-                    <span className="font-bold text-xs text-on-surface dark:text-inverse-on-surface">{det.detected_pest_name}</span>
+                    <div>
+                      <span className="font-bold text-xs text-on-surface dark:text-inverse-on-surface block">
+                        {det.detected_pest_name}
+                      </span>
+                      {det.detected_disease_name && (
+                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">
+                          + {det.detected_disease_name}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] text-outline font-medium">
                       {new Date(det.created_at).toLocaleDateString(lang === 'tl' ? 'fil-PH' : undefined)}
                     </span>

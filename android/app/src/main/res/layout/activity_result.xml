@@ -230,6 +230,173 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Card 3B: Plant Disease Diagnosis & Pathology (Dual AI Assessment) -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardDiseaseDiagnosis"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/amber_600"
+                app:strokeWidth="1.5dp"
+                app:cardBackgroundColor="@color/surface_container_lowest">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="top">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PLANT DISEASE DIAGNOSIS"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/amber_600"
+                                android:letterSpacing="0.05"
+                                android:layout_marginBottom="2dp" />
+
+                            <TextView
+                                android:id="@+id/tvDiseaseName"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Disease Species Name"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/on_surface" />
+
+                            <TextView
+                                android:id="@+id/tvDiseaseScientific"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Pathogen Scientific Name"
+                                android:textSize="12sp"
+                                android:textStyle="italic"
+                                android:textColor="@color/on_surface_variant" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvDiseaseSeverityBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="MODERATE"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/amber_accent"
+                            android:background="@drawable/bg_badge_warning"
+                            android:paddingHorizontal="10dp"
+                            android:paddingVertical="3dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="PATHOGEN TYPE"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/outline" />
+
+                            <TextView
+                                android:id="@+id/tvDiseasePathogen"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Fungal"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/primary" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DISEASE CERTAINTY"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/outline" />
+
+                            <TextView
+                                android:id="@+id/tvDiseaseConfidence"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="92.0%"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/amber_600" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvDiseaseSymptoms"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:textSize="12sp"
+                        android:textColor="@color/on_surface_variant"
+                        android:text="Symptoms: Concentric target-like circular necrotic lesions." />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:background="@color/surface_variant" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DISEASE MANAGEMENT &amp; TREATMENT"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/outline"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="4dp" />
+
+                    <TextView
+                        android:id="@+id/tvDiseaseRecommendation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Apply protective copper hydroxide spray or contact protectant Mancozeb."
+                        android:textSize="12sp"
+                        android:textColor="@color/on_surface"
+                        android:lineSpacingExtra="2dp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Card 4: Telemetry Metadata -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

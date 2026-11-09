@@ -4,13 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.core.db import engine, Base
+from app.core.db import engine, Base, ensure_schema_compatibility
 from app.api.v1.api import api_router
 # Import all models to guarantee SQLAlchemy metadata creation
 from app.models import *
 
-# Initialize database tables
+# Initialize database tables & apply schema upgrades
 Base.metadata.create_all(bind=engine)
+ensure_schema_compatibility()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -34,6 +35,17 @@ app.mount("/static/uploads", StaticFiles(directory=settings.UPLOAD_DIR), name="u
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+@app.on_event("startup")
+def on_startup():
+    try:
+        import sys
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from seed import seed_db
+        seed_db()
+        print("[+] Automatic startup database initialization completed successfully.")
+    except Exception as e:
+        print(f"[-] Startup seed note: {e}")
 
 @app.get("/")
 def root():

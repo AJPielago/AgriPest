@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/surface">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Side-by-Side Diagnosis Comparison"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/primary"
+        android:layout_marginBottom="4dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Comparing two diagnostic inspection specimens"
+        android:textSize="12sp"
+        android:textColor="@color/on_surface_variant"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false">
+
+        <!-- Specimen 1 Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="6dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/outline_variant"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/surface_container_lowest">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/ivCompare1"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/bg_card_stitch" />
+
+                <TextView
+                    android:id="@+id/tvCompareId1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Report #1"
+                    android:textSize="10sp"
+                    android:textColor="@color/outline" />
+
+                <TextView
+                    android:id="@+id/tvComparePest1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pest Name"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_surface" />
+
+                <TextView
+                    android:id="@+id/tvCompareDisease1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Disease Name"
+                    android:textSize="11sp"
+                    android:textColor="@color/amber_600"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvCompareCrop1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Crop: Cabbage"
+                    android:textSize="11sp"
+                    android:textColor="@color/on_surface_variant" />
+
+                <TextView
+                    android:id="@+id/tvCompareConf1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Certainty: 92%"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvCompareSeverity1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="MODERATE"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/error" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Specimen 2 Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="6dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp"
+            app:strokeColor="@color/outline_variant"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/surface_container_lowest">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="10dp">
+
+                <ImageView
+                    android:id="@+id/ivCompare2"
+                    android:layout_width="match_parent"
+                    android:layout_height="100dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/bg_card_stitch" />
+
+                <TextView
+                    android:id="@+id/tvCompareId2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Report #2"
+                    android:textSize="10sp"
+                    android:textColor="@color/outline" />
+
+                <TextView
+                    android:id="@+id/tvComparePest2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pest Name"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/on_surface" />
+
+                <TextView
+                    android:id="@+id/tvCompareDisease2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Disease Name"
+                    android:textSize="11sp"
+                    android:textColor="@color/amber_600"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tvCompareCrop2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Crop: Cabbage"
+                    android:textSize="11sp"
+                    android:textColor="@color/on_surface_variant" />
+
+                <TextView
+                    android:id="@+id/tvCompareConf2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Certainty: 95%"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary" />
+
+                <TextView
+                    android:id="@+id/tvCompareSeverity2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="HIGH RISK"
+                    android:textSize="9sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/error" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCloseCompare"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="16dp"
+        android:text="Close Comparison"
+        android:textAllCaps="false"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@color/on_surface"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/outline_variant" />
+
+</LinearLayout>
+

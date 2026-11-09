@@ -44,13 +44,16 @@ export const Reports = () => {
       return;
     }
 
-    const headers = ["Inspection_ID", "Detected_Pest", "Host_Crop", "Confidence_Score", "Severity_Level", "Weather_Condition", "Location", "Timestamp"];
+    const headers = ["Inspection_ID", "Detected_Pest", "Detected_Disease", "Host_Crop", "Confidence_Score", "Disease_Confidence", "Severity_Level", "Disease_Severity", "Weather_Condition", "Location", "Timestamp"];
     const rows = history.map(d => [
       d.id,
       `"${d.detected_pest_name}"`,
+      `"${d.detected_disease_name || 'N/A'}"`,
       `"${d.crop_name || 'N/A'}"`,
       `${Math.round(d.confidence_score * 100)}%`,
+      d.disease_confidence_score ? `${Math.round(d.disease_confidence_score * 100)}%` : 'N/A',
       `"${d.severity}"`,
+      `"${d.disease_severity || d.severity || 'N/A'}"`,
       `"${d.weather_condition || 'Sunny'}"`,
       `"${d.field_location || 'Field #1'}"`,
       `"${new Date(d.created_at).toLocaleString()}"`

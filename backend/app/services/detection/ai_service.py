@@ -19,7 +19,9 @@ from typing import Dict, Any, Optional
 from sqlalchemy.orm import Session
 from app.services.detection.base import BaseDetectionService
 from app.models.pest import Pest
+from app.models.disease import Disease
 from app.models.recommendation import Recommendation
+from app.models.disease_recommendation import DiseaseRecommendation
 
 class AIDetectionService(BaseDetectionService):
     def __init__(self):
@@ -95,7 +97,25 @@ class AIDetectionService(BaseDetectionService):
         conf = round(random.uniform(0.82, 0.97), 2)
         severity = "Critical" if conf > 0.92 else "High" if conf > 0.86 else "Moderate"
 
+        # Plant Disease Assessment (Always included with pest detection)
+        disease_records = db.query(Disease).all() if db else []
+        selected_disease = random.choice(disease_records) if disease_records else None
+
+        dis_name = selected_disease.name if selected_disease else "Northern Corn Leaf Blight"
+        dis_scientific = selected_disease.scientific_name if selected_disease else "Exserohilum turcicum"
+        dis_pathogen = selected_disease.pathogen_type if selected_disease else "Fungal"
+        dis_symptoms = selected_disease.symptoms if selected_disease else "Elliptical grayish-green lesions on leaves."
+        dis_desc = selected_disease.description if selected_disease else "Foliar pathogen causing premature leaf death."
+        dis_id = selected_disease.id if selected_disease else None
+
+        dis_rec = db.query(DiseaseRecommendation).filter(DiseaseRecommendation.disease_id == dis_id).first() if (db and dis_id) else None
+        dis_action = dis_rec.action_title + ": " + dis_rec.description if dis_rec else "Apply targeted foliar fungicide and remove infected debris."
+
+        dis_conf = round(random.uniform(0.80, 0.95), 2)
+        dis_severity = "High" if dis_conf > 0.88 else "Moderate"
+
         return {
+            "detection_type": "pest_and_disease",
             "pest_id": pest_id,
             "crop_id": crop_id,
             "pest_name": pest_name,
@@ -104,8 +124,30 @@ class AIDetectionService(BaseDetectionService):
             "confidence": conf,
             "severity": severity,
             "recommended_action": rec_action,
+
+            # Disease Assessment
+            "disease_id": dis_id,
+            "detected_disease_name": dis_name,
+            "disease_scientific_name": dis_scientific,
+            "disease_pathogen_type": dis_pathogen,
+            "disease_confidence_score": dis_conf,
+            "disease_severity": dis_severity,
+            "disease_symptoms": dis_symptoms,
+            "disease_recommended_action": dis_action,
+            "disease_details": {
+                "name": dis_name,
+                "scientific_name": dis_scientific,
+                "pathogen_type": dis_pathogen,
+                "severity": dis_severity,
+                "symptoms": dis_symptoms,
+                "description": dis_desc,
+                "recommended_action": dis_action,
+                "confidence": dis_conf
+            },
+
             "bounding_boxes": [
-                {"x": 120, "y": 80, "width": 340, "height": 280, "label": pest_name, "confidence": conf}
+                {"x_min": 0.18, "y_min": 0.28, "x_max": 0.52, "y_max": 0.65, "label": f"Pest: {pest_name}", "type": "pest", "confidence": conf},
+                {"x_min": 0.56, "y_min": 0.35, "x_max": 0.88, "y_max": 0.78, "label": f"Disease: {dis_name}", "type": "disease", "confidence": dis_conf}
             ]
         }
 

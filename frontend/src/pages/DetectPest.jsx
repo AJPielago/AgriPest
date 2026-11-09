@@ -56,11 +56,14 @@ export const DetectPest = () => {
       {/* Stitch Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display-lg text-2xl sm:text-3xl font-bold text-primary dark:text-primary-fixed">
-            {t('pestDetection')}
+          <h1 className="font-display-lg text-2xl sm:text-3xl font-bold text-primary dark:text-primary-fixed flex items-center gap-2">
+            <span className="material-symbols-outlined text-3xl text-primary">biotech</span>
+            <span>{lang === 'tl' ? 'Pagtukoy sa Peste at Sakit ng Halaman' : 'Pest & Plant Disease Detection'}</span>
           </h1>
           <p className="font-body-lg text-sm sm:text-base text-on-surface-variant mt-1">
-            {t('detectionSubtitle')}
+            {lang === 'tl' 
+              ? 'Mag-upload o kumuha ng larawan ng dahon para sa mabilisang AI diagnosis ng mga peste at sakit sa pananim kasama ang mga gabay sa paggamot.'
+              : 'Upload or capture a crop leaf image for instant AI pest and plant disease recognition and treatment advice.'}
           </p>
         </div>
 
@@ -108,8 +111,14 @@ export const DetectPest = () => {
                 <p className="text-secondary dark:text-secondary-fixed">
                   <span>{lang === 'tl' ? '✓ Paghahanda ng matrix ng pananim' : '✓ Host crop matrix alignment'}</span>
                 </p>
+                <p className="text-secondary dark:text-secondary-fixed">
+                  <span>{lang === 'tl' ? '✓ Pagsusuri sa banta ng insekto at peste' : '✓ Insect pest recognition pipeline'}</span>
+                </p>
+                <p className="text-secondary dark:text-secondary-fixed">
+                  <span>{lang === 'tl' ? '✓ Pagsusuri sa mga sakit at pathogen sa dahon' : '✓ Foliar plant disease & pathogen diagnostic'}</span>
+                </p>
                 <p className="text-primary dark:text-primary-fixed animate-pulse font-bold">
-                  <span>{lang === 'tl' ? 'Pinapatakbo ang AI detection pipeline...' : 'Executing YOLO pest inference...'}</span>
+                  <span>{lang === 'tl' ? 'Kinakalkula ang pinagsamang resulta...' : 'Synthesizing dual pest & disease diagnostic...'}</span>
                 </p>
               </div>
             </div>
@@ -119,18 +128,18 @@ export const DetectPest = () => {
             <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-6 sm:p-8 space-y-4 shadow-sm">
               <div className="border-b border-outline-variant dark:border-outline pb-4">
                 <h3 className="font-title-lg text-base font-bold text-on-surface dark:text-inverse-on-surface">
-                  {lang === 'tl' ? 'Handa ang AI Diagnostic Console' : 'AI Diagnostic Engine Ready'}
+                  {lang === 'tl' ? 'Handa ang AI Diagnostic Console (Peste at Sakit)' : 'AI Diagnostic Engine Ready (Pest & Disease)'}
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">
-                  {lang === 'tl' ? 'Naghihintay ng litrato ng dahon' : 'Awaiting image specimen input'}
+                  {lang === 'tl' ? 'Naghihintay ng litrato ng dahon' : 'Awaiting crop specimen leaf photo'}
                 </p>
               </div>
 
               <div className="space-y-4 text-xs text-on-surface-variant">
                 <p className="leading-relaxed">
                   {lang === 'tl' 
-                    ? 'Mamili ng target na pananim sa kaliwa, kumuha ng larawan gamit ang camera o mag-upload ng kuha mula sa bukid upang agad na makakuha ng ulat ng peste at rekomendasyon sa pagpuksa.' 
-                    : 'Select your target crop host on the left pane and snap a leaf photo or upload a specimen image. The AI engine will identify pest species, determine risk severity, and present targeted management protocols.'}
+                    ? 'Mamili ng target na pananim sa kaliwa, kumuha ng larawan gamit ang camera o mag-upload ng kuha mula sa bukid. Sabay na tutukuyin ng AI ang anumang pinsala mula sa mga peste at mga sakit sa pananim, at magbibigay ng angkop na rekomendasyon sa pamamahala.' 
+                    : 'Select your target crop host on the left pane and snap a leaf photo or upload a specimen image. The AI engine automatically inspects the specimen for both insect pests and foliar plant diseases simultaneously, providing targeted IPM & disease management protocols.'}
                 </p>
 
                 <div className="p-4 bg-surface-container-low dark:bg-slate-800 rounded-xl border border-outline-variant dark:border-slate-700 space-y-2.5 text-xs font-medium">

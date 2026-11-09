@@ -44,6 +44,17 @@ def get_dashboard_stats(
     )
     top_pests = [{"pest_name": name, "count": count} for name, count in top_pests_query]
 
+    # Top detected plant diseases
+    top_diseases_query = (
+        db.query(Detection.detected_disease_name, func.count(Detection.id).label("count"))
+        .filter(Detection.user_id == current_user.id, Detection.detected_disease_name.isnot(None))
+        .group_by(Detection.detected_disease_name)
+        .order_by(desc("count"))
+        .limit(5)
+        .all()
+    )
+    top_diseases = [{"disease_name": name, "count": count} for name, count in top_diseases_query if name]
+
     # Time series breakdown (Monthly detections)
     monthly_query = (
         db.query(
@@ -82,8 +93,10 @@ def get_dashboard_stats(
         {
             "id": r.id,
             "pest_name": r.detected_pest_name,
+            "disease_name": r.detected_disease_name,
             "confidence": r.confidence_score,
             "severity": r.severity,
+            "disease_severity": r.disease_severity,
             "created_at": r.created_at.isoformat(),
             "image_path": r.image_path,
             "weather_condition": r.weather_condition,
@@ -98,6 +111,7 @@ def get_dashboard_stats(
         "recent_detections_count": len(recent_records),
         "avg_confidence": avg_confidence,
         "top_pests": top_pests,
+        "top_diseases": top_diseases,
         "detection_mode": settings.DETECTION_MODE,
         "recent_records": recent_records,
         "severity_dist": severity_dist,

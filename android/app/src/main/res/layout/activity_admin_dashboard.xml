@@ -412,6 +412,20 @@
                     app:cornerRadius="6dp" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnManageDiseases"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Manage Plant Diseases"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:textColor="@color/on_surface"
+                    app:strokeColor="@color/outline_variant"
+                    app:cornerRadius="6dp" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewAuditLogs"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"

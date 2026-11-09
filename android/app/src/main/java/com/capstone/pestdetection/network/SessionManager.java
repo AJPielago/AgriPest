@@ -12,9 +12,9 @@ public class SessionManager {
     private static final String KEY_ROLE = "role";
     private static final String KEY_BASE_URL = "base_url";
 
-    // Default development URL (10.0.2.2 points to host machine from Android Emulator)
-    public static final String DEFAULT_BASE_URL = "http://10.0.2.2:8000/";
-
+    // Default development URL (10.0.2.2 points to host machine from Android
+    // Emulator)
+    public static final String DEFAULT_BASE_URL = "https://agripest.onrender.com/";
     private final SharedPreferences pref;
     private final SharedPreferences.Editor editor;
 

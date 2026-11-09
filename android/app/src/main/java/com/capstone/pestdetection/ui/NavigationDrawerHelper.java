@@ -83,6 +83,8 @@ public class NavigationDrawerHelper {
                     activity.startActivity(new Intent(activity, ManageCropsActivity.class));
                 } else if (id == R.id.nav_pests) {
                     activity.startActivity(new Intent(activity, PestLibraryActivity.class));
+                } else if (id == R.id.nav_diseases) {
+                    activity.startActivity(new Intent(activity, DiseaseLibraryActivity.class));
                 } else if (id == R.id.nav_reports) {
                     activity.startActivity(new Intent(activity, ReportsActivity.class));
                 } else if (id == R.id.nav_notifications) {

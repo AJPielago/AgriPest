@@ -94,6 +94,20 @@
                         android:textSize="13sp"
                         android:inputType="text" />
                 </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCompareDetections"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Compare Top 2 Detections"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:strokeColor="@color/primary"
+                    app:cornerRadius="6dp" />
             </LinearLayout>
 
             <ProgressBar

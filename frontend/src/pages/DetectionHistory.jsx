@@ -93,12 +93,14 @@ export const DetectionHistory = () => {
   const handleExportCSV = () => {
     if (filteredDetections.length === 0) return;
 
-    const headers = ["ID", "Pest Name", "Crop Name", "Confidence Score", "Severity", "Logged Date"];
+    const headers = ["ID", "Pest Name", "Disease Name", "Crop Name", "Pest Confidence", "Disease Confidence", "Severity", "Logged Date"];
     const rows = filteredDetections.map(d => [
       d.id,
       `"${d.detected_pest_name}"`,
+      `"${d.detected_disease_name || 'N/A'}"`,
       `"${d.crop_name || 'N/A'}"`,
       `${Math.round(d.confidence_score * 100)}%`,
+      `${d.disease_confidence_score ? Math.round(d.disease_confidence_score * 100) + '%' : 'N/A'}`,
       `"${d.severity}"`,
       `"${new Date(d.created_at).toLocaleString()}"`
     ]);
@@ -115,8 +117,11 @@ export const DetectionHistory = () => {
 
   const filteredDetections = useMemo(() => {
     return detections.filter(rec => {
-      const matchesQuery = rec.detected_pest_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (rec.crop_name && rec.crop_name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const query = searchQuery.toLowerCase();
+      const matchesQuery = rec.detected_pest_name?.toLowerCase().includes(query) ||
+        rec.detected_disease_name?.toLowerCase().includes(query) ||
+        (rec.crop_name && rec.crop_name.toLowerCase().includes(query)) ||
+        (rec.field_location && rec.field_location.toLowerCase().includes(query));
       const matchesSeverity = !selectedSeverityFilter || rec.severity?.toLowerCase() === selectedSeverityFilter.toLowerCase();
       return matchesQuery && matchesSeverity;
     });
@@ -444,9 +449,18 @@ export const DetectionHistory = () => {
                   {/* Info Details */}
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1 gap-2">
-                      <h3 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate">
-                        {rec.detected_pest_name}
-                      </h3>
+                      <div>
+                        <h3 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px] text-emerald-600">bug_report</span>
+                          <span>{rec.detected_pest_name}</span>
+                        </h3>
+                        {rec.detected_disease_name && (
+                          <div className="flex items-center gap-1 mt-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                            <span className="material-symbols-outlined text-[14px]">coronavirus</span>
+                            <span>{rec.detected_disease_name}</span>
+                          </div>
+                        )}
+                      </div>
                       {getSeverityBadge(rec.severity)}
                     </div>
                     <p className="font-body-md text-xs text-on-surface-variant flex items-center gap-1 mb-1">

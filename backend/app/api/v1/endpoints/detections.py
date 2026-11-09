@@ -79,12 +79,19 @@ async def detect_pest(
         user_id=current_user.id,
         crop_id=result.get("crop_id"),
         pest_id=result.get("pest_id"),
+        disease_id=result.get("disease_id"),
+        detection_type=result.get("detection_type", "pest_and_disease"),
         image_path=image_url,
         confidence_score=result.get("confidence", 0.0),
         severity=result.get("severity", "Moderate"),
         detected_pest_name=result.get("pest_name", "Unknown Pest"),
         recommended_action=result.get("recommended_action", "Consult agricultural extension office."),
         bounding_boxes=result.get("bounding_boxes", []),
+        detected_disease_name=result.get("detected_disease_name"),
+        disease_confidence_score=result.get("disease_confidence_score"),
+        disease_severity=result.get("disease_severity"),
+        disease_recommended_action=result.get("disease_recommended_action"),
+        disease_details=result.get("disease_details", {}),
         weather_condition=weather_condition,
         field_location=field_location,
         status="completed"
@@ -96,7 +103,7 @@ async def detect_pest(
     audit = AuditLog(
         user_id=current_user.id,
         action="DETECTION_RUN",
-        details=f"Ran detection for pest: {detection_record.detected_pest_name} ({int(detection_record.confidence_score * 100)}%)"
+        details=f"Ran detection: Pest={detection_record.detected_pest_name} ({int(detection_record.confidence_score * 100)}%), Disease={detection_record.detected_disease_name or 'None'} ({int((detection_record.disease_confidence_score or 0) * 100)}%)"
     )
     db.add(audit)
 
@@ -111,7 +118,28 @@ async def detect_pest(
     out_data.scientific_name = pest_obj.scientific_name if pest_obj else result.get("scientific_name")
     out_data.pest_description = pest_obj.description if pest_obj else result.get("description")
 
+    out_data.disease_scientific_name = result.get("disease_scientific_name")
+    out_data.disease_pathogen_type = result.get("disease_pathogen_type")
+    out_data.disease_symptoms = result.get("disease_symptoms")
+
     return out_data
+
+def _enrich_detection_out(rec: Detection) -> DetectionOut:
+    out = DetectionOut.model_validate(rec)
+    if rec.crop:
+        out.crop_name = rec.crop.name
+    if rec.pest:
+        out.scientific_name = rec.pest.scientific_name
+        out.pest_description = rec.pest.description
+    if rec.disease:
+        out.disease_scientific_name = rec.disease.scientific_name
+        out.disease_pathogen_type = rec.disease.pathogen_type
+        out.disease_symptoms = rec.disease.symptoms
+    elif rec.disease_details:
+        out.disease_scientific_name = rec.disease_details.get("scientific_name")
+        out.disease_pathogen_type = rec.disease_details.get("pathogen_type")
+        out.disease_symptoms = rec.disease_details.get("symptoms")
+    return out
 
 @router.post("/{detection_id}/feedback", response_model=DetectionOut)
 def submit_detection_feedback(
@@ -140,14 +168,7 @@ def submit_detection_feedback(
     db.commit()
     db.refresh(rec)
 
-    out = DetectionOut.model_validate(rec)
-    if rec.crop:
-        out.crop_name = rec.crop.name
-    if rec.pest:
-        out.scientific_name = rec.pest.scientific_name
-        out.pest_description = rec.pest.description
-
-    return out
+    return _enrich_detection_out(rec)
 
 @router.get("", response_model=DetectionListOut)
 def list_detection_history(
@@ -165,15 +186,7 @@ def list_detection_history(
     total = query.count()
     records = query.order_by(desc(Detection.created_at)).offset(skip).limit(limit).all()
 
-    items = []
-    for rec in records:
-        out = DetectionOut.model_validate(rec)
-        if rec.crop:
-            out.crop_name = rec.crop.name
-        if rec.pest:
-            out.scientific_name = rec.pest.scientific_name
-            out.pest_description = rec.pest.description
-        items.append(out)
+    items = [_enrich_detection_out(rec) for rec in records]
 
     return {"total": total, "items": items}
 
@@ -190,14 +203,7 @@ def get_detection_detail(
     if rec.user_id != current_user.id and current_user.role.name != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to view this record.")
 
-    out = DetectionOut.model_validate(rec)
-    if rec.crop:
-        out.crop_name = rec.crop.name
-    if rec.pest:
-        out.scientific_name = rec.pest.scientific_name
-        out.pest_description = rec.pest.description
-
-    return out
+    return _enrich_detection_out(rec)
 
 @router.delete("/{detection_id}")
 def delete_detection(

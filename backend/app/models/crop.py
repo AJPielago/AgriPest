@@ -17,4 +17,5 @@ class Crop(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     crop_pests = relationship("CropPest", back_populates="crop", cascade="all, delete-orphan")
+    crop_diseases = relationship("CropDisease", back_populates="crop", cascade="all, delete-orphan")
     detections = relationship("Detection", back_populates="crop")

@@ -33,6 +33,8 @@ public class DetectionResultActivity extends BaseActivity {
     private BoundingBoxOverlayView overlayBoundingBox;
     private TextView tvPestName, tvScientificName, tvSeverityBadge, tvConfidenceScore, tvResultCropName, tvRecommendation;
     private TextView tvResultLocation, tvResultWeather, tvResultTimestamp;
+    private View cardDiseaseDiagnosis;
+    private TextView tvDiseaseName, tvDiseaseScientific, tvDiseaseSeverityBadge, tvDiseasePathogen, tvDiseaseConfidence, tvDiseaseSymptoms, tvDiseaseRecommendation;
     private MaterialButton btnFeedbackAccurate, btnFeedbackInaccurate, btnNewScanFromReport;
 
     private DetectionResponse detectionResult;
@@ -59,6 +61,15 @@ public class DetectionResultActivity extends BaseActivity {
         tvResultLocation = findViewById(R.id.tvResultLocation);
         tvResultWeather = findViewById(R.id.tvResultWeather);
         tvResultTimestamp = findViewById(R.id.tvResultTimestamp);
+
+        cardDiseaseDiagnosis = findViewById(R.id.cardDiseaseDiagnosis);
+        tvDiseaseName = findViewById(R.id.tvDiseaseName);
+        tvDiseaseScientific = findViewById(R.id.tvDiseaseScientific);
+        tvDiseaseSeverityBadge = findViewById(R.id.tvDiseaseSeverityBadge);
+        tvDiseasePathogen = findViewById(R.id.tvDiseasePathogen);
+        tvDiseaseConfidence = findViewById(R.id.tvDiseaseConfidence);
+        tvDiseaseSymptoms = findViewById(R.id.tvDiseaseSymptoms);
+        tvDiseaseRecommendation = findViewById(R.id.tvDiseaseRecommendation);
 
         btnFeedbackAccurate = findViewById(R.id.btnFeedbackAccurate);
         btnFeedbackInaccurate = findViewById(R.id.btnFeedbackInaccurate);
@@ -126,6 +137,33 @@ public class DetectionResultActivity extends BaseActivity {
 
         String dateStr = detectionResult.getCreatedAt() != null ? detectionResult.getCreatedAt().replace("T", " ").substring(0, Math.min(16, detectionResult.getCreatedAt().length())) : "Recent";
         tvResultTimestamp.setText(dateStr);
+
+        // Plant Disease Diagnosis Display (Dual Assessment)
+        if (detectionResult.getDetectedDiseaseName() != null && !detectionResult.getDetectedDiseaseName().isEmpty()) {
+            cardDiseaseDiagnosis.setVisibility(View.VISIBLE);
+            tvDiseaseName.setText(detectionResult.getDetectedDiseaseName());
+            tvDiseaseScientific.setText(detectionResult.getDiseaseScientificName() != null ? detectionResult.getDiseaseScientificName() : "Plant Pathogen");
+            tvDiseasePathogen.setText(detectionResult.getDiseasePathogenType() != null ? detectionResult.getDiseasePathogenType() : "Fungal");
+
+            float disConf = detectionResult.getDiseaseConfidenceScore() != null ? detectionResult.getDiseaseConfidenceScore() : 0.88f;
+            tvDiseaseConfidence.setText(Math.round(disConf * 100) + "%");
+
+            String disSeverity = detectionResult.getDiseaseSeverity() != null ? detectionResult.getDiseaseSeverity() : "Moderate";
+            tvDiseaseSeverityBadge.setText(disSeverity.toUpperCase());
+
+            if (detectionResult.getDiseaseSymptoms() != null && !detectionResult.getDiseaseSymptoms().isEmpty()) {
+                tvDiseaseSymptoms.setVisibility(View.VISIBLE);
+                tvDiseaseSymptoms.setText("Symptoms: " + detectionResult.getDiseaseSymptoms());
+            } else {
+                tvDiseaseSymptoms.setVisibility(View.GONE);
+            }
+
+            tvDiseaseRecommendation.setText(detectionResult.getDiseaseRecommendedAction() != null
+                    ? detectionResult.getDiseaseRecommendedAction()
+                    : "Apply protective copper hydroxide spray or contact protectant as per extension office protocols.");
+        } else {
+            cardDiseaseDiagnosis.setVisibility(View.GONE);
+        }
 
         // Load Specimen Image
         String imageUrl = detectionResult.getImagePath();

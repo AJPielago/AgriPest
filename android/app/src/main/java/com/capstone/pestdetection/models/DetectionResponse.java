@@ -56,6 +56,27 @@ public class DetectionResponse implements Serializable {
     @SerializedName("field_location")
     private String fieldLocation;
 
+    @SerializedName("detected_disease_name")
+    private String detectedDiseaseName;
+
+    @SerializedName("disease_scientific_name")
+    private String diseaseScientificName;
+
+    @SerializedName("disease_pathogen_type")
+    private String diseasePathogenType;
+
+    @SerializedName("disease_confidence_score")
+    private Float diseaseConfidenceScore;
+
+    @SerializedName("disease_severity")
+    private String diseaseSeverity;
+
+    @SerializedName("disease_symptoms")
+    private String diseaseSymptoms;
+
+    @SerializedName("disease_recommended_action")
+    private String diseaseRecommendedAction;
+
     @SerializedName("feedback_accurate")
     private Boolean feedbackAccurate;
 
@@ -79,6 +100,13 @@ public class DetectionResponse implements Serializable {
     public String getPestDescription() { return pestDescription; }
     public String getWeatherCondition() { return weatherCondition; }
     public String getFieldLocation() { return fieldLocation; }
+    public String getDetectedDiseaseName() { return detectedDiseaseName; }
+    public String getDiseaseScientificName() { return diseaseScientificName; }
+    public String getDiseasePathogenType() { return diseasePathogenType; }
+    public Float getDiseaseConfidenceScore() { return diseaseConfidenceScore; }
+    public String getDiseaseSeverity() { return diseaseSeverity; }
+    public String getDiseaseSymptoms() { return diseaseSymptoms; }
+    public String getDiseaseRecommendedAction() { return diseaseRecommendedAction; }
     public Boolean getFeedbackAccurate() { return feedbackAccurate; }
     public String getFeedbackNotes() { return feedbackNotes; }
 }
