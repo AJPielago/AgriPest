@@ -429,6 +429,58 @@
                             app:cornerRadius="8dp" />
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
+
+                <!-- Section 5: App Updates & Installation -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="24dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/outline_variant"
+                    app:strokeWidth="1dp"
+                    app:cardBackgroundColor="@color/surface_container_lowest">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/nav_install_app"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/outline"
+                            android:letterSpacing="0.05"
+                            android:layout_marginBottom="6dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/install_app_subtitle"
+                            android:textSize="12sp"
+                            android:textColor="@color/on_surface_variant" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSettingsInstallApp"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/install_app_gdrive"
+                            android:textAllCaps="false"
+                            android:textSize="13sp"
+                            android:textStyle="bold"
+                            app:icon="@drawable/ic_download"
+                            app:iconGravity="textStart"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                            android:textColor="@color/on_primary"
+                            app:backgroundTint="@color/primary"
+                            app:cornerRadius="8dp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

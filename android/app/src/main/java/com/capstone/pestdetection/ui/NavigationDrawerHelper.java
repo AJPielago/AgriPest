@@ -91,6 +91,10 @@ public class NavigationDrawerHelper {
                     activity.startActivity(new Intent(activity, NotificationsActivity.class));
                 } else if (id == R.id.nav_settings) {
                     activity.startActivity(new Intent(activity, SettingsActivity.class));
+                } else if (id == R.id.nav_install_app) {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"));
+                    activity.startActivity(browserIntent);
+                    return false;
                 } else if (id == R.id.nav_admin_dashboard) {
                     activity.startActivity(new Intent(activity, AdminDashboardActivity.class));
                 } else if (id == R.id.nav_logout) {

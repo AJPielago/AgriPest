@@ -212,7 +212,16 @@ export const Settings = () => {
               <span className="font-bold text-primary dark:text-primary-fixed">Web Speech API</span>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-col gap-2">
+              <a
+                href="https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-fixed text-center font-bold flex items-center justify-center gap-2 border border-primary/30 transition-colors shadow-xs"
+              >
+                <span className="material-symbols-outlined text-[18px]">install_mobile</span>
+                <span>{lang === 'tl' ? 'I-install ang Mobile App (Google Drive APK)' : 'Install Mobile App (Google Drive APK)'}</span>
+              </a>
               <Link
                 to="/history"
                 className="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface text-center font-bold block border border-outline-variant transition-colors"

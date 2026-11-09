@@ -66,6 +66,10 @@ public class SettingsActivity extends BaseActivity {
 
         findViewById(R.id.btnUpdatePassword).setOnClickListener(v -> handlePasswordUpdate());
         findViewById(R.id.btnSettingsConfigServer).setOnClickListener(v -> showServerConfigDialog());
+        findViewById(R.id.btnSettingsInstallApp).setOnClickListener(v -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"));
+            startActivity(browserIntent);
+        });
     }
 
     private void populateProfileInfo() {

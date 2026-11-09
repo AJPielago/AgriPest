@@ -4,32 +4,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 
+const GDRIVE_APK_URL = "https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH";
+
 export const Header = ({ onOpenSidebar }) => {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { lang, toggleLanguage, t } = useLanguage();
   const location = useLocation();
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
 
-  useEffect(() => {
-    const handler = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => setDeferredPrompt(null));
-    } else {
-      alert(lang === 'tl'
-        ? "Upang i-install sa Android Phone:\n\n1. I-click ang tatlong tuldok (⋮) sa kanang itaas ng Chrome browser.\n2. Piliin ang 'Add to Home screen' o 'Install app'."
-        : "To install on your Android Phone:\n\n1. Tap the three dots (⋮) in the top right corner of Chrome.\n2. Select 'Add to Home screen' or 'Install app'."
-      );
-    }
+  const handleInstallClick = (e) => {
+    // Direct redirect to the official Google Drive APK distribution folder
+    window.open(GDRIVE_APK_URL, '_blank', 'noopener,noreferrer');
   };
 
   const getBreadcrumbTitle = (path) => {
@@ -84,16 +69,18 @@ export const Header = ({ onOpenSidebar }) => {
       {/* Action Controls & User Status */}
       <div className="flex items-center gap-2">
         
-        {/* Install Mobile PWA Button */}
-        <button
-          onClick={handleInstallClick}
-          aria-label="Install App to Android Home Screen"
+        {/* Install / Download Mobile App Button (Redirects to Google Drive) */}
+        <a
+          href={GDRIVE_APK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Install App"
           className="px-3 py-1.5 text-xs font-bold rounded-lg border border-outline-variant bg-surface-container-lowest dark:bg-surface-container-high hover:bg-surface-container-low text-primary dark:text-primary-fixed transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-          title="Install App to Android Home Screen"
+          title={lang === 'tl' ? 'I-install ang App mula sa Google Drive' : 'Install App from Google Drive'}
         >
           <span className="material-symbols-outlined text-[16px]">install_mobile</span>
           <span className="hidden md:inline">{lang === 'tl' ? 'I-install App' : 'Install App'}</span>
-        </button>
+        </a>
 
         {/* Language Toggle (English / Tagalog) */}
         <button

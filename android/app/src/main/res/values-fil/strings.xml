@@ -16,6 +16,9 @@
     <string name="title_reports">Mga Ulat</string>
     <string name="title_notifications">Mga Abiso</string>
     <string name="title_settings">Mga Setting</string>
+    <string name="nav_install_app">I-install ang App / APK</string>
+    <string name="install_app_gdrive">I-download at I-install ang Pinakabagong App (Google Drive)</string>
+    <string name="install_app_subtitle">Kunin ang pinakabagong bersyon ng APK mula sa Google Drive</string>
     <string name="title_history">Kasaysayan ng Pagsusuri</string>
     <string name="title_pest_library">Katalogo ng Peste</string>
     <string name="title_admin">Pangangasiwa</string>
