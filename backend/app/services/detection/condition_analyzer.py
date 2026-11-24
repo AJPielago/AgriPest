@@ -13,11 +13,12 @@ Lettuce (Litsugas), Bok Choy (Petsay), or Mustard Greens (Mustasa):
      Magnesium/Iron interveinal chlorosis, Heat/Water stress) from pests and pathogens.
 """
 
+from collections import deque
 import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from app.services.detection.domain_gate import BRASSICA_CROPS, TARGET_CROPS
 
@@ -296,12 +297,125 @@ NUTRIENT_DEFICIENCY_CATALOG: Dict[str, Dict[str, Any]] = {
 }
 
 
-def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dict[str, float]:
+def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
+    """
+    Pure Pillow + NumPy detector for insect chew-holes / shot-holes strictly
+    enclosed inside bright green leafy foliage (zero OpenCV dependency, Render-safe).
+
+    A real insect puncture/chew hole inside a leaf blade appears as a compact
+    dark cavity whose 4-sided perimeter ring is predominantly bright green leaf
+    tissue and sharply brighter than the cavity interior.
+    """
+    try:
+        w, h = im.size
+        if w < 48 or h < 48:
+            return 0, 0.0
+        # Strip outer edges (bezels/frames/background margins) and normalize size
+        crop = im.crop((int(w * 0.12), int(h * 0.15), int(w * 0.88), int(h * 0.85)))
+        crop = crop.resize((320, 320), Image.Resampling.BILINEAR)
+
+        hsv = np.asarray(crop.convert("HSV"), dtype=np.float32)
+        hue, sat, val = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
+
+        green = (hue >= 36) & (hue <= 118) & (sat >= 42) & (val >= 70)
+        soil_bg = (~green) & (val >= 55)
+        if float(green.mean()) < 0.25:
+            return 0, 0.0
+
+        val_img = Image.fromarray(val.astype(np.uint8), mode="L")
+        # Tight 5px + wide 11px local contrast: punched insect holes have razor-sharp step edges,
+        # whereas soft shadows in healthy curled rosettes fade gradually and are ignored.
+        local_tight = np.asarray(val_img.filter(ImageFilter.BoxBlur(5)), dtype=np.float32)
+        local_wide = np.asarray(val_img.filter(ImageFilter.BoxBlur(11)), dtype=np.float32)
+
+        dark_spot = ((local_tight - val) >= 40.0) & ((local_wide - val) >= 50.0) & (val < 125.0)
+        ys, xs = np.where(dark_spot)
+        if ys.size == 0 or ys.size > 35000:
+            return 0, 0.0
+
+        height, width = dark_spot.shape
+        visited = np.zeros((height, width), dtype=bool)
+        hole_count = 0
+        total_hole_area = 0
+
+        for sy, sx in zip(ys.tolist(), xs.tolist()):
+            if visited[sy, sx]:
+                continue
+            q = deque([(sy, sx)])
+            visited[sy, sx] = True
+            pixels: List[Tuple[int, int]] = []
+            min_y = max_y = sy
+            min_x = max_x = sx
+            touches_border = False
+
+            while q:
+                cy, cx = q.popleft()
+                pixels.append((cy, cx))
+                if cy <= 5 or cy >= height - 6 or cx <= 5 or cx >= width - 6:
+                    touches_border = True
+                if cy < min_y:
+                    min_y = cy
+                if cy > max_y:
+                    max_y = cy
+                if cx < min_x:
+                    min_x = cx
+                if cx > max_x:
+                    max_x = cx
+
+                for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                    ny, nx = cy + dy, cx + dx
+                    if 0 <= ny < height and 0 <= nx < width and not visited[ny, nx] and dark_spot[ny, nx]:
+                        visited[ny, nx] = True
+                        q.append((ny, nx))
+
+            area = len(pixels)
+            if touches_border or area < 5 or area > 650:
+                continue
+
+            bh = max_y - min_y + 1
+            bw = max_x - min_x + 1
+            if max(bh, bw) / max(1, min(bh, bw)) > 3.2:
+                continue  # Ignore elongated leaf-fold shadow creases
+            if area / float(bh * bw) < 0.30:
+                continue  # Ignore lacy background gaps
+
+            pad = 6
+            ry0, ry1 = max(0, min_y - pad), min(height, max_y + pad + 1)
+            rx0, rx1 = max(0, min_x - pad), min(width, max_x + pad + 1)
+
+            top_strip = green[ry0:min_y, rx0:rx1]
+            bot_strip = green[max_y + 1 : ry1, rx0:rx1]
+            left_strip = green[ry0:ry1, rx0:min_x]
+            right_strip = green[ry0:ry1, max_x + 1 : rx1]
+            sides = [float(s.mean()) if s.size > 0 else 0.0 for s in (top_strip, bot_strip, left_strip, right_strip)]
+
+            if min(sides) < 0.65 or float(np.mean(sides)) < 0.80:
+                continue
+            if float(soil_bg[ry0:ry1, rx0:rx1].mean()) > 0.05:
+                continue
+
+            ring_green_vals = val[ry0:ry1, rx0:rx1][green[ry0:ry1, rx0:rx1]]
+            if ring_green_vals.size == 0:
+                continue
+            hole_v = float(np.mean([val[py, px] for py, px in pixels]))
+            if float(np.median(ring_green_vals)) - hole_v >= 65.0:
+                hole_count += 1
+                total_hole_area += area
+
+        hole_area_pct = round(total_hole_area / float(height * width) * 100.0, 2)
+        return hole_count, hole_area_pct
+    except Exception:
+        return 0, 0.0
+
+
+def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dict[str, Any]:
     """
     Extracts quantitative visual foliage ratios from the central specimen region:
       - green_foliage_pct: healthy green chlorophyll ratio
       - yellow_chlorosis_pct: yellowing/chlorotic tissue ratio (N/Mg/Fe deficiency or viral/mildew)
       - brown_necrosis_pct: brown/scorched/rotted tissue ratio (tipburn, K-scorch, rot, spots)
+      - leaf_hole_count: count of distinct dark chew/shot-holes enclosed inside green foliage
+      - hole_area_pct: percentage of central leaf area perforated by enclosed holes
     """
     try:
         if isinstance(image_source, Image.Image):
@@ -322,11 +436,14 @@ def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dic
             healthy_green = (hue >= 42) & (hue <= 122) & (sat >= 35) & (val >= 32)
             yellow_chlorosis = (hue >= 22) & (hue < 42) & (sat >= 38) & (val >= 55)
             brown_necrosis = (hue >= 6) & (hue < 22) & (sat >= 35) & (val >= 28) & (val <= 215)
+            leaf_hole_count, hole_area_pct = detect_enclosed_leaf_holes(im)
 
             return {
                 "green_foliage_pct": round(float(healthy_green.mean()) * 100.0, 1),
                 "yellow_chlorosis_pct": round(float(yellow_chlorosis.mean()) * 100.0, 1),
                 "brown_necrosis_pct": round(float(brown_necrosis.mean()) * 100.0, 1),
+                "leaf_hole_count": int(leaf_hole_count),
+                "hole_area_pct": float(hole_area_pct),
             }
         finally:
             if should_close:
@@ -336,6 +453,8 @@ def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dic
             "green_foliage_pct": 0.0,
             "yellow_chlorosis_pct": 0.0,
             "brown_necrosis_pct": 0.0,
+            "leaf_hole_count": 0,
+            "hole_area_pct": 0.0,
         }
 
 
@@ -359,7 +478,7 @@ class HolisticConditionAnalyzer:
         ("healthy", "healthy_foliage", "a photo of crisp green leafy vegetable foliage with intact edges and no holes, yellowing, or rot"),
         # Indirect pest-damage signatures (insect not required to be visible)
         ("pest_damage", "chewing_damage", "a photo of green leafy vegetable leaves with irregular chewed holes, ragged eaten margins, or caterpillar feeding damage"),
-        ("pest_damage", "shothole_damage", "a photo of leafy brassica or bok choy leaves riddled with many tiny round pinholes and flea beetle shot-hole punctures"),
+        ("pest_damage", "shothole_damage", "a photo of green lettuce, bok choy, or mustard leaves riddled with many tiny round pinholes and flea beetle shot-hole punctures"),
         ("pest_damage", "leafminer_damage", "a photo of a green vegetable leaf with winding silvery-white serpentine leafminer tunnels etched inside the leaf"),
         ("pest_damage", "sucking_damage", "a photo of severely curled, cupped, crinkled, distorted leafy vegetable leaves with stippling or honeydew from aphids or thrips"),
         # Nutrient deficiencies & abiotic stress
@@ -514,8 +633,11 @@ def synthesize_total_condition(
     top_deficiency = condition_raw.get("top_nutrient_deficiency")
     crop_label = crop_name if crop_name in TARGET_CROPS else "Leafy Green"
 
+    green_pct = float(visual.get("green_foliage_pct", 0.0))
     yellow_pct = float(visual.get("yellow_chlorosis_pct", 0.0))
     brown_pct = float(visual.get("brown_necrosis_pct", 0.0))
+    leaf_hole_count = int(visual.get("leaf_hole_count", 0))
+    hole_area_pct = float(visual.get("hole_area_pct", 0.0))
     stress_color_pct = yellow_pct + brown_pct
 
     p_healthy = float(group_probs.get("healthy", 0.0))
@@ -523,10 +645,43 @@ def synthesize_total_condition(
     p_deficiency = float(group_probs.get("nutrient_deficiency", 0.0))
     p_disease = float(group_probs.get("infectious_disease", 0.0))
 
-    # Build optional Pest-Damage detail if CLIP sees a clear indirect feeding signature
+    # Strong visual perforation signal: many sharp enclosed dark cavities inside green foliage
+    # calibrated against outdoor + hydroponic healthy lettuce/bok choy baselines (<=19 holes, <=0.38% area)
+    # so intact leaves stay healthy while heavily insect-perforated leaves are caught accurately.
+    clip_agrees_unhealthy = (not group_probs) or (p_healthy < 0.35)
+    strong_hole_evidence = (
+        leaf_hole_count >= 22
+        and hole_area_pct >= 0.45
+        and green_pct >= 50.0
+        and clip_agrees_unhealthy
+    )
+
+    # Build optional Pest-Damage detail if CLIP or visual hole-detection sees clear feeding damage
     pest_damage_obj: Optional[Dict[str, Any]] = None
     probable_pests: List[Dict[str, str]] = []
-    if top_damage and (p_damage >= 0.38 or (top_damage[1] >= 0.30 and p_damage > p_healthy)):
+    if strong_hole_evidence:
+        # Prefer CLIP's hole-compatible damage subclass if available, else infer chewing vs shot-hole from hole size
+        avg_hole_px = (hole_area_pct / 100.0 * 320.0 * 320.0) / max(1, leaf_hole_count)
+        if top_damage and top_damage[0] in ("chewing_damage", "shothole_damage"):
+            dmg_key = top_damage[0]
+        else:
+            dmg_key = "shothole_damage" if avg_hole_px < 24.0 else "chewing_damage"
+        meta = PEST_DAMAGE_CATALOG[dmg_key]
+        hole_strength = min(1.0, (leaf_hole_count / 45.0) * 0.65 + (hole_area_pct / 2.0) * 0.35)
+        scaled_conf = round(min(0.93, max(0.68, 0.62 + hole_strength * 0.28)), 2)
+        probable_pests = get_probable_culprits(dmg_key, crop_label)
+        pest_damage_obj = {
+            "key": dmg_key,
+            "damage_type": meta["damage_type"],
+            "confidence": scaled_conf,
+            "severity": "High" if leaf_hole_count >= 25 or hole_area_pct >= 1.5 else meta["severity"],
+            "description": (
+                f"{meta['description']} Visual scan detected {leaf_hole_count} distinct "
+                f"perforations covering {hole_area_pct:.1f}% of the central leaf blade."
+            ),
+            "recommended_action": meta["recommended_action"],
+        }
+    elif top_damage and (p_damage >= 0.38 or (top_damage[1] >= 0.30 and p_damage > p_healthy)):
         dmg_key, dmg_prob = top_damage
         meta = PEST_DAMAGE_CATALOG[dmg_key]
         scaled_conf = round(min(0.92, max(0.55, 0.45 + p_damage * 0.50)), 2)
@@ -564,9 +719,11 @@ def synthesize_total_condition(
     # Decide if a weak 'healthy' or 'none' YOLO result should be promoted to 'pest_damage' or 'nutrient_deficiency'
     promoted_type = det_type
     if det_type in ("healthy", "none"):
-        # Strong YOLO 'healthy' (>= 0.85) is respected unless there is overwhelming CLIP evidence
-        # backed by real visual chlorosis/necrosis (for nutrient deficiency) or strong feeding scars.
-        if det_type == "none" or primary_conf < 0.85:
+        # Strong visual perforation evidence (many enclosed insect holes + CLIP agrees leaf isn't healthy)
+        # overrides YOLO 'healthy' because YOLO has no indirect chew-hole class.
+        if strong_hole_evidence and pest_damage_obj:
+            promoted_type = "pest_damage"
+        elif det_type == "none" or primary_conf < 0.85:
             if pest_damage_obj and p_damage >= 0.45 and p_damage >= p_deficiency and p_damage >= p_disease:
                 promoted_type = "pest_damage"
             elif (

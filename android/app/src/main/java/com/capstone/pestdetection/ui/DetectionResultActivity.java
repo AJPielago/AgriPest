@@ -1,15 +1,16 @@
 package com.capstone.pestdetection.ui;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
@@ -22,6 +23,11 @@ import com.capstone.pestdetection.network.SessionManager;
 import com.capstone.pestdetection.views.BoundingBoxOverlayView;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,6 +37,12 @@ public class DetectionResultActivity extends BaseActivity {
 
     private ImageView ivResultImage;
     private BoundingBoxOverlayView overlayBoundingBox;
+    private MaterialCardView cardTotalCondition, cardProbablePests, cardNutrientDeficiency;
+    private TextView tvOverallCondition, tvHealthScore, tvConditionSummary;
+    private TextView tvSignalGreen, tvSignalYellow, tvSignalBrown, tvSignalHoles;
+    private TextView tvDamageType, tvDamageDescription;
+    private LinearLayout layoutCulpritsContainer;
+    private TextView tvNutrientName, tvNutrientBadge, tvNutrientSymptoms, tvNutrientCauses, tvNutrientAction;
     private TextView tvPestName, tvScientificName, tvSeverityBadge, tvConfidenceScore, tvResultCropName, tvRecommendation;
     private TextView tvResultLocation, tvResultWeather, tvResultTimestamp;
     private View cardDiseaseDiagnosis;
@@ -52,6 +64,28 @@ public class DetectionResultActivity extends BaseActivity {
 
         ivResultImage = findViewById(R.id.ivResultImage);
         overlayBoundingBox = findViewById(R.id.overlayBoundingBox);
+
+        cardTotalCondition = findViewById(R.id.cardTotalCondition);
+        tvOverallCondition = findViewById(R.id.tvOverallCondition);
+        tvHealthScore = findViewById(R.id.tvHealthScore);
+        tvConditionSummary = findViewById(R.id.tvConditionSummary);
+        tvSignalGreen = findViewById(R.id.tvSignalGreen);
+        tvSignalYellow = findViewById(R.id.tvSignalYellow);
+        tvSignalBrown = findViewById(R.id.tvSignalBrown);
+        tvSignalHoles = findViewById(R.id.tvSignalHoles);
+
+        cardProbablePests = findViewById(R.id.cardProbablePests);
+        tvDamageType = findViewById(R.id.tvDamageType);
+        tvDamageDescription = findViewById(R.id.tvDamageDescription);
+        layoutCulpritsContainer = findViewById(R.id.layoutCulpritsContainer);
+
+        cardNutrientDeficiency = findViewById(R.id.cardNutrientDeficiency);
+        tvNutrientName = findViewById(R.id.tvNutrientName);
+        tvNutrientBadge = findViewById(R.id.tvNutrientBadge);
+        tvNutrientSymptoms = findViewById(R.id.tvNutrientSymptoms);
+        tvNutrientCauses = findViewById(R.id.tvNutrientCauses);
+        tvNutrientAction = findViewById(R.id.tvNutrientAction);
+
         tvPestName = findViewById(R.id.tvPestName);
         tvScientificName = findViewById(R.id.tvScientificName);
         tvSeverityBadge = findViewById(R.id.tvSeverityBadge);
@@ -155,13 +189,23 @@ public class DetectionResultActivity extends BaseActivity {
         tvSeverityBadge.setText(localizedSeverity.toUpperCase());
 
         boolean isCritical = "Critical".equalsIgnoreCase(severity) || "High".equalsIgnoreCase(severity);
+        boolean isModerate = "Moderate".equalsIgnoreCase(severity);
         if (isCritical) {
             tvSeverityBadge.setBackgroundResource(R.drawable.bg_badge_error);
             tvSeverityBadge.setTextColor(ContextCompat.getColor(this, R.color.error));
+        } else if (isModerate) {
+            tvSeverityBadge.setBackgroundResource(R.drawable.bg_badge_warning);
+            tvSeverityBadge.setTextColor(ContextCompat.getColor(this, R.color.amber_accent));
+        } else if (isHealthy) {
+            tvSeverityBadge.setBackgroundResource(R.drawable.bg_badge_success);
+            tvSeverityBadge.setTextColor(ContextCompat.getColor(this, R.color.primary));
         } else {
             tvSeverityBadge.setBackgroundResource(R.drawable.bg_badge_neutral);
             tvSeverityBadge.setTextColor(ContextCompat.getColor(this, R.color.outline));
         }
+
+        // Render Holistic Total Plant Condition, Probable Culprits & Nutrient Deficiency Cards
+        renderConditionAssessment(detectionResult.getConditionAssessment());
 
         float primaryConf = isDiseaseOnly && detectionResult.getDiseaseConfidenceScore() != null
                 ? detectionResult.getDiseaseConfidenceScore()
@@ -232,6 +276,171 @@ public class DetectionResultActivity extends BaseActivity {
         // Overlay Bounding Boxes
         if (detectionResult.getBoundingBoxes() != null && !detectionResult.getBoundingBoxes().isEmpty()) {
             overlayBoundingBox.setBoundingBoxes(detectionResult.getBoundingBoxes());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void renderConditionAssessment(Map<String, Object> ca) {
+        if (ca == null || ca.isEmpty()) {
+            cardTotalCondition.setVisibility(View.GONE);
+            cardProbablePests.setVisibility(View.GONE);
+            cardNutrientDeficiency.setVisibility(View.GONE);
+            return;
+        }
+
+        // 1. Total Plant Condition Card
+        cardTotalCondition.setVisibility(View.VISIBLE);
+        String overall = asString(ca.get("overall_condition"), "Plant Condition");
+        String summary = asString(ca.get("condition_summary"), "");
+        int healthScore = asInt(ca.get("health_score"), 75);
+
+        tvOverallCondition.setText(overall);
+        tvConditionSummary.setText(summary);
+        tvHealthScore.setText(String.format(Locale.US, "%d / 100", healthScore));
+
+        if (healthScore >= 80) {
+            cardTotalCondition.setStrokeColor(ContextCompat.getColor(this, R.color.primary));
+            tvHealthScore.setBackgroundResource(R.drawable.bg_badge_success);
+            tvHealthScore.setTextColor(ContextCompat.getColor(this, R.color.primary));
+        } else if (healthScore >= 55) {
+            cardTotalCondition.setStrokeColor(ContextCompat.getColor(this, R.color.amber_600));
+            tvHealthScore.setBackgroundResource(R.drawable.bg_badge_warning);
+            tvHealthScore.setTextColor(ContextCompat.getColor(this, R.color.amber_accent));
+        } else {
+            cardTotalCondition.setStrokeColor(ContextCompat.getColor(this, R.color.error));
+            tvHealthScore.setBackgroundResource(R.drawable.bg_badge_error);
+            tvHealthScore.setTextColor(ContextCompat.getColor(this, R.color.error));
+        }
+
+        Object vsObj = ca.get("visual_signals");
+        if (vsObj instanceof Map) {
+            Map<String, Object> vs = (Map<String, Object>) vsObj;
+            double green = asDouble(vs.get("green_foliage_pct"), 0.0);
+            double yellow = asDouble(vs.get("yellow_chlorosis_pct"), 0.0);
+            double brown = asDouble(vs.get("brown_necrosis_pct"), 0.0);
+            int holes = asInt(vs.get("leaf_hole_count"), 0);
+            double holeArea = asDouble(vs.get("hole_area_pct"), 0.0);
+
+            tvSignalGreen.setText(String.format(Locale.US, "Green %.0f%%", green));
+            tvSignalYellow.setText(String.format(Locale.US, "Chlorosis %.0f%%", yellow));
+            tvSignalBrown.setText(String.format(Locale.US, "Necrosis %.0f%%", brown));
+
+            if (holes >= 10) {
+                tvSignalHoles.setVisibility(View.VISIBLE);
+                tvSignalHoles.setText(String.format(Locale.US, "Leaf Perforations Detected: %d holes (%.1f%% blade area)", holes, holeArea));
+            } else {
+                tvSignalHoles.setVisibility(View.GONE);
+            }
+        }
+
+        // 2. Indirect Pest Damage & Probable Causal Pests Card
+        Object dmgObj = ca.get("pest_damage");
+        Object culpritsObj = ca.get("probable_pests");
+        List<Object> culprits = (culpritsObj instanceof List) ? (List<Object>) culpritsObj : null;
+
+        if ((dmgObj instanceof Map) || (culprits != null && !culprits.isEmpty())) {
+            cardProbablePests.setVisibility(View.VISIBLE);
+            if (dmgObj instanceof Map) {
+                Map<String, Object> dmg = (Map<String, Object>) dmgObj;
+                tvDamageType.setText(asString(dmg.get("damage_type"), "Indirect Pest Feeding Damage"));
+                tvDamageDescription.setText(asString(dmg.get("description"), ""));
+                tvDamageDescription.setVisibility(tvDamageDescription.getText().length() > 0 ? View.VISIBLE : View.GONE);
+            } else {
+                tvDamageType.setText("Indirect Pest Feeding Damage");
+                tvDamageDescription.setVisibility(View.GONE);
+            }
+
+            layoutCulpritsContainer.removeAllViews();
+            if (culprits != null) {
+                int dp8 = Math.round(8 * getResources().getDisplayMetrics().density);
+                int dp10 = Math.round(10 * getResources().getDisplayMetrics().density);
+                for (Object item : culprits) {
+                    if (!(item instanceof Map)) continue;
+                    Map<String, Object> c = (Map<String, Object>) item;
+                    String cName = asString(c.get("name"), "Unknown Pest");
+                    String cSci = asString(c.get("scientific_name"), "");
+                    String cLike = asString(c.get("likelihood"), "Moderate");
+                    String cEvidence = asString(c.get("evidence"), "");
+
+                    LinearLayout row = new LinearLayout(this);
+                    row.setOrientation(LinearLayout.VERTICAL);
+                    row.setBackgroundResource(R.drawable.bg_card_stitch);
+                    row.setPadding(dp10, dp8, dp10, dp8);
+                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    lp.bottomMargin = dp8;
+                    row.setLayoutParams(lp);
+
+                    TextView tvTitle = new TextView(this);
+                    tvTitle.setText(cName + "  •  " + cLike.toUpperCase(Locale.US) + " LIKELIHOOD");
+                    tvTitle.setTextSize(13f);
+                    tvTitle.setTypeface(null, Typeface.BOLD);
+                    tvTitle.setTextColor(ContextCompat.getColor(this,
+                            "High".equalsIgnoreCase(cLike) ? R.color.error : R.color.amber_accent));
+                    row.addView(tvTitle);
+
+                    if (!cSci.isEmpty()) {
+                        TextView tvSci = new TextView(this);
+                        tvSci.setText(cSci);
+                        tvSci.setTextSize(11f);
+                        tvSci.setTypeface(null, Typeface.ITALIC);
+                        tvSci.setTextColor(ContextCompat.getColor(this, R.color.outline));
+                        row.addView(tvSci);
+                    }
+
+                    if (!cEvidence.isEmpty()) {
+                        TextView tvEv = new TextView(this);
+                        tvEv.setText(cEvidence);
+                        tvEv.setTextSize(12f);
+                        tvEv.setTextColor(ContextCompat.getColor(this, R.color.on_surface_variant));
+                        row.addView(tvEv);
+                    }
+
+                    layoutCulpritsContainer.addView(row);
+                }
+            }
+        } else {
+            cardProbablePests.setVisibility(View.GONE);
+        }
+
+        // 3. Nutrient Deficiency / Abiotic Stress Card
+        Object nutObj = ca.get("nutrient_deficiency");
+        if (nutObj instanceof Map) {
+            Map<String, Object> nut = (Map<String, Object>) nutObj;
+            cardNutrientDeficiency.setVisibility(View.VISIBLE);
+            tvNutrientName.setText(asString(nut.get("name"), "Nutrient Deficiency"));
+            tvNutrientBadge.setText(asString(nut.get("nutrient"), "ABIOTIC").toUpperCase(Locale.US));
+            String symptoms = asString(nut.get("symptoms"), "");
+            String causes = asString(nut.get("causes"), "");
+            tvNutrientSymptoms.setText(symptoms.isEmpty() ? "" : "Symptoms: " + symptoms);
+            tvNutrientCauses.setText(causes.isEmpty() ? "" : "Likely Cause: " + causes);
+            tvNutrientAction.setText(asString(nut.get("recommended_action"), ""));
+        } else {
+            cardNutrientDeficiency.setVisibility(View.GONE);
+        }
+    }
+
+    private String asString(Object val, String fallback) {
+        return val != null ? String.valueOf(val) : fallback;
+    }
+
+    private int asInt(Object val, int fallback) {
+        if (val instanceof Number) return ((Number) val).intValue();
+        try {
+            return val != null ? (int) Math.round(Double.parseDouble(String.valueOf(val))) : fallback;
+        } catch (Exception ignored) {
+            return fallback;
+        }
+    }
+
+    private double asDouble(Object val, double fallback) {
+        if (val instanceof Number) return ((Number) val).doubleValue();
+        try {
+            return val != null ? Double.parseDouble(String.valueOf(val)) : fallback;
+        } catch (Exception ignored) {
+            return fallback;
         }
     }
 

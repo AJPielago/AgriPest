@@ -17,6 +17,7 @@ from app.core.config import settings
 from app.core.rate_limiter import detection_limiter, login_limiter
 from app.main import app
 from app.services.detection.condition_analyzer import (
+    detect_enclosed_leaf_holes,
     extract_visual_foliage_signals,
     get_probable_culprits,
     synthesize_total_condition,
@@ -248,6 +249,63 @@ def test_synthesize_promotes_chewed_leaf_to_pest_damage_without_visible_bug():
     assert ca["overall_condition"] == "Pest-Damaged Foliage"
     assert ca["pest_damage"]["key"] == "chewing_damage"
     assert any(c["name"] == "Diamondback Moth" for c in ca["probable_pests"])
+
+
+def test_enclosed_leaf_hole_detector_distinguishes_perforated_vs_intact_leaf():
+    # Intact bright green leaf blade with mild vein texture -> near-zero enclosed holes
+    rng = np.random.default_rng(7)
+    base = np.zeros((360, 360, 3), dtype=np.uint8)
+    base[:, :, 0] = rng.integers(55, 85, size=(360, 360))
+    base[:, :, 1] = rng.integers(170, 205, size=(360, 360))
+    base[:, :, 2] = rng.integers(35, 65, size=(360, 360))
+    intact_im = Image.fromarray(base, mode="RGB")
+    intact_holes, intact_area = detect_enclosed_leaf_holes(intact_im)
+    assert intact_holes < 5
+    assert intact_area < 0.3
+
+    # Same leaf perforated with 30 dark insect chew-holes inside the blade
+    chewed = base.copy()
+    for row in range(5):
+        for col in range(6):
+            cy = 75 + row * 45
+            cx = 70 + col * 42
+            chewed[cy - 4 : cy + 5, cx - 4 : cx + 5] = [18, 42, 12]
+    chewed_im = Image.fromarray(chewed, mode="RGB")
+    chewed_holes, chewed_area = detect_enclosed_leaf_holes(chewed_im)
+    assert chewed_holes >= 20
+    assert chewed_area >= 0.45
+
+
+def test_synthesize_overrides_high_conf_healthy_when_leaf_is_riddled_with_insect_holes():
+    # Even if YOLO classifies an insect-riddled green lettuce leaf as 'lettuce_healthy' (0.96),
+    # strong enclosed hole count + CLIP agreeing leaf isn't healthy promotes it to 'pest_damage'.
+    cond_raw = {
+        "available": True,
+        "visual_signals": {
+            "green_foliage_pct": 88.7,
+            "yellow_chlorosis_pct": 0.0,
+            "brown_necrosis_pct": 0.0,
+            "leaf_hole_count": 59,
+            "hole_area_pct": 2.40,
+        },
+        "group_probs": {"healthy": 0.19, "pest_damage": 0.08, "nutrient_deficiency": 0.05, "infectious_disease": 0.68},
+        "top_pest_damage": ("chewing_damage", 0.06),
+        "top_nutrient_deficiency": ("nitrogen_deficiency", 0.03),
+    }
+    res = synthesize_total_condition(
+        det_type="healthy",
+        crop_name="Lettuce",
+        primary_conf=0.96,
+        pest_name=None,
+        disease_name=None,
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "pest_damage"
+    ca = res["condition_assessment"]
+    assert ca["overall_condition"] == "Pest-Damaged Foliage"
+    assert ca["health_score"] < 60
+    assert ca["pest_damage"]["key"] == "chewing_damage"
+    assert any(c["name"] == "Cabbage Looper" for c in ca["probable_pests"])
 
 
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():

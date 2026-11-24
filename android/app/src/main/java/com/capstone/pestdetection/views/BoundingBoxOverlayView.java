@@ -81,13 +81,21 @@ public class BoundingBoxOverlayView extends View {
             float right = box.getXMax() * width;
             float bottom = box.getYMax() * height;
 
-            // Check if this box is for a plant disease
-            boolean isDisease = "disease".equalsIgnoreCase(box.getType()) 
-                    || (box.getLabel() != null && box.getLabel().toLowerCase().startsWith("disease"));
-
-            if (isDisease) {
+            // Color-code bounding box by finding type
+            String typeLower = box.getType() != null ? box.getType().toLowerCase() : "";
+            String labelLower = box.getLabel() != null ? box.getLabel().toLowerCase() : "";
+            if ("disease".equals(typeLower) || labelLower.startsWith("disease")) {
                 boxPaint.setColor(Color.parseColor("#F59E0B")); // Amber 500
                 labelBgPaint.setColor(Color.parseColor("#E678350F")); // Amber 900
+            } else if ("pest_damage".equals(typeLower) || labelLower.startsWith("pest damage")) {
+                boxPaint.setColor(Color.parseColor("#EA580C")); // Orange 600
+                labelBgPaint.setColor(Color.parseColor("#E69A3412")); // Orange 900
+            } else if ("nutrient".equals(typeLower) || labelLower.startsWith("nutrient")) {
+                boxPaint.setColor(Color.parseColor("#7C3AED")); // Violet 600
+                labelBgPaint.setColor(Color.parseColor("#E64C1D95")); // Violet 900
+            } else if ("pest".equals(typeLower) || labelLower.startsWith("pest:")) {
+                boxPaint.setColor(Color.parseColor("#EF4444")); // Red 500
+                labelBgPaint.setColor(Color.parseColor("#E67F1D1D")); // Red 900
             } else {
                 boxPaint.setColor(Color.parseColor("#10B981")); // Emerald 500
                 labelBgPaint.setColor(Color.parseColor("#E6064E3B")); // Emerald 900

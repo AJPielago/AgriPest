@@ -57,7 +57,18 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DetectionResponse item = items.get(position);
 
-        holder.tvPestName.setText(item.getDetectedPestName() != null ? item.getDetectedPestName() : "Pest Detected");
+        String detType = item.getDetectionType() != null ? item.getDetectionType().toLowerCase() : "";
+        String displayTitle;
+        if ("disease".equals(detType) && item.getDetectedDiseaseName() != null && !item.getDetectedDiseaseName().isEmpty()) {
+            displayTitle = item.getDetectedDiseaseName();
+        } else if (item.getDetectedPestName() != null && !"No Pest Detected".equalsIgnoreCase(item.getDetectedPestName())) {
+            displayTitle = item.getDetectedPestName();
+        } else if (item.getDetectedDiseaseName() != null && !item.getDetectedDiseaseName().isEmpty()) {
+            displayTitle = item.getDetectedDiseaseName();
+        } else {
+            displayTitle = "Inspection Record";
+        }
+        holder.tvPestName.setText(displayTitle);
 
         String crop = item.getCropName() != null ? item.getCropName() : context.getString(R.string.crop_cabbage_default);
         String location = item.getFieldLocation() != null ? item.getFieldLocation() : "Field #1";

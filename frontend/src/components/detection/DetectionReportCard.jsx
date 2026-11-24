@@ -405,6 +405,14 @@ export const DetectionReportCard = ({ detection }) => {
                         <span>{lang === 'tl' ? 'Pagkatuyot' : 'Necrosis'}</span>
                         <span className="font-bold">{visualSignals.brown_necrosis_pct}%</span>
                       </div>
+                      {visualSignals.leaf_hole_count >= 10 && (
+                        <div className="col-span-3 px-2.5 py-1.5 rounded-lg bg-rose-500/10 text-rose-800 dark:text-rose-300 flex items-center justify-between border border-rose-500/20">
+                          <span>{lang === 'tl' ? 'Mga Butas sa Dahon (Kagat ng Peste)' : 'Leaf Perforations (Insect Chew Holes)'}</span>
+                          <span className="font-bold">
+                            {visualSignals.leaf_hole_count} holes ({visualSignals.hole_area_pct}%)
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
