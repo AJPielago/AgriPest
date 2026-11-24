@@ -197,7 +197,7 @@ class AIDetectionService(BaseDetectionService):
 
             if kind == "pest":
                 threshold = min_pest_conf
-            elif kind == "disease":
+            elif kind in ("disease", "pest_damage", "nutrient_deficiency"):
                 threshold = min_disease_conf
             else:
                 threshold = min_healthy_conf
@@ -205,19 +205,32 @@ class AIDetectionService(BaseDetectionService):
             if conf < threshold:
                 continue
 
+            if kind == "healthy":
+                box_label = f"Healthy Crop: {display_name}"
+                box_type = "healthy"
+            elif kind == "pest_damage":
+                box_label = f"Pest Damage: {display_name}"
+                box_type = "pest_damage"
+            elif kind == "nutrient_deficiency":
+                box_label = f"Nutrient: {display_name}"
+                box_type = "nutrient"
+            else:
+                box_label = f"{kind.capitalize()}: {display_name}"
+                box_type = kind
+
             box_dict = {
                 "x_min": round(x1, 4),
                 "y_min": round(y1, 4),
                 "x_max": round(x2, 4),
                 "y_max": round(y2, 4),
-                "label": f"{'Healthy Crop' if kind == 'healthy' else kind.capitalize()}: {display_name}",
-                "type": kind,
+                "label": box_label,
+                "type": box_type,
                 "confidence": round(conf, 2),
             }
 
-            # ALWAYS enforce organic foliage + anti-paper check on crop & disease boxes
+            # ALWAYS enforce organic foliage + anti-paper check on crop, disease & condition boxes
             # (never bypassed even at high YOLO confidence!)
-            if kind in ("healthy", "disease"):
+            if kind in ("healthy", "disease", "pest_damage", "nutrient_deficiency"):
                 if not has_organic_foliage_colors(image_source, box_dict):
                     continue
 
@@ -474,7 +487,10 @@ class AIDetectionService(BaseDetectionService):
         # 5. CLIP Tier-2 leafy-green specificity gate:
         #    Whenever the primary finding is a crop or foliar disease (not a pure macro pest),
         #    verify the plant is actually one of the 3 leafy greens (not tomato/flower/tree/grass/houseplant).
-        has_crop_or_disease = any(d["kind"] in ("healthy", "disease") for d in detections)
+        has_crop_or_disease = any(
+            d["kind"] in ("healthy", "disease", "pest_damage", "nutrient_deficiency")
+            for d in detections
+        )
         has_strong_pest = any(d["kind"] == "pest" and d["confidence"] >= 0.65 for d in detections)
         if has_crop_or_disease and not has_strong_pest and clip_available:
             clip_t2 = self.clip_gate.evaluate(image_source, require_leafy_crop=True)
@@ -556,6 +572,8 @@ class AIDetectionService(BaseDetectionService):
             det_type: str = resolved["detection_type"]
             pest_hits: List[Dict[str, Any]] = resolved["pest_hits"]
             disease_hits: List[Dict[str, Any]] = resolved["disease_hits"]
+            pest_damage_hits: List[Dict[str, Any]] = resolved.get("pest_damage_hits", [])
+            nutrient_hits: List[Dict[str, Any]] = resolved.get("nutrient_hits", [])
             healthy_hits: List[Dict[str, Any]] = resolved["healthy_hits"]
             bounding_boxes: List[Dict[str, Any]] = resolved["final_boxes"]
             resolved_crop_name: Optional[str] = resolved.get("resolved_crop_name")
@@ -663,7 +681,26 @@ class AIDetectionService(BaseDetectionService):
                 rec_action = top_h["meta"].get("action", rec_action)
 
             # Synthesize holistic plant condition (indirect pest damage + nutrient deficiency + health score)
-            condition_raw = resolved.get("condition_raw", {})
+            condition_raw = dict(resolved.get("condition_raw") or {})
+            has_native_damage_box = bool(det_type == "pest_damage" and pest_damage_hits)
+            has_native_nutrient_box = bool(det_type == "nutrient_deficiency" and nutrient_hits)
+            if has_native_damage_box:
+                top_dmg = pest_damage_hits[0]
+                dmg_key = top_dmg["meta"].get("damage_key", top_dmg["raw_name"])
+                pest_conf = round(top_dmg["confidence"], 2)
+                condition_raw["top_pest_damage"] = (dmg_key, pest_conf)
+                gp = dict(condition_raw.get("group_probs") or {})
+                gp["pest_damage"] = max(float(gp.get("pest_damage", 0.0)), min(0.95, pest_conf))
+                condition_raw["group_probs"] = gp
+            elif has_native_nutrient_box:
+                top_nut = nutrient_hits[0]
+                nut_key = top_nut["meta"].get("nutrient_key", top_nut["raw_name"])
+                pest_conf = round(top_nut["confidence"], 2)
+                condition_raw["top_nutrient_deficiency"] = (nut_key, pest_conf)
+                gp = dict(condition_raw.get("group_probs") or {})
+                gp["nutrient_deficiency"] = max(float(gp.get("nutrient_deficiency", 0.0)), min(0.95, pest_conf))
+                condition_raw["group_probs"] = gp
+
             synth = synthesize_total_condition(
                 det_type=det_type,
                 crop_name=resolved_crop_name,
@@ -683,43 +720,53 @@ class AIDetectionService(BaseDetectionService):
                 pest_id = None
                 pest_name = dmg["damage_type"]
                 scientific_name = culprits[0]["scientific_name"] if culprits else None
-                pest_conf = dmg["confidence"]
+                pest_conf = round(pest_damage_hits[0]["confidence"], 2) if has_native_damage_box else dmg["confidence"]
                 pest_severity = dmg["severity"]
                 description = condition_assessment["condition_summary"]
                 rec_action = dmg["recommended_action"]
-                dmg_zones = localized_boxes.get("damage_boxes") or []
-                if dmg_zones:
-                    bounding_boxes = [
-                        {
-                            "x_min": z["x_min"],
-                            "y_min": z["y_min"],
-                            "x_max": z["x_max"],
-                            "y_max": z["y_max"],
-                            "label": f"Pest Damage: {dmg['damage_type']}",
-                            "type": "pest_damage",
-                            "confidence": pest_conf,
-                        }
-                        for z in dmg_zones
-                    ]
-                else:
-                    bounding_boxes = [
-                        {
-                            "x_min": 0.08,
-                            "y_min": 0.08,
-                            "x_max": 0.92,
-                            "y_max": 0.92,
-                            "label": f"Pest Damage: {dmg['damage_type']}",
-                            "type": "pest_damage",
-                            "confidence": pest_conf,
-                        }
-                    ]
+                disease_id = None
+                dis_name = None
+                dis_scientific = None
+                dis_pathogen = None
+                dis_symptoms = None
+                dis_conf = None
+                dis_severity = None
+                dis_action = None
+                disease_details = {}
+                if not has_native_damage_box:
+                    dmg_zones = localized_boxes.get("damage_boxes") or []
+                    if dmg_zones:
+                        bounding_boxes = [
+                            {
+                                "x_min": z["x_min"],
+                                "y_min": z["y_min"],
+                                "x_max": z["x_max"],
+                                "y_max": z["y_max"],
+                                "label": f"Pest Damage: {dmg['damage_type']}",
+                                "type": "pest_damage",
+                                "confidence": pest_conf,
+                            }
+                            for z in dmg_zones
+                        ]
+                    else:
+                        bounding_boxes = [
+                            {
+                                "x_min": 0.08,
+                                "y_min": 0.08,
+                                "x_max": 0.92,
+                                "y_max": 0.92,
+                                "label": f"Pest Damage: {dmg['damage_type']}",
+                                "type": "pest_damage",
+                                "confidence": pest_conf,
+                            }
+                        ]
             elif promoted_type == "nutrient_deficiency" and condition_assessment.get("nutrient_deficiency"):
                 nut = condition_assessment["nutrient_deficiency"]
                 det_type = "nutrient_deficiency"
                 pest_id = None
                 pest_name = nut["name"]
                 scientific_name = f"Abiotic Disorder ({nut['nutrient']})"
-                pest_conf = nut["confidence"]
+                pest_conf = round(nutrient_hits[0]["confidence"], 2) if has_native_nutrient_box else nut["confidence"]
                 pest_severity = nut["severity"]
                 description = nut["symptoms"]
                 rec_action = nut["recommended_action"]
@@ -732,32 +779,33 @@ class AIDetectionService(BaseDetectionService):
                 dis_severity = None
                 dis_action = None
                 disease_details = {}
-                stress_zones = localized_boxes.get("stress_boxes") or []
-                if stress_zones:
-                    bounding_boxes = [
-                        {
-                            "x_min": z["x_min"],
-                            "y_min": z["y_min"],
-                            "x_max": z["x_max"],
-                            "y_max": z["y_max"],
-                            "label": f"Nutrient: {nut['name']}",
-                            "type": "nutrient",
-                            "confidence": pest_conf,
-                        }
-                        for z in stress_zones
-                    ]
-                else:
-                    bounding_boxes = [
-                        {
-                            "x_min": 0.08,
-                            "y_min": 0.08,
-                            "x_max": 0.92,
-                            "y_max": 0.92,
-                            "label": f"Nutrient: {nut['name']}",
-                            "type": "nutrient",
-                            "confidence": pest_conf,
-                        }
-                    ]
+                if not has_native_nutrient_box:
+                    stress_zones = localized_boxes.get("stress_boxes") or []
+                    if stress_zones:
+                        bounding_boxes = [
+                            {
+                                "x_min": z["x_min"],
+                                "y_min": z["y_min"],
+                                "x_max": z["x_max"],
+                                "y_max": z["y_max"],
+                                "label": f"Nutrient: {nut['name']}",
+                                "type": "nutrient",
+                                "confidence": pest_conf,
+                            }
+                            for z in stress_zones
+                        ]
+                    else:
+                        bounding_boxes = [
+                            {
+                                "x_min": 0.08,
+                                "y_min": 0.08,
+                                "x_max": 0.92,
+                                "y_max": 0.92,
+                                "label": f"Nutrient: {nut['name']}",
+                                "type": "nutrient",
+                                "confidence": pest_conf,
+                            }
+                        ]
             elif det_type == "none":
                 return self._reject(
                     "Unrecognized specimen: Unable to determine plant condition clearly. "
@@ -865,8 +913,14 @@ class AIDetectionService(BaseDetectionService):
             det_type = resolved["detection_type"]
             pest_hits = resolved["pest_hits"]
             disease_hits = resolved["disease_hits"]
+            pest_damage_hits = resolved.get("pest_damage_hits", [])
+            nutrient_hits = resolved.get("nutrient_hits", [])
             healthy_hits = resolved["healthy_hits"]
-            all_hits = sorted(pest_hits + disease_hits + healthy_hits, key=lambda d: d["confidence"], reverse=True)
+            all_hits = sorted(
+                pest_hits + disease_hits + pest_damage_hits + nutrient_hits + healthy_hits,
+                key=lambda d: d["confidence"],
+                reverse=True,
+            )
             top = all_hits[0]
             conf = round(top["confidence"], 2)
 
@@ -876,6 +930,10 @@ class AIDetectionService(BaseDetectionService):
                 summary = f"Pest detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
             elif det_type == "disease":
                 summary = f"Disease detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
+            elif det_type == "pest_damage":
+                summary = f"Pest damage detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
+            elif det_type == "nutrient_deficiency":
+                summary = f"Nutrient stress detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
             else:
                 summary = (
                     f"Detected {pest_hits[0]['display_name']} & {disease_hits[0]['display_name']} "

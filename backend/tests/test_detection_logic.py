@@ -417,6 +417,52 @@ def test_two_angle_fusion_upgrades_top_damage_with_underside_pest():
     assert fused["condition_assessment"]["two_angle_scan"]["underside_outcome"] == "pest"
 
 
+def test_resolver_handles_native_yolo_pest_damage_and_nutrient_classes():
+    dmg_res = resolve_logical_detections(
+        [_make_det("chewing_damage", 0.78, box=(0.2, 0.2, 0.7, 0.7))],
+        selected_crop_name="Lettuce",
+    )
+    assert dmg_res["rejected"] is False
+    assert dmg_res["detection_type"] == "pest_damage"
+    assert len(dmg_res["pest_damage_hits"]) == 1
+
+    nut_res = resolve_logical_detections(
+        [_make_det("nitrogen_deficiency", 0.81, box=(0.1, 0.1, 0.85, 0.85))],
+        selected_crop_name="Bok Choy",
+    )
+    assert nut_res["rejected"] is False
+    assert nut_res["detection_type"] == "nutrient_deficiency"
+    assert len(nut_res["nutrient_hits"]) == 1
+
+
+def test_pure_green_perforated_leaf_overrides_false_disease_to_pest_damage():
+    # A 99% bright-green leaf with 0% yellowing/browning and 60 sharp insect chew holes
+    # must resolve to pest_damage even if YOLO confuses the dark holes for a foliar leaf spot.
+    cond_raw = {
+        "available": True,
+        "visual_signals": {
+            "green_foliage_pct": 99.3,
+            "yellow_chlorosis_pct": 0.2,
+            "brown_necrosis_pct": 0.0,
+            "leaf_hole_count": 60,
+            "hole_area_pct": 1.94,
+        },
+        "group_probs": {"healthy": 0.45, "pest_damage": 0.25, "nutrient_deficiency": 0.15, "infectious_disease": 0.15},
+        "top_pest_damage": ("chewing_damage", 0.20),
+        "top_nutrient_deficiency": None,
+    }
+    res = synthesize_total_condition(
+        det_type="disease",
+        crop_name="Lettuce",
+        primary_conf=0.76,
+        pest_name=None,
+        disease_name="Downy Mildew of Lettuce",
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "pest_damage"
+    assert res["condition_assessment"]["overall_condition"] == "Pest-Damaged Foliage"
+
+
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():
     cond_raw = {
         "available": True,
@@ -527,13 +573,13 @@ def test_ai_engine_returns_clean_single_outcomes_on_real_specimens(monkeypatch):
     assert det["detected_disease_name"] is None
     client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
 
-    # 2. Pest specimen (Green Peach Aphid) -> 'pest' (no fabricated disease!)
-    aphid_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "green_peach_aphid__*")))
-    assert aphid_imgs
+    # 2. Active insect pest specimen (Diamondback Moth) -> 'pest' (no fabricated disease!)
+    pest_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "diamondback_moth__*")))
+    assert pest_imgs
     resp = client.post(
         "/api/v1/detections/detect",
         headers=headers,
-        files={"file": ("aphid.jpg", Path(aphid_imgs[0]).read_bytes(), "image/jpeg")},
+        files={"file": ("dbm.jpg", Path(pest_imgs[0]).read_bytes(), "image/jpeg")},
     )
     assert resp.status_code == 201, resp.text
     det = resp.json()
@@ -541,13 +587,13 @@ def test_ai_engine_returns_clean_single_outcomes_on_real_specimens(monkeypatch):
     assert det["detected_disease_name"] is None
     client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
 
-    # 3. Disease specimen (Lettuce Powdery Mildew on real lettuce leaf) -> 'disease' (no fabricated pest!)
-    disease_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "lettuce_powdery_mildew__*")))
+    # 3. Foliar disease specimen (Brassica Alternaria Leaf Spot) -> 'disease' (no fabricated pest!)
+    disease_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "brassica_alternaria_leaf_spot__*")))
     assert disease_imgs
     resp = client.post(
         "/api/v1/detections/detect",
         headers=headers,
-        files={"file": ("mildew.jpg", Path(disease_imgs[0]).read_bytes(), "image/jpeg")},
+        files={"file": ("alternaria.jpg", Path(disease_imgs[0]).read_bytes(), "image/jpeg")},
     )
     assert resp.status_code == 201, resp.text
     det = resp.json()
@@ -556,6 +602,34 @@ def test_ai_engine_returns_clean_single_outcomes_on_real_specimens(monkeypatch):
     assert det["detected_pest_name"] == "No Pest Detected"
     assert det["detected_disease_name"] is not None
     client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
+
+    # 4. Native Indirect Pest Damage (Chewing Damage) -> 'pest_damage' with probable culprits
+    chew_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "chewing_damage__*")))
+    if chew_imgs:
+        resp = client.post(
+            "/api/v1/detections/detect",
+            headers=headers,
+            files={"file": ("chewed.jpg", Path(chew_imgs[0]).read_bytes(), "image/jpeg")},
+        )
+        assert resp.status_code == 201, resp.text
+        det = resp.json()
+        assert det["detection_type"] == "pest_damage"
+        assert det["condition_assessment"]["probable_pests"]
+        client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
+
+    # 5. Native Nutrient Deficiency (Potassium Deficiency) -> 'nutrient_deficiency'
+    nut_imgs = sorted(glob.glob(str(TEST_DATASET_DIR / "potassium_deficiency__*")))
+    if nut_imgs:
+        resp = client.post(
+            "/api/v1/detections/detect",
+            headers=headers,
+            files={"file": ("potassium.jpg", Path(nut_imgs[0]).read_bytes(), "image/jpeg")},
+        )
+        assert resp.status_code == 201, resp.text
+        det = resp.json()
+        assert det["detection_type"] == "nutrient_deficiency"
+        assert det["condition_assessment"]["nutrient_deficiency"] is not None
+        client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
 
     # 4. Herbarium paper card & non-target wild weed in test folder must be REJECTED (422)
     herbarium_card = TEST_DATASET_DIR / "brassica_alternaria_leaf_spot__gbif_1a4a7d250f64.jpg"

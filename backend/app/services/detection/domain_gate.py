@@ -294,6 +294,71 @@ CLASS_REGISTRY: Dict[str, Tuple[str, str, FrozenSet[str], Dict[str, str]]] = {
             "action": "Install blue/yellow sticky traps, use reflective mulch, and apply spinosad or neem oil.",
         },
     ),
+    # 04. Indirect Pest-Damage Signatures (natively trainable in YOLOv8 v2)
+    "chewing_damage": (
+        "pest_damage",
+        "Chewing / Skeletonized Foliage Damage",
+        TARGET_CROPS,
+        {
+            "damage_key": "chewing_damage",
+            "action": "Inspect leaf undersides and stems at dusk; hand-pick larvae and apply Bt kurstaki at twilight.",
+        },
+    ),
+    "shothole_damage": (
+        "pest_damage",
+        "Shot-Hole Punctures (Flea Beetle Feeding)",
+        TARGET_CROPS,
+        {
+            "damage_key": "shothole_damage",
+            "action": "Install 32-mesh insect barrier netting and yellow sticky cards near soil level.",
+        },
+    ),
+    "leafminer_damage": (
+        "pest_damage",
+        "Serpentine Leaf Mines & Tunnels",
+        TARGET_CROPS,
+        {
+            "damage_key": "leafminer_damage",
+            "action": "Prune mined leaves early before pupation and hang bright yellow sticky traps.",
+        },
+    ),
+    "sucking_damage": (
+        "pest_damage",
+        "Sap-Sucking Curl, Stippling & Distortion",
+        TARGET_CROPS,
+        {
+            "damage_key": "sucking_damage",
+            "action": "Inspect leaf undersides and spray 1% potassium insecticidal soap or neem oil (5ml/L).",
+        },
+    ),
+    # 05. Nutrient Deficiencies & Abiotic Stress (natively trainable in YOLOv8 v2)
+    "nitrogen_deficiency": (
+        "nutrient_deficiency",
+        "Nitrogen (N) Deficiency",
+        TARGET_CROPS,
+        {
+            "nutrient_key": "nitrogen_deficiency",
+            "action": "Side-dress with organic nitrogen (vermicompost tea, fish amino acid, or balanced NPK).",
+        },
+    ),
+    "potassium_deficiency": (
+        "nutrient_deficiency",
+        "Potassium (K) Deficiency / Marginal Scorch",
+        TARGET_CROPS,
+        {
+            "nutrient_key": "potassium_deficiency",
+            "action": "Supplement with potassium sulfate (0-0-50) or organic potassium extract and stabilize watering.",
+        },
+    ),
+    "abiotic_water_heat_stress": (
+        "nutrient_deficiency",
+        "Heat / Water / Sunscald Stress (Abiotic)",
+        TARGET_CROPS,
+        {
+            "nutrient_key": "abiotic_water_heat_stress",
+            "action": "Install 30-50% shade netting during peak midday sun and irrigate consistently early morning.",
+        },
+    ),
 }
 
 
@@ -879,8 +944,9 @@ def suppress_conflicting_detections(detections: Sequence[Dict[str, Any]]) -> Lis
             ex_box = existing["box"]
             iou = compute_iou(cand_box, ex_box)
 
-            # Same leaf cannot simultaneously be healthy & diseased, or two diseases at once
-            if cand_kind in ("healthy", "disease") and ex_kind in ("healthy", "disease"):
+            # Same leaf cannot simultaneously be healthy & diseased/damaged/deficient
+            leaf_kinds = ("healthy", "disease", "pest_damage", "nutrient_deficiency")
+            if cand_kind in leaf_kinds and ex_kind in leaf_kinds:
                 if iou >= 0.45:
                     suppressed = True
                     break
@@ -989,17 +1055,31 @@ def resolve_logical_detections(
 
     pest_hits = [d for d in filtered if d["kind"] == "pest"]
     disease_hits = [d for d in filtered if d["kind"] == "disease"]
+    pest_damage_hits = [d for d in filtered if d["kind"] == "pest_damage"]
+    nutrient_hits = [d for d in filtered if d["kind"] == "nutrient_deficiency"]
     healthy_hits = [d for d in filtered if d["kind"] == "healthy"]
 
-    # Step 2: Resolve Healthy vs Disease contradiction
-    # If healthy is strongly dominant over a marginal disease, treat as healthy (drop noisy disease)
+    # Step 2: Resolve Healthy vs Disease / Damage / Nutrient contradictions
     if healthy_hits and disease_hits:
         top_h_conf = healthy_hits[0]["confidence"]
         top_d_conf = disease_hits[0]["confidence"]
         if top_h_conf >= top_d_conf + 0.15 and top_d_conf < 0.70:
             disease_hits = []
         else:
-            # Confirmed disease on the specimen — drop healthy boxes so UI doesn't claim both Healthy & Diseased
+            healthy_hits = []
+    if healthy_hits and pest_damage_hits:
+        top_h_conf = healthy_hits[0]["confidence"]
+        top_dmg_conf = pest_damage_hits[0]["confidence"]
+        if top_h_conf >= top_dmg_conf + 0.15 and top_dmg_conf < 0.65:
+            pest_damage_hits = []
+        else:
+            healthy_hits = []
+    if healthy_hits and nutrient_hits:
+        top_h_conf = healthy_hits[0]["confidence"]
+        top_nut_conf = nutrient_hits[0]["confidence"]
+        if top_h_conf >= top_nut_conf + 0.15 and top_nut_conf < 0.65:
+            nutrient_hits = []
+        else:
             healthy_hits = []
 
     # Step 3: Strict Joint Pest + Disease validation (every scan does NOT need 1 pest and 1 disease!)
@@ -1021,17 +1101,22 @@ def resolve_logical_detections(
         elif (top_d["confidence"] - top_p["confidence"]) >= 0.25 and top_p["confidence"] < 0.65:
             pest_hits = []
 
-    # Step 4: Determine clean 4-state outcome & final bounding boxes
+    # Step 4: Determine clean 6-state outcome & final bounding boxes
     if pest_hits and disease_hits:
         detection_type = "pest_and_disease"
         final_dets = pest_hits[:4] + disease_hits[:4]
     elif pest_hits:
         detection_type = "pest"
-        # Include pest boxes only (no fake disease boxes, no contradictory healthy boxes)
         final_dets = pest_hits[:6]
     elif disease_hits:
         detection_type = "disease"
         final_dets = disease_hits[:6]
+    elif pest_damage_hits:
+        detection_type = "pest_damage"
+        final_dets = pest_damage_hits[:4]
+    elif nutrient_hits:
+        detection_type = "nutrient_deficiency"
+        final_dets = nutrient_hits[:4]
     elif healthy_hits:
         detection_type = "healthy"
         final_dets = healthy_hits[:4]
@@ -1052,6 +1137,8 @@ def resolve_logical_detections(
         "resolved_crop_name": resolved_crop_name,
         "pest_hits": pest_hits,
         "disease_hits": disease_hits,
+        "pest_damage_hits": pest_damage_hits,
+        "nutrient_hits": nutrient_hits,
         "healthy_hits": healthy_hits,
         "final_boxes": [d["box"] for d in final_dets[:8]],
     }

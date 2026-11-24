@@ -898,9 +898,22 @@ def synthesize_total_condition(
             "recommended_action": meta["recommended_action"],
         }
 
-    # Decide if a weak 'healthy' or 'none' YOLO result should be promoted to 'pest_damage' or 'nutrient_deficiency'
+    # Decide if a weak 'healthy', 'none', or pure-green hole-confused 'disease' YOLO result
+    # should be promoted to 'pest_damage' or 'nutrient_deficiency'.
     promoted_type = det_type
-    if det_type in ("healthy", "none"):
+    # Pure bright-green leaf (zero yellowing/browning rot) riddled with sharp chew holes
+    # is physically insect feeding damage, not fungal/bacterial foliar disease.
+    pure_green_perforated_override = (
+        det_type == "disease"
+        and overwhelming_hole_evidence
+        and pest_damage_obj is not None
+        and green_pct >= 80.0
+        and stress_color_pct < 3.0
+        and primary_conf < 0.85
+    )
+    if pure_green_perforated_override:
+        promoted_type = "pest_damage"
+    elif det_type in ("healthy", "none"):
         # Strong visual perforation evidence (many enclosed insect holes + CLIP agrees leaf isn't healthy)
         # overrides YOLO 'healthy' because YOLO has no indirect chew-hole class.
         if strong_hole_evidence and pest_damage_obj:
