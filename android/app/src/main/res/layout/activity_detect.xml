@@ -113,6 +113,29 @@
                                 android:scaleType="centerCrop"
                                 android:contentDescription="Crop Specimen Preview" />
 
+                            <!-- Dashed Leaf Framing Guide Overlay -->
+                            <View
+                                android:id="@+id/viewFramingGuide"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_margin="16dp"
+                                android:background="@drawable/bg_framing_guide" />
+
+                            <TextView
+                                android:id="@+id/tvFramingHint"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="bottom|center_horizontal"
+                                android:layout_marginBottom="20dp"
+                                android:visibility="gone"
+                                android:text="Center 1–2 leaves inside frame"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/white"
+                                android:background="#B30F172A"
+                                android:paddingHorizontal="10dp"
+                                android:paddingVertical="3dp" />
+
                             <LinearLayout
                                 android:id="@+id/layoutUploadPlaceholder"
                                 android:layout_width="wrap_content"
@@ -191,6 +214,85 @@
                                 app:icon="@drawable/ic_photo"
                                 app:iconGravity="textStart"
                                 app:iconTint="@color/on_surface"
+                                app:cornerRadius="8dp" />
+                        </LinearLayout>
+
+                        <!-- Quick Center-Leaf Crop Toggle -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnCropCenter"
+                            android:layout_width="match_parent"
+                            android:layout_height="38dp"
+                            android:layout_marginTop="8dp"
+                            android:visibility="gone"
+                            android:text="Crop Center Leaf (Remove Background)"
+                            android:textAllCaps="false"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:textColor="@color/primary"
+                            app:strokeColor="@color/primary"
+                            app:cornerRadius="8dp" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginTop="14dp"
+                            android:layout_marginBottom="10dp"
+                            android:background="@color/surface_variant" />
+
+                        <!-- Optional 2-Angle Scan: Leaf Underside Photo -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2-ANGLE SCAN • LEAF UNDERSIDE (OPTIONAL)"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:letterSpacing="0.05" />
+
+                        <TextView
+                            android:id="@+id/tvUndersideStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Optional: add the underside of the leaf to catch hidden aphids, whiteflies, or larvae."
+                            android:textSize="11sp"
+                            android:textColor="@color/on_surface_variant" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnUndersideGallery"
+                                android:layout_width="0dp"
+                                android:layout_height="38dp"
+                                android:layout_weight="1"
+                                android:text="+ Underside Photo"
+                                android:textAllCaps="false"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:textColor="@color/primary"
+                                app:strokeColor="@color/outline_variant"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnClearUnderside"
+                                android:layout_width="wrap_content"
+                                android:layout_height="38dp"
+                                android:layout_marginStart="6dp"
+                                android:visibility="gone"
+                                android:text="Remove"
+                                android:textAllCaps="false"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:textColor="@color/error"
+                                app:strokeColor="@color/error"
                                 app:cornerRadius="8dp" />
                         </LinearLayout>
                     </LinearLayout>

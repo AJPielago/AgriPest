@@ -16,12 +16,16 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
   const [locatingGps, setLocatingGps] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [undersideFile, setUndersideFile] = useState(null);
+  const [undersidePreviewUrl, setUndersidePreviewUrl] = useState(null);
+  const [croppedCenter, setCroppedCenter] = useState(false);
   const [qualityWarning, setQualityWarning] = useState(null);
   const [error, setError] = useState(null);
   const [offlineQueued, setOfflineQueued] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [syncingQueue, setSyncingQueue] = useState(false);
   const fileInputRef = useRef(null);
+  const undersideInputRef = useRef(null);
 
   useEffect(() => {
     const refreshQueueCount = async () => {
@@ -36,8 +40,9 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (undersidePreviewUrl) URL.revokeObjectURL(undersidePreviewUrl);
     };
-  }, [previewUrl]);
+  }, [previewUrl, undersidePreviewUrl]);
 
   const handleLocateGps = () => {
     if (!('geolocation' in navigator)) {
@@ -91,11 +96,61 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
     }
 
     setSelectedFile(optimizedFile);
+    setCroppedCenter(false);
     const url = URL.createObjectURL(optimizedFile);
     setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return url;
     });
+  };
+
+  const handleUndersideFileChange = async (file) => {
+    if (!file) return;
+    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!validTypes.includes(file.type) || file.size > 10 * 1024 * 1024) {
+      setError(lang === 'tl' ? 'Maling format o sobrang laki ng larawan sa ilalim ng dahon.' : 'Invalid underside image format or size (>10MB).');
+      return;
+    }
+    const { file: optimized } = await compressAndInspectImage(file);
+    setUndersideFile(optimized);
+    const url = URL.createObjectURL(optimized);
+    setUndersidePreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return url;
+    });
+  };
+
+  const handleCropCenterLeaf = async () => {
+    if (!selectedFile || !previewUrl) return;
+    try {
+      const img = new Image();
+      img.src = previewUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+      const sx = Math.round(img.width * 0.12);
+      const sy = Math.round(img.height * 0.12);
+      const sw = Math.max(64, Math.round(img.width * 0.76));
+      const sh = Math.max(64, Math.round(img.height * 0.76));
+      const canvas = document.createElement('canvas');
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.90));
+      if (!blob) return;
+      const croppedFile = new File([blob], `cropped_${selectedFile.name || 'leaf.jpg'}`, { type: 'image/jpeg' });
+      setSelectedFile(croppedFile);
+      setCroppedCenter(true);
+      const nextUrl = URL.createObjectURL(croppedFile);
+      setPreviewUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return nextUrl;
+      });
+    } catch {
+      // Keep original file if browser canvas fails
+    }
   };
 
   const handleLiveCapturedFile = (capturedFile) => {
@@ -111,7 +166,13 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
 
   const handleReset = () => {
     setSelectedFile(null);
+    setCroppedCenter(false);
     setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setUndersideFile(null);
+    setUndersidePreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return null;
     });
@@ -119,6 +180,7 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
     setError(null);
     setOfflineQueued(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (undersideInputRef.current) undersideInputRef.current.value = '';
     if (onReset) onReset();
   };
 
@@ -148,7 +210,14 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
       return;
     }
 
-    onAnalyze(selectedFile, selectedCropId ? parseInt(selectedCropId, 10) : null, weatherCondition, fieldLocation, coords);
+    onAnalyze(
+      selectedFile,
+      selectedCropId ? parseInt(selectedCropId, 10) : null,
+      weatherCondition,
+      fieldLocation,
+      coords,
+      undersideFile
+    );
   };
 
   return (
@@ -350,13 +419,91 @@ export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false 
             </button>
           </div>
 
-          <div className="rounded-lg bg-surface aspect-video max-h-80 flex items-center justify-center overflow-hidden border border-outline-variant shadow-inner">
+          <div className="relative rounded-lg bg-surface aspect-video max-h-80 flex items-center justify-center overflow-hidden border border-outline-variant shadow-inner">
             <img
               src={previewUrl}
               alt="Specimen preview"
               className="w-full h-full object-contain"
             />
+            {/* Leaf Framing Guide Overlay */}
+            <div className="pointer-events-none absolute inset-4 border-2 border-dashed border-emerald-500/60 rounded-lg flex items-end justify-center pb-1.5">
+              <span className="px-2 py-0.5 rounded bg-slate-950/70 text-[10px] font-bold text-emerald-300">
+                {croppedCenter
+                  ? (lang === 'tl' ? 'Na-crop ang Gitnang Dahon ✓' : 'Center Leaf Cropped ✓')
+                  : (lang === 'tl' ? 'Itapat ang 1–2 dahon sa loob ng frame' : 'Center 1–2 leaves inside guide')}
+              </span>
+            </div>
           </div>
+
+          {/* Quick Center-Crop & Optional 2-Angle Leaf Underside Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <button
+              type="button"
+              onClick={handleCropCenterLeaf}
+              disabled={loading || croppedCenter}
+              className="px-3 py-1.5 rounded-lg border border-outline-variant bg-surface hover:bg-surface-container text-on-surface font-bold text-[11px] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[15px]">crop</span>
+              <span>{croppedCenter ? (lang === 'tl' ? 'Na-crop na' : 'Center Cropped') : (lang === 'tl' ? 'I-crop ang Gitna' : 'Crop Center Leaf')}</span>
+            </button>
+
+            <input
+              type="file"
+              ref={undersideInputRef}
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              className="hidden"
+              onChange={(e) => {
+                handleUndersideFileChange(e.target.files[0]);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => undersideInputRef.current?.click()}
+              disabled={loading}
+              className="px-3 py-1.5 rounded-lg border border-primary/40 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-[11px] flex items-center gap-1 cursor-pointer disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-[15px]">flip</span>
+              <span>
+                {undersideFile
+                  ? (lang === 'tl' ? 'Palitan ang Ilalim ng Dahon' : 'Change Underside Photo')
+                  : (lang === 'tl' ? '+ Larawan ng Ilalim ng Dahon (Opsyonal)' : '+ Add Leaf Underside (Optional)')}
+              </span>
+            </button>
+          </div>
+
+          {undersidePreviewUrl && (
+            <div className="p-2.5 rounded-lg border border-primary/30 bg-primary/5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img
+                  src={undersidePreviewUrl}
+                  alt="Leaf underside preview"
+                  className="w-12 h-12 rounded object-cover border border-outline-variant flex-shrink-0"
+                />
+                <div className="min-w-0">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-primary block">
+                    {lang === 'tl' ? '2-Angle Scan Aktibo' : '2-Angle Scan Ready'}
+                  </span>
+                  <span className="text-xs text-on-surface-variant truncate block">
+                    {lang === 'tl' ? 'Susuriin ang ibabaw at ilalim ng dahon' : 'Top + Underside will be analyzed together'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setUndersideFile(null);
+                  setUndersidePreviewUrl((prev) => {
+                    if (prev) URL.revokeObjectURL(prev);
+                    return null;
+                  });
+                }}
+                className="text-xs font-bold text-error hover:underline cursor-pointer flex-shrink-0"
+              >
+                {lang === 'tl' ? 'Alisin' : 'Remove'}
+              </button>
+            </div>
+          )}
 
           <button
             type="submit"

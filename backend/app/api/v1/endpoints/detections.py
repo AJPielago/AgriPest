@@ -71,12 +71,99 @@ async def live_check_frame(
         "message": result.get("message", "Scanning live camera feed...")
     }
 
+def _fuse_two_angle_results(
+    top_res: dict,
+    underside_res: dict,
+    underside_url: str,
+) -> dict:
+    """
+    Immutably fuses top-of-leaf and leaf-underside scan results into a single
+    coherent diagnostic report. Pests hiding on the underside (aphids, whiteflies,
+    caterpillar larvae) or underside mildew upgrade a healthy/pest_damage top scan.
+    """
+    fused = dict(top_res)
+    top_ca = dict(top_res.get("condition_assessment") or {})
+    under_ca = dict(underside_res.get("condition_assessment") or {})
+
+    if underside_res.get("rejected"):
+        top_ca["two_angle_scan"] = {
+            "enabled": True,
+            "underside_image_path": None,
+            "underside_status": "rejected",
+            "underside_summary": underside_res.get("rejection_reason") or "Underside photo could not be verified.",
+        }
+        fused["condition_assessment"] = top_ca
+        return fused
+
+    top_type = fused.get("detection_type", "healthy")
+    under_type = underside_res.get("detection_type", "healthy")
+
+    # Promote active pest found on the underside when top leaf only saw healthy or indirect feeding damage
+    if under_type in ("pest", "pest_and_disease") and top_type in ("healthy", "pest_damage", "nutrient_deficiency"):
+        fused["pest_id"] = underside_res.get("pest_id")
+        fused["pest_name"] = underside_res.get("pest_name")
+        fused["scientific_name"] = underside_res.get("scientific_name")
+        fused["confidence"] = underside_res.get("confidence", fused.get("confidence", 0.0))
+        fused["severity"] = underside_res.get("severity", fused.get("severity", "Moderate"))
+        fused["recommended_action"] = underside_res.get("recommended_action", fused.get("recommended_action"))
+        fused["detection_type"] = "pest_and_disease" if (top_type == "disease" or under_type == "pest_and_disease") else "pest"
+        top_ca["overall_condition"] = "Active Pest Infestation (Confirmed on Underside)"
+        top_ca["condition_summary"] = (
+            f"Leaf underside scan confirmed active {underside_res.get('pest_name')} "
+            f"({int(round((underside_res.get('confidence') or 0) * 100))}%). "
+            + (top_ca.get("condition_summary") or "")
+        ).strip()
+    elif under_type in ("pest", "pest_and_disease") and top_type == "disease":
+        fused["pest_id"] = underside_res.get("pest_id")
+        fused["pest_name"] = underside_res.get("pest_name")
+        fused["scientific_name"] = underside_res.get("scientific_name")
+        fused["detection_type"] = "pest_and_disease"
+        top_ca["overall_condition"] = "Pest & Disease Infestation"
+        top_ca["condition_summary"] = (
+            f"Top leaf showed {fused.get('detected_disease_name')} and underside scan confirmed active "
+            f"{underside_res.get('pest_name')}."
+        )
+
+    # Promote disease found on the underside when top leaf had no disease
+    if under_type in ("disease", "pest_and_disease") and not fused.get("detected_disease_name"):
+        fused["disease_id"] = underside_res.get("disease_id")
+        fused["detected_disease_name"] = underside_res.get("detected_disease_name")
+        fused["disease_confidence_score"] = underside_res.get("disease_confidence_score")
+        fused["disease_severity"] = underside_res.get("disease_severity")
+        fused["disease_recommended_action"] = underside_res.get("disease_recommended_action")
+        fused["disease_details"] = underside_res.get("disease_details", {})
+        if fused.get("detection_type") in ("healthy", "pest_damage", "nutrient_deficiency"):
+            fused["detection_type"] = "disease"
+            fused["confidence"] = underside_res.get("disease_confidence_score") or fused.get("confidence", 0.0)
+            fused["severity"] = underside_res.get("disease_severity") or fused.get("severity", "Moderate")
+            top_ca["overall_condition"] = "Diseased Foliage (Confirmed on Underside)"
+        elif fused.get("detection_type") == "pest":
+            fused["detection_type"] = "pest_and_disease"
+            top_ca["overall_condition"] = "Pest & Disease Infestation"
+
+    # Use the more cautious health score between top and underside views
+    if isinstance(top_ca.get("health_score"), (int, float)) and isinstance(under_ca.get("health_score"), (int, float)):
+        top_ca["health_score"] = int(min(top_ca["health_score"], under_ca["health_score"]))
+
+    top_ca["two_angle_scan"] = {
+        "enabled": True,
+        "underside_image_path": underside_url,
+        "underside_status": "verified",
+        "underside_outcome": under_type,
+        "underside_condition": under_ca.get("overall_condition") or underside_res.get("pest_name") or "Verified",
+        "underside_summary": under_ca.get("condition_summary") or "Underside leaf scan completed.",
+    }
+    fused["condition_assessment"] = top_ca
+    return fused
+
+
 @router.post("/detect", response_model=DetectionOut, status_code=status.HTTP_201_CREATED)
 
 @router.post("", response_model=DetectionOut, status_code=status.HTTP_201_CREATED)
 async def detect_pest(
     request: Request,
     file: UploadFile = File(...),
+    underside_file: Optional[UploadFile] = File(None),
     crop_id: Optional[int] = Form(None),
     weather_condition: Optional[str] = Form(None),
     field_location: Optional[str] = Form(None),
@@ -87,13 +174,15 @@ async def detect_pest(
 ):
     """
     Core Pest Detection Endpoint.
-    Accepts image, optional crop host, weather, and field location tags.
+    Accepts top-of-leaf image, optional leaf-underside image (2-angle scan),
+    optional crop host, weather, and field location tags.
     Executes active detection engine and logs detection audit record.
     """
     detection_limiter.check_and_record(request)
 
     # 1. Secure file upload & validation
     image_url = validate_and_save_upload(file)
+    underside_url = validate_and_save_upload(underside_file) if underside_file is not None else None
 
     # 2. Invoke modular detection factory
     detection_service = get_detection_service()
@@ -106,6 +195,8 @@ async def detect_pest(
     # 2b. Reject unclassified / non-crop images instead of saving a guessed diagnosis
     if result.get("rejected"):
         _remove_uploaded_file(image_url)
+        if underside_url:
+            _remove_uploaded_file(underside_url)
         raise HTTPException(
             status_code=result.get("http_status", status.HTTP_422_UNPROCESSABLE_ENTITY),
             detail=result.get(
@@ -113,6 +204,17 @@ async def detect_pest(
                 "Unrecognized specimen. Please scan a clear close-up of Lettuce, Bok Choy, Mustard Greens, or a known pest/disease."
             )
         )
+
+    # 2c. Optional 2-Angle Scan Fusion (Top Leaf + Leaf Underside)
+    if underside_url:
+        underside_result = await detection_service.analyze_image(
+            image_path=underside_url,
+            crop_id=result.get("crop_id") or crop_id,
+            db=db,
+        )
+        if underside_result.get("rejected"):
+            _remove_uploaded_file(underside_url)
+        result = _fuse_two_angle_results(result, underside_result, underside_url)
 
     # 3. Create database record with metadata
     detection_record = Detection(

@@ -405,7 +405,7 @@ export const DetectionReportCard = ({ detection }) => {
                         <span>{lang === 'tl' ? 'Pagkatuyot' : 'Necrosis'}</span>
                         <span className="font-bold">{visualSignals.brown_necrosis_pct}%</span>
                       </div>
-                      {visualSignals.leaf_hole_count >= 10 && (
+                      {visualSignals.leaf_hole_count >= 4 && visualSignals.hole_area_pct >= 0.8 && (
                         <div className="col-span-3 px-2.5 py-1.5 rounded-lg bg-rose-500/10 text-rose-800 dark:text-rose-300 flex items-center justify-between border border-rose-500/20">
                           <span>{lang === 'tl' ? 'Mga Butas sa Dahon (Kagat ng Peste)' : 'Leaf Perforations (Insect Chew Holes)'}</span>
                           <span className="font-bold">
@@ -413,6 +413,25 @@ export const DetectionReportCard = ({ detection }) => {
                           </span>
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {conditionAssessment.two_angle_scan?.enabled && (
+                    <div className="px-2.5 py-2 rounded-lg bg-primary/10 border border-primary/25 text-[11px] text-on-surface dark:text-inverse-on-surface flex items-start gap-2">
+                      <span className="material-symbols-outlined text-[16px] text-primary mt-0.5">flip</span>
+                      <div>
+                        <span className="font-bold text-primary block text-[10px] uppercase tracking-wider">
+                          {lang === 'tl' ? '2-Angle Scan (Ibabaw + Ilalim ng Dahon)' : '2-Angle Scan (Top + Leaf Underside)'}
+                        </span>
+                        <span className="text-on-surface-variant">{conditionAssessment.two_angle_scan.underside_summary}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {conditionAssessment.image_quality?.quality_hint && (
+                    <div className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[15px]">photo_camera</span>
+                      <span>{conditionAssessment.image_quality.quality_hint}</span>
                     </div>
                   )}
                 </div>

@@ -118,3 +118,29 @@ def test_login_rate_limiting():
     # Reset limiter after test completes
     login_limiter.clear_all()
 
+
+def test_admin_flagged_scans_active_learning_endpoints():
+    login_limiter.clear_all()
+    admin_login = client.post(
+        "/api/v1/auth/login",
+        data={"username": "admin@pestdetect.com", "password": "admin123"},
+    )
+    assert admin_login.status_code == 200
+    admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+
+    # Verify metrics include flagged_detections counter
+    metrics = client.get("/api/v1/admin/metrics", headers=admin_headers)
+    assert metrics.status_code == 200
+    assert "flagged_detections" in metrics.json()
+
+    # Verify flagged-scans queue and active-learning JSON export endpoint
+    flagged = client.get("/api/v1/admin/flagged-scans", headers=admin_headers)
+    assert flagged.status_code == 200
+    assert "items" in flagged.json() and "total" in flagged.json()
+
+    export_resp = client.get("/api/v1/admin/flagged-scans/export", headers=admin_headers)
+    assert export_resp.status_code == 200
+    body = export_resp.json()
+    assert body["schema"] == "agripest_active_learning_v1"
+    assert isinstance(body["records"], list)
+

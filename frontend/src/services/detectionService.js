@@ -1,9 +1,12 @@
 import api from './api';
 
 export const detectionService = {
-  detectPest: async (file, cropId = null, weatherCondition = null, fieldLocation = null, coords = null) => {
+  detectPest: async (file, cropId = null, weatherCondition = null, fieldLocation = null, coords = null, undersideFile = null) => {
     const formData = new FormData();
     formData.append('file', file);
+    if (undersideFile) {
+      formData.append('underside_file', undersideFile);
+    }
     if (cropId) {
       formData.append('crop_id', cropId);
     }

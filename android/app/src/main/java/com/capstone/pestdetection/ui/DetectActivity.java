@@ -55,13 +55,16 @@ public class DetectActivity extends BaseActivity {
 
     private ImageView ivSpecimenPreview;
     private LinearLayout layoutUploadPlaceholder;
+    private android.widget.TextView tvFramingHint, tvUndersideStatus;
     private Spinner spinnerCrops, spinnerWeather;
     private EditText etFieldLocation;
-    private MaterialButton btnCamera, btnGallery, btnSubmitDetection;
+    private MaterialButton btnCamera, btnGallery, btnCropCenter, btnUndersideGallery, btnClearUnderside, btnSubmitDetection;
     private ProgressBar detectProgressBar;
 
     private File currentPhotoFile;
     private Uri selectedImageUri;
+    private Uri selectedUndersideUri;
+    private boolean cropCenterEnabled = false;
     private List<CropDto> cropList = new ArrayList<>();
 
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
@@ -69,6 +72,8 @@ public class DetectActivity extends BaseActivity {
             result -> {
                 if (result.getResultCode() == RESULT_OK && currentPhotoFile != null && currentPhotoFile.exists()) {
                     selectedImageUri = Uri.fromFile(currentPhotoFile);
+                    cropCenterEnabled = false;
+                    updateCropButtonLabel();
                     displayPreviewImage(selectedImageUri);
                 }
             }
@@ -80,7 +85,24 @@ public class DetectActivity extends BaseActivity {
                 if (uri != null) {
                     currentPhotoFile = null;
                     selectedImageUri = uri;
+                    cropCenterEnabled = false;
+                    updateCropButtonLabel();
                     displayPreviewImage(selectedImageUri);
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<String> undersideGalleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.GetContent(),
+            uri -> {
+                if (uri != null) {
+                    selectedUndersideUri = uri;
+                    if (tvUndersideStatus != null) {
+                        tvUndersideStatus.setText("2-Angle Scan ready: leaf underside photo attached ✓");
+                    }
+                    if (btnClearUnderside != null) {
+                        btnClearUnderside.setVisibility(View.VISIBLE);
+                    }
                 }
             }
     );
@@ -107,13 +129,37 @@ public class DetectActivity extends BaseActivity {
 
         ivSpecimenPreview = findViewById(R.id.ivSpecimenPreview);
         layoutUploadPlaceholder = findViewById(R.id.layoutUploadPlaceholder);
+        tvFramingHint = findViewById(R.id.tvFramingHint);
+        tvUndersideStatus = findViewById(R.id.tvUndersideStatus);
         spinnerCrops = findViewById(R.id.spinnerCrops);
         spinnerWeather = findViewById(R.id.spinnerWeather);
         etFieldLocation = findViewById(R.id.etFieldLocation);
         btnCamera = findViewById(R.id.btnCamera);
         btnGallery = findViewById(R.id.btnGallery);
+        btnCropCenter = findViewById(R.id.btnCropCenter);
+        btnUndersideGallery = findViewById(R.id.btnUndersideGallery);
+        btnClearUnderside = findViewById(R.id.btnClearUnderside);
         btnSubmitDetection = findViewById(R.id.btnSubmitDetection);
         detectProgressBar = findViewById(R.id.detectProgressBar);
+
+        if (btnCropCenter != null) {
+            btnCropCenter.setOnClickListener(v -> {
+                cropCenterEnabled = !cropCenterEnabled;
+                updateCropButtonLabel();
+            });
+        }
+        if (btnUndersideGallery != null) {
+            btnUndersideGallery.setOnClickListener(v -> undersideGalleryLauncher.launch("image/*"));
+        }
+        if (btnClearUnderside != null) {
+            btnClearUnderside.setOnClickListener(v -> {
+                selectedUndersideUri = null;
+                if (tvUndersideStatus != null) {
+                    tvUndersideStatus.setText("Optional: add the underside of the leaf to catch hidden aphids, whiteflies, or larvae.");
+                }
+                btnClearUnderside.setVisibility(View.GONE);
+            });
+        }
 
         View btnNavNotifications = findViewById(R.id.btnNavNotifications);
         if (btnNavNotifications != null) {
@@ -231,6 +277,19 @@ public class DetectActivity extends BaseActivity {
         return File.createTempFile(imageFileName, ".jpg", storageDir);
     }
 
+    private void updateCropButtonLabel() {
+        if (btnCropCenter != null) {
+            btnCropCenter.setText(cropCenterEnabled
+                    ? "Center-Leaf Crop Active ✓ (Tap to Reset)"
+                    : "Crop Center Leaf (Remove Background)");
+        }
+        if (tvFramingHint != null) {
+            tvFramingHint.setText(cropCenterEnabled
+                    ? "Center 76% leaf area will be analyzed ✓"
+                    : "Center 1–2 leaves inside frame");
+        }
+    }
+
     private void displayPreviewImage(Uri uri) {
         ivSpecimenPreview.setImageDrawable(null);
         ivSpecimenPreview.setImageURI(null);
@@ -240,6 +299,8 @@ public class DetectActivity extends BaseActivity {
                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
                 .into(ivSpecimenPreview);
         layoutUploadPlaceholder.setVisibility(View.GONE);
+        if (btnCropCenter != null) btnCropCenter.setVisibility(View.VISIBLE);
+        if (tvFramingHint != null) tvFramingHint.setVisibility(View.VISIBLE);
     }
 
     private void submitDiagnosticRequest() {
@@ -248,10 +309,23 @@ public class DetectActivity extends BaseActivity {
             return;
         }
 
-        final File uploadFile = getFileFromUri(selectedImageUri);
+        final File uploadFile = getFileFromUri(selectedImageUri, cropCenterEnabled);
         if (uploadFile == null || !uploadFile.exists()) {
             Toast.makeText(this, getString(R.string.prepare_image_failed), Toast.LENGTH_LONG).show();
             return;
+        }
+
+        MultipartBody.Part undersideBody = null;
+        if (selectedUndersideUri != null) {
+            File undersideFile = getFileFromUri(selectedUndersideUri, false);
+            if (undersideFile != null && undersideFile.exists()) {
+                RequestBody underReq = RequestBody.create(MediaType.parse("image/jpeg"), undersideFile);
+                undersideBody = MultipartBody.Part.createFormData(
+                        "underside_file",
+                        "underside_" + System.currentTimeMillis() + ".jpg",
+                        underReq
+                );
+            }
         }
 
         setLoading(true);
@@ -275,7 +349,7 @@ public class DetectActivity extends BaseActivity {
         RequestBody locationBody = !locationVal.isEmpty() ? RequestBody.create(MediaType.parse("text/plain"), locationVal) : null;
 
         ApiService apiService = ApiClient.getApiService(this);
-        apiService.detectPest(body, cropIdBody, weatherBody, locationBody).enqueue(new Callback<DetectionResponse>() {
+        apiService.detectPest(body, undersideBody, cropIdBody, weatherBody, locationBody).enqueue(new Callback<DetectionResponse>() {
             @Override
             public void onResponse(Call<DetectionResponse> call, Response<DetectionResponse> response) {
                 setLoading(false);
@@ -310,6 +384,10 @@ public class DetectActivity extends BaseActivity {
     }
 
     private File getFileFromUri(Uri uri) {
+        return getFileFromUri(uri, false);
+    }
+
+    private File getFileFromUri(Uri uri, boolean applyCenterCrop) {
         File sourceFile = null;
         if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
             sourceFile = new File(uri.getPath());
@@ -330,7 +408,32 @@ public class DetectActivity extends BaseActivity {
                 return null;
             }
         }
+        if (applyCenterCrop && sourceFile != null && sourceFile.exists()) {
+            sourceFile = cropCenterRegion(sourceFile);
+        }
         return compressImageIfNeeded(sourceFile, 1280, 85);
+    }
+
+    private File cropCenterRegion(File sourceFile) {
+        try {
+            Bitmap bm = BitmapFactory.decodeFile(sourceFile.getAbsolutePath());
+            if (bm == null || bm.getWidth() < 120 || bm.getHeight() < 120) return sourceFile;
+            int sx = Math.round(bm.getWidth() * 0.12f);
+            int sy = Math.round(bm.getHeight() * 0.12f);
+            int sw = Math.max(64, Math.round(bm.getWidth() * 0.76f));
+            int sh = Math.max(64, Math.round(bm.getHeight() * 0.76f));
+            Bitmap cropped = Bitmap.createBitmap(bm, sx, sy, sw, sh);
+            bm.recycle();
+            File outFile = File.createTempFile("upload_center_", ".jpg", getCacheDir());
+            try (FileOutputStream out = new FileOutputStream(outFile)) {
+                cropped.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                out.flush();
+            }
+            cropped.recycle();
+            return outFile;
+        } catch (Exception ignored) {
+            return sourceFile;
+        }
     }
 
     /**

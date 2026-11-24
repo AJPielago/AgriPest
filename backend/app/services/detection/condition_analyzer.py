@@ -20,7 +20,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 from PIL import Image, ImageFilter
 
-from app.services.detection.domain_gate import BRASSICA_CROPS, CLASS_REGISTRY, TARGET_CROPS
+from app.services.detection.domain_gate import (
+    BRASSICA_CROPS,
+    CLASS_REGISTRY,
+    TARGET_CROPS,
+    assess_image_quality,
+)
 
 logger = logging.getLogger("agripest.condition")
 
@@ -297,21 +302,97 @@ NUTRIENT_DEFICIENCY_CATALOG: Dict[str, Dict[str, Any]] = {
 }
 
 
-def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
+def _cluster_boxes(
+    raw_boxes: List[Tuple[float, float, float, float]],
+    merge_gap: float = 0.08,
+    pad: float = 0.025,
+    max_boxes: int = 4,
+) -> List[Dict[str, float]]:
     """
-    Pure Pillow + NumPy detector for insect chew-holes / shot-holes strictly
-    enclosed inside bright green leafy foliage (zero OpenCV dependency, Render-safe).
+    Merges nearby/overlapping normalized boxes (x1, y1, x2, y2) into at most `max_boxes`
+    clean, readable damaged-zone boxes tightly framing the affected leaf regions.
+    """
+    if not raw_boxes:
+        return []
 
-    A real insect puncture/chew hole inside a leaf blade appears as a compact
-    dark cavity whose 4-sided perimeter ring is predominantly bright green leaf
-    tissue and sharply brighter than the cavity interior.
+    clusters: List[List[float]] = []  # [x1, y1, x2, y2, count]
+    for x1, y1, x2, y2 in raw_boxes:
+        merged_idx = -1
+        for idx, c in enumerate(clusters):
+            if (
+                x1 <= c[2] + merge_gap
+                and x2 >= c[0] - merge_gap
+                and y1 <= c[3] + merge_gap
+                and y2 >= c[1] - merge_gap
+            ):
+                merged_idx = idx
+                break
+        if merged_idx >= 0:
+            c = clusters[merged_idx]
+            c[0] = min(c[0], x1)
+            c[1] = min(c[1], y1)
+            c[2] = max(c[2], x2)
+            c[3] = max(c[3], y2)
+            c[4] += 1.0
+        else:
+            clusters.append([x1, y1, x2, y2, 1.0])
+
+    # Second transitive merge pass so newly expanded adjacent clusters consolidate cleanly
+    changed = True
+    while changed and len(clusters) > 1:
+        changed = False
+        for i in range(len(clusters)):
+            for j in range(i + 1, len(clusters)):
+                a, b = clusters[i], clusters[j]
+                if (
+                    a[0] <= b[2] + merge_gap * 0.7
+                    and a[2] >= b[0] - merge_gap * 0.7
+                    and a[1] <= b[3] + merge_gap * 0.7
+                    and a[3] >= b[1] - merge_gap * 0.7
+                ):
+                    clusters[i] = [
+                        min(a[0], b[0]),
+                        min(a[1], b[1]),
+                        max(a[2], b[2]),
+                        max(a[3], b[3]),
+                        a[4] + b[4],
+                    ]
+                    clusters.pop(j)
+                    changed = True
+                    break
+            if changed:
+                break
+
+    # Prefer clusters with the most holes / largest damaged area
+    clusters.sort(key=lambda c: (c[4], (c[2] - c[0]) * (c[3] - c[1])), reverse=True)
+    results: List[Dict[str, float]] = []
+    for x1, y1, x2, y2, _ in clusters[:max_boxes]:
+        results.append(
+            {
+                "x_min": round(max(0.02, x1 - pad), 4),
+                "y_min": round(max(0.02, y1 - pad), 4),
+                "x_max": round(min(0.98, x2 + pad), 4),
+                "y_max": round(min(0.98, y2 + pad), 4),
+            }
+        )
+    return results
+
+
+def detect_enclosed_leaf_holes_with_boxes(
+    im: Image.Image,
+) -> Tuple[int, float, List[Dict[str, float]]]:
+    """
+    Pure Pillow + NumPy multi-scale detector for insect chew-holes / shot-holes strictly
+    enclosed inside bright green leafy foliage (zero OpenCV dependency, Render-safe).
+    Returns `(hole_count, hole_area_pct, clustered_damage_boxes)` in normalized [0..1] coords.
     """
     try:
         w, h = im.size
         if w < 48 or h < 48:
-            return 0, 0.0
+            return 0, 0.0, []
         # Strip outer edges (bezels/frames/background margins) and normalize size
-        crop = im.crop((int(w * 0.08), int(h * 0.12), int(w * 0.92), int(h * 0.88)))
+        cx0_f, cy0_f, cx1_f, cy1_f = 0.08, 0.12, 0.92, 0.88
+        crop = im.crop((int(w * cx0_f), int(h * cy0_f), int(w * cx1_f), int(h * cy1_f)))
         crop = crop.resize((320, 320), Image.Resampling.BILINEAR)
 
         hsv = np.asarray(crop.convert("HSV"), dtype=np.float32)
@@ -320,7 +401,7 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
         green = (hue >= 36) & (hue <= 118) & (sat >= 42) & (val >= 75)
         soil_bg = (~green) & (val >= 55)
         if float(green.mean()) < 0.25:
-            return 0, 0.0
+            return 0, 0.0, []
 
         val_img = Image.fromarray(val.astype(np.uint8), mode="L")
         # Multi-scale local reference: wide 29x29 ceiling reaches outside large zoomed-in
@@ -335,12 +416,13 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
         )
         ys, xs = np.where(dark_spot)
         if ys.size == 0 or ys.size > 40000:
-            return 0, 0.0
+            return 0, 0.0, []
 
         height, width = dark_spot.shape
         visited = np.zeros((height, width), dtype=bool)
         hole_count = 0
         total_hole_area = 0
+        raw_hole_boxes: List[Tuple[float, float, float, float]] = []
 
         for sy, sx in zip(ys.tolist(), xs.tolist()):
             if visited[sy, sx]:
@@ -409,14 +491,57 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
             if float(np.median(rim_green_vals)) - hole_v >= 55.0:
                 hole_count += 1
                 total_hole_area += area
+                # Map crop-space [0..width/height] back to full-image normalized [0..1] coords
+                nx1 = cx0_f + (min_x / float(width)) * (cx1_f - cx0_f)
+                ny1 = cy0_f + (min_y / float(height)) * (cy1_f - cy0_f)
+                nx2 = cx0_f + ((max_x + 1) / float(width)) * (cx1_f - cx0_f)
+                ny2 = cy0_f + ((max_y + 1) / float(height)) * (cy1_f - cy0_f)
+                raw_hole_boxes.append((nx1, ny1, nx2, ny2))
 
         hole_area_pct = round(total_hole_area / float(height * width) * 100.0, 2)
-        return hole_count, hole_area_pct
+        clustered = _cluster_boxes(raw_hole_boxes, merge_gap=0.09, pad=0.03, max_boxes=4)
+        return hole_count, hole_area_pct, clustered
     except Exception:
-        return 0, 0.0
+        return 0, 0.0, []
 
 
-def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dict[str, Any]:
+def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
+    """Backwards-compatible wrapper returning `(hole_count, hole_area_pct)`."""
+    count, area_pct, _ = detect_enclosed_leaf_holes_with_boxes(im)
+    return count, area_pct
+
+
+def _extract_stress_region_boxes(
+    stress_mask: np.ndarray,
+    crop_bounds: Tuple[float, float, float, float] = (0.10, 0.10, 0.90, 0.90),
+    max_boxes: int = 3,
+) -> List[Dict[str, float]]:
+    """
+    Divides a 96x96 chlorosis/necrosis mask into a 6x6 grid, selects cells with
+    concentrated stress (>= 22% affected pixels), and merges adjacent cells into
+    tight normalized bounding boxes on the actual yellowed/scorched leaf zones.
+    """
+    h, w = stress_mask.shape
+    cx0, cy0, cx1, cy1 = crop_bounds
+    grid = 6
+    cell_h, cell_w = h // grid, w // grid
+    raw: List[Tuple[float, float, float, float]] = []
+    for r in range(grid):
+        for c in range(grid):
+            patch = stress_mask[r * cell_h : (r + 1) * cell_h, c * cell_w : (c + 1) * cell_w]
+            if float(patch.mean()) >= 0.22:
+                x1 = cx0 + (c / float(grid)) * (cx1 - cx0)
+                y1 = cy0 + (r / float(grid)) * (cy1 - cy0)
+                x2 = cx0 + ((c + 1) / float(grid)) * (cx1 - cx0)
+                y2 = cy0 + ((r + 1) / float(grid)) * (cy1 - cy0)
+                raw.append((x1, y1, x2, y2))
+    return _cluster_boxes(raw, merge_gap=0.04, pad=0.015, max_boxes=max_boxes)
+
+
+def extract_visual_foliage_signals(
+    image_source: Union[str, Image.Image],
+    include_boxes: bool = False,
+) -> Dict[str, Any]:
     """
     Extracts quantitative visual foliage ratios from the central specimen region:
       - green_foliage_pct: healthy green chlorophyll ratio
@@ -424,6 +549,7 @@ def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dic
       - brown_necrosis_pct: brown/scorched/rotted tissue ratio (tipburn, K-scorch, rot, spots)
       - leaf_hole_count: count of distinct dark chew/shot-holes enclosed inside green foliage
       - hole_area_pct: percentage of central leaf area perforated by enclosed holes
+    When `include_boxes=True`, also attaches `damage_boxes` and `stress_boxes` for tight UI overlays.
     """
     try:
         if isinstance(image_source, Image.Image):
@@ -444,26 +570,36 @@ def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dic
             healthy_green = (hue >= 42) & (hue <= 122) & (sat >= 35) & (val >= 32)
             yellow_chlorosis = (hue >= 22) & (hue < 42) & (sat >= 38) & (val >= 55)
             brown_necrosis = (hue >= 6) & (hue < 22) & (sat >= 35) & (val >= 28) & (val <= 215)
-            leaf_hole_count, hole_area_pct = detect_enclosed_leaf_holes(im)
+            leaf_hole_count, hole_area_pct, damage_boxes = detect_enclosed_leaf_holes_with_boxes(im)
 
-            return {
+            result: Dict[str, Any] = {
                 "green_foliage_pct": round(float(healthy_green.mean()) * 100.0, 1),
                 "yellow_chlorosis_pct": round(float(yellow_chlorosis.mean()) * 100.0, 1),
                 "brown_necrosis_pct": round(float(brown_necrosis.mean()) * 100.0, 1),
                 "leaf_hole_count": int(leaf_hole_count),
                 "hole_area_pct": float(hole_area_pct),
             }
+            if include_boxes:
+                stress_mask = yellow_chlorosis | brown_necrosis
+                result["_localized_boxes"] = {
+                    "damage_boxes": damage_boxes,
+                    "stress_boxes": _extract_stress_region_boxes(stress_mask),
+                }
+            return result
         finally:
             if should_close:
                 im.close()
     except Exception:
-        return {
+        fallback: Dict[str, Any] = {
             "green_foliage_pct": 0.0,
             "yellow_chlorosis_pct": 0.0,
             "brown_necrosis_pct": 0.0,
             "leaf_hole_count": 0,
             "hole_area_pct": 0.0,
         }
+        if include_boxes:
+            fallback["_localized_boxes"] = {"damage_boxes": [], "stress_boxes": []}
+        return fallback
 
 
 def get_probable_culprits(damage_key: str, crop_name: Optional[str]) -> List[Dict[str, str]]:
@@ -557,11 +693,16 @@ class HolisticConditionAnalyzer:
         Evaluates total plant condition, indirect pest-damage signatures, and nutrient deficiencies.
         Always returns visual HSV signals even if CLIP is unavailable.
         """
-        visual_signals = extract_visual_foliage_signals(image_source)
+        visual_with_boxes = extract_visual_foliage_signals(image_source, include_boxes=True)
+        localized_boxes = visual_with_boxes.pop("_localized_boxes", {"damage_boxes": [], "stress_boxes": []})
+        visual_signals = visual_with_boxes
+        image_quality = assess_image_quality(image_source)
         if not self.available:
             return {
                 "available": False,
                 "visual_signals": visual_signals,
+                "localized_boxes": localized_boxes,
+                "image_quality": image_quality,
                 "group_probs": {},
                 "top_group": "unknown",
                 "top_pest_damage": None,
@@ -627,6 +768,8 @@ class HolisticConditionAnalyzer:
             return {
                 "available": True,
                 "visual_signals": visual_signals,
+                "localized_boxes": localized_boxes,
+                "image_quality": image_quality,
                 "group_probs": group_probs,
                 "top_group": top_group,
                 "top_pest_damage": _top_subclass(damage_sims, group_probs["pest_damage"]),
@@ -637,6 +780,8 @@ class HolisticConditionAnalyzer:
             return {
                 "available": False,
                 "visual_signals": visual_signals,
+                "localized_boxes": localized_boxes,
+                "image_quality": image_quality,
                 "group_probs": {},
                 "top_group": "unknown",
                 "top_pest_damage": None,
@@ -865,6 +1010,7 @@ def synthesize_total_condition(
             "pest_damage": pest_damage_obj,
             "nutrient_deficiency": nutrient_def_obj,
             "visual_signals": visual,
+            "image_quality": condition_raw.get("image_quality"),
             "screened_targets": get_screened_targets(crop_name),
         },
     }

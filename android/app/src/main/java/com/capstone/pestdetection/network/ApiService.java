@@ -57,6 +57,7 @@ public interface ApiService {
     @POST("api/v1/detections/detect")
     Call<DetectionResponse> detectPest(
             @Part MultipartBody.Part file,
+            @Part MultipartBody.Part undersideFile,
             @Part("crop_id") RequestBody cropId,
             @Part("weather_condition") RequestBody weatherCondition,
             @Part("field_location") RequestBody fieldLocation

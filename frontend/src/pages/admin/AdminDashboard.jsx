@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { ShieldAlert, Users, Sprout, Bug, Activity, ArrowRight, Server, HardDrive, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, Users, Sprout, Bug, Activity, ArrowRight, Server, HardDrive, CheckCircle2, Flag, Download } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -12,17 +12,21 @@ export const AdminDashboard = () => {
   const { lang, t } = useLanguage();
   const [metrics, setMetrics] = useState(null);
   const [health, setHealth] = useState(null);
+  const [flaggedScans, setFlaggedScans] = useState([]);
+  const [exportingFlagged, setExportingFlagged] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [metricsRes, healthRes] = await Promise.all([
+        const [metricsRes, healthRes, flaggedRes] = await Promise.all([
           api.get('/admin/metrics'),
-          api.get('/admin/health')
+          api.get('/admin/health'),
+          api.get('/admin/flagged-scans?limit=15')
         ]);
         setMetrics(metricsRes.data);
         setHealth(healthRes.data);
+        setFlaggedScans(flaggedRes.data?.items || []);
       } catch (err) {
         console.error("Error loading admin dashboard data:", err);
       } finally {
@@ -31,6 +35,26 @@ export const AdminDashboard = () => {
     };
     fetchData();
   }, []);
+
+  const handleExportFlagged = async () => {
+    setExportingFlagged(true);
+    try {
+      const res = await api.get('/admin/flagged-scans/export');
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'flagged_scans_active_learning.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export flagged scans:', err);
+    } finally {
+      setExportingFlagged(false);
+    }
+  };
 
   if (loading) return <LoadingSpinner label={t('analyzingImage')} size="lg" />;
 
@@ -217,6 +241,73 @@ export const AdminDashboard = () => {
             </Button>
           </Link>
         </Card>
+      </div>
+
+      {/* Active-Learning Queue: Farmer-Flagged Inaccurate Scans */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-md p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-2">
+            <Flag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div>
+              <h3 className="font-display text-sm font-bold text-slate-900 dark:text-slate-100">
+                {lang === 'tl' ? 'Mga Flagged Scan para sa Active Learning' : 'Active-Learning Queue (Flagged Inaccurate Scans)'}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {lang === 'tl'
+                  ? 'Mga scan na minarkahan ng mga magsasaka para sa pagpapabuti at retraining ng AI model.'
+                  : 'Farmer-flagged scans with field correction notes ready for review and model retraining.'}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={Download}
+            onClick={handleExportFlagged}
+            disabled={exportingFlagged || flaggedScans.length === 0}
+          >
+            {exportingFlagged
+              ? (lang === 'tl' ? 'Ina-export...' : 'Exporting...')
+              : (lang === 'tl' ? `I-export (${metrics?.flagged_detections ?? flaggedScans.length})` : `Export Retraining JSON (${metrics?.flagged_detections ?? flaggedScans.length})`)}
+          </Button>
+        </div>
+
+        {flaggedScans.length === 0 ? (
+          <p className="text-xs text-slate-500 dark:text-slate-400 py-2">
+            {lang === 'tl'
+              ? 'Walang naka-flag na scan sa ngayon. Kapag minarkahan ng magsasaka ang resulta bilang hindi wasto, lalabas ito rito.'
+              : 'No flagged inaccurate scans yet. When farmers mark a report as Inaccurate, it appears here for retraining review.'}
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase text-[10px]">
+                  <th className="py-2 pr-3">ID</th>
+                  <th className="py-2 pr-3">Crop</th>
+                  <th className="py-2 pr-3">AI Prediction</th>
+                  <th className="py-2 pr-3">Farmer Correction Notes</th>
+                  <th className="py-2">Farmer</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {flaggedScans.map((item) => (
+                  <tr key={item.id} className="text-slate-800 dark:text-slate-200">
+                    <td className="py-2 pr-3 font-mono font-bold">#{item.id}</td>
+                    <td className="py-2 pr-3 font-semibold">{item.crop_name}</td>
+                    <td className="py-2 pr-3">
+                      <span className="font-semibold">{item.predicted_pest || item.predicted_disease}</span>
+                      <span className="ml-1 text-[10px] text-slate-500">({Math.round((item.confidence_score || 0) * 100)}%)</span>
+                    </td>
+                    <td className="py-2 pr-3 text-amber-800 dark:text-amber-300">{item.feedback_notes || '—'}</td>
+                    <td className="py-2 text-slate-500">{item.farmer_name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </div>

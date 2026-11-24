@@ -31,12 +31,12 @@ export const DetectPest = () => {
     loadCrops();
   }, []);
 
-  const handleAnalyze = async (file, cropId, weatherCondition, fieldLocation, coords = null) => {
+  const handleAnalyze = async (file, cropId, weatherCondition, fieldLocation, coords = null, undersideFile = null) => {
     setError(null);
     setDetectionResult(null);
     setAnalyzing(true);
     try {
-      const result = await detectionService.detectPest(file, cropId, weatherCondition, fieldLocation, coords);
+      const result = await detectionService.detectPest(file, cropId, weatherCondition, fieldLocation, coords, undersideFile);
       setDetectionResult(result);
     } catch (err) {
       setDetectionResult(null);

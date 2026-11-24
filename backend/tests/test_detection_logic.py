@@ -18,6 +18,7 @@ from app.core.rate_limiter import detection_limiter, login_limiter
 from app.main import app
 from app.services.detection.condition_analyzer import (
     detect_enclosed_leaf_holes,
+    detect_enclosed_leaf_holes_with_boxes,
     extract_visual_foliage_signals,
     get_probable_culprits,
     synthesize_total_condition,
@@ -77,6 +78,13 @@ def test_image_sanity_rejects_black_white_flat_and_tiny_images():
     assert check_image_sanity(Image.new("RGB", (300, 300), (0, 0, 0))) is not None
     assert check_image_sanity(Image.new("RGB", (300, 300), (255, 255, 255))) is not None
     assert check_image_sanity(Image.new("RGB", (300, 300), (50, 140, 50))) is not None
+
+    # Severely blurred / unreadable smooth gradient -> rejected with blur guidance
+    from PIL import ImageFilter
+    grad = np.tile(np.linspace(40, 210, 256, dtype=np.uint8), (256, 1))
+    blurry = Image.fromarray(np.stack([grad, grad, grad], axis=2), mode="RGB").filter(ImageFilter.GaussianBlur(14))
+    blur_err = check_image_sanity(blurry)
+    assert blur_err is not None and "blur" in blur_err.lower()
 
 
 def test_foliage_gate_rejects_paper_card_and_non_plant_colors():
@@ -271,9 +279,11 @@ def test_enclosed_leaf_hole_detector_distinguishes_perforated_vs_intact_leaf():
             cx = 70 + col * 42
             chewed[cy - 4 : cy + 5, cx - 4 : cx + 5] = [18, 42, 12]
     chewed_im = Image.fromarray(chewed, mode="RGB")
-    chewed_holes, chewed_area = detect_enclosed_leaf_holes(chewed_im)
+    chewed_holes, chewed_area, dmg_boxes = detect_enclosed_leaf_holes_with_boxes(chewed_im)
     assert chewed_holes >= 20
     assert chewed_area >= 0.45
+    assert 1 <= len(dmg_boxes) <= 4
+    assert all(0.0 <= b["x_min"] < b["x_max"] <= 1.0 and 0.0 <= b["y_min"] < b["y_max"] <= 1.0 for b in dmg_boxes)
 
 
 def test_synthesize_overrides_high_conf_healthy_when_leaf_is_riddled_with_insect_holes():
@@ -367,6 +377,44 @@ def test_synthesize_catches_zoomed_in_large_caterpillar_chew_holes():
     assert res["promoted_detection_type"] == "pest_damage"
     assert res["condition_assessment"]["pest_damage"]["key"] == "chewing_damage"
     assert res["condition_assessment"]["health_score"] < 60
+
+
+def test_two_angle_fusion_upgrades_top_damage_with_underside_pest():
+    from app.api.v1.endpoints.detections import _fuse_two_angle_results
+
+    top = {
+        "rejected": False,
+        "detection_type": "pest_damage",
+        "pest_name": "Chewing / Skeletonized Foliage Damage",
+        "confidence": 0.78,
+        "severity": "High",
+        "condition_assessment": {
+            "overall_condition": "Pest-Damaged Foliage",
+            "condition_summary": "Lettuce shows chewed holes.",
+            "health_score": 52,
+        },
+    }
+    underside = {
+        "rejected": False,
+        "detection_type": "pest",
+        "pest_id": 2,
+        "pest_name": "Green Peach Aphid",
+        "scientific_name": "Myzus persicae",
+        "confidence": 0.86,
+        "severity": "High",
+        "recommended_action": "Spray neem oil on leaf undersides.",
+        "condition_assessment": {
+            "overall_condition": "Active Pest Infestation",
+            "condition_summary": "Active Green Peach Aphid detected on Lettuce.",
+            "health_score": 44,
+        },
+    }
+    fused = _fuse_two_angle_results(top, underside, "/static/uploads/detections/under.jpg")
+    assert fused["detection_type"] == "pest"
+    assert fused["pest_name"] == "Green Peach Aphid"
+    assert fused["condition_assessment"]["health_score"] == 44
+    assert fused["condition_assessment"]["two_angle_scan"]["enabled"] is True
+    assert fused["condition_assessment"]["two_angle_scan"]["underside_outcome"] == "pest"
 
 
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():

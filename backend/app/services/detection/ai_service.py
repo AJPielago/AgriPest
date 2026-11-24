@@ -234,6 +234,99 @@ class AIDetectionService(BaseDetectionService):
         parsed.sort(key=lambda item: item["confidence"], reverse=True)
         return parsed
 
+    def _run_tiled_tiny_pest_pass(
+        self,
+        image_source: Union[str, Image.Image],
+        min_tile_pest_conf: float = 0.62,
+    ) -> List[Dict[str, Any]]:
+        """
+        SAHI-style 2x2 overlapping tiled inference pass for tiny insect pests
+        (aphids, whiteflies, thrips, flea beetles) that shrink to <12px when
+        YOLOv8 downscales a full smartphone photo to 640x640.
+        Runs all 4 tiles in a single batched GPU/CPU forward pass and maps
+        high-confidence insect boxes back to full-image normalized coordinates.
+        """
+        try:
+            if isinstance(image_source, Image.Image):
+                im = image_source.convert("RGB")
+                should_close = False
+            else:
+                im = Image.open(image_source).convert("RGB")
+                should_close = True
+            try:
+                w, h = im.size
+                if w < 400 or h < 400:
+                    return []
+                tile_specs = (
+                    (0.0, 0.0, 0.60, 0.60),
+                    (0.40, 0.0, 1.0, 0.60),
+                    (0.0, 0.40, 0.60, 1.0),
+                    (0.40, 0.40, 1.0, 1.0),
+                )
+                tile_imgs = [
+                    im.crop((int(tx0 * w), int(ty0 * h), int(tx1 * w), int(ty1 * h)))
+                    for (tx0, ty0, tx1, ty1) in tile_specs
+                ]
+            finally:
+                if should_close:
+                    im.close()
+
+            batch_results = self.model.predict(
+                tile_imgs,
+                conf=min_tile_pest_conf,
+                iou=0.45,
+                verbose=False,
+            )
+
+            tiled_pests: List[Dict[str, Any]] = []
+            for (tx0, ty0, tx1, ty1), res in zip(tile_specs, batch_results):
+                boxes = res.boxes
+                if boxes is None or len(boxes) == 0:
+                    continue
+                tw = tx1 - tx0
+                th = ty1 - ty0
+                for i in range(len(boxes)):
+                    conf = float(boxes.conf[i])
+                    if conf < min_tile_pest_conf:
+                        continue
+                    cls_id = int(boxes.cls[i])
+                    raw_name = str(res.names.get(cls_id, "unknown"))
+                    if raw_name not in CLASS_REGISTRY:
+                        continue
+                    kind, display_name, valid_crops, meta = CLASS_REGISTRY[raw_name]
+                    if kind != "pest":
+                        continue
+                    lx1, ly1, lx2, ly2 = [max(0.0, min(1.0, float(v))) for v in boxes.xyxyn[i].tolist()]
+                    gx1 = max(0.0, min(1.0, tx0 + lx1 * tw))
+                    gy1 = max(0.0, min(1.0, ty0 + ly1 * th))
+                    gx2 = max(0.0, min(1.0, tx0 + lx2 * tw))
+                    gy2 = max(0.0, min(1.0, ty0 + ly2 * th))
+                    # Ignore absurdly huge full-tile hallucinations (tiny pests occupy a localized box)
+                    if (gx2 - gx1) * (gy2 - gy1) > 0.30:
+                        continue
+                    tiled_pests.append({
+                        "raw_name": raw_name,
+                        "kind": kind,
+                        "display_name": display_name,
+                        "valid_crops": valid_crops,
+                        "meta": meta,
+                        "confidence": round(conf, 3),
+                        "box": {
+                            "x_min": round(gx1, 4),
+                            "y_min": round(gy1, 4),
+                            "x_max": round(gx2, 4),
+                            "y_max": round(gy2, 4),
+                            "label": f"Pest: {display_name}",
+                            "type": "pest",
+                            "confidence": round(conf, 2),
+                        },
+                    })
+            tiled_pests.sort(key=lambda item: item["confidence"], reverse=True)
+            return tiled_pests[:6]
+        except Exception as err:
+            logger.debug("Tiled tiny-pest pass skipped due to error: %s", err)
+            return []
+
     def _run_inference_sync(
         self,
         image_source: Union[str, Image.Image],
@@ -310,6 +403,15 @@ class AIDetectionService(BaseDetectionService):
             min_disease_conf=min_dis_conf,
             min_pest_conf=MIN_CONF_PEST,
         )
+
+        # 4a-tile. Run 2x2 overlapping tiled pass on CLIP-verified leafy greens when no high-conf
+        #          pest was already spotted at full resolution (catches tiny aphids/thrips/flea beetles)
+        has_strong_full_pest = any(d["kind"] == "pest" and d["confidence"] >= 0.72 for d in detections)
+        if clip_verified_leafy and not is_live_check and not has_strong_full_pest:
+            tiled_pests = self._run_tiled_tiny_pest_pass(image_source, min_tile_pest_conf=0.66)
+            if tiled_pests:
+                detections.extend(tiled_pests)
+                detections.sort(key=lambda item: item["confidence"], reverse=True)
 
         # 4b. Compute holistic plant condition / indirect pest-damage / nutrient-deficiency signals
         condition_raw: Dict[str, Any] = {}
@@ -573,6 +675,7 @@ class AIDetectionService(BaseDetectionService):
             promoted_type = synth["promoted_detection_type"]
             condition_assessment = synth["condition_assessment"]
 
+            localized_boxes = condition_raw.get("localized_boxes") or {}
             if promoted_type == "pest_damage" and condition_assessment.get("pest_damage"):
                 dmg = condition_assessment["pest_damage"]
                 culprits = condition_assessment.get("probable_pests") or []
@@ -584,17 +687,32 @@ class AIDetectionService(BaseDetectionService):
                 pest_severity = dmg["severity"]
                 description = condition_assessment["condition_summary"]
                 rec_action = dmg["recommended_action"]
-                bounding_boxes = [
-                    {
-                        "x_min": 0.08,
-                        "y_min": 0.08,
-                        "x_max": 0.92,
-                        "y_max": 0.92,
-                        "label": f"Pest Damage: {dmg['damage_type']}",
-                        "type": "pest_damage",
-                        "confidence": pest_conf,
-                    }
-                ]
+                dmg_zones = localized_boxes.get("damage_boxes") or []
+                if dmg_zones:
+                    bounding_boxes = [
+                        {
+                            "x_min": z["x_min"],
+                            "y_min": z["y_min"],
+                            "x_max": z["x_max"],
+                            "y_max": z["y_max"],
+                            "label": f"Pest Damage: {dmg['damage_type']}",
+                            "type": "pest_damage",
+                            "confidence": pest_conf,
+                        }
+                        for z in dmg_zones
+                    ]
+                else:
+                    bounding_boxes = [
+                        {
+                            "x_min": 0.08,
+                            "y_min": 0.08,
+                            "x_max": 0.92,
+                            "y_max": 0.92,
+                            "label": f"Pest Damage: {dmg['damage_type']}",
+                            "type": "pest_damage",
+                            "confidence": pest_conf,
+                        }
+                    ]
             elif promoted_type == "nutrient_deficiency" and condition_assessment.get("nutrient_deficiency"):
                 nut = condition_assessment["nutrient_deficiency"]
                 det_type = "nutrient_deficiency"
@@ -614,17 +732,32 @@ class AIDetectionService(BaseDetectionService):
                 dis_severity = None
                 dis_action = None
                 disease_details = {}
-                bounding_boxes = [
-                    {
-                        "x_min": 0.08,
-                        "y_min": 0.08,
-                        "x_max": 0.92,
-                        "y_max": 0.92,
-                        "label": f"Nutrient: {nut['name']}",
-                        "type": "nutrient",
-                        "confidence": pest_conf,
-                    }
-                ]
+                stress_zones = localized_boxes.get("stress_boxes") or []
+                if stress_zones:
+                    bounding_boxes = [
+                        {
+                            "x_min": z["x_min"],
+                            "y_min": z["y_min"],
+                            "x_max": z["x_max"],
+                            "y_max": z["y_max"],
+                            "label": f"Nutrient: {nut['name']}",
+                            "type": "nutrient",
+                            "confidence": pest_conf,
+                        }
+                        for z in stress_zones
+                    ]
+                else:
+                    bounding_boxes = [
+                        {
+                            "x_min": 0.08,
+                            "y_min": 0.08,
+                            "x_max": 0.92,
+                            "y_max": 0.92,
+                            "label": f"Nutrient: {nut['name']}",
+                            "type": "nutrient",
+                            "confidence": pest_conf,
+                        }
+                    ]
             elif det_type == "none":
                 return self._reject(
                     "Unrecognized specimen: Unable to determine plant condition clearly. "

@@ -303,43 +303,110 @@ def _open_rgb_image(image_source: Union[str, Image.Image]) -> Tuple[Image.Image,
     return Image.open(image_source).convert("RGB"), True
 
 
-def check_image_sanity(image_source: Union[str, Image.Image]) -> Optional[str]:
+def assess_image_quality(image_source: Union[str, Image.Image]) -> Dict[str, Any]:
     """
-    Fast deterministic check that rejects unusable images before inference:
-      - Tiny images (< 32x32)
-      - Blank / solid-color / pitch-black / washed-out white frames
-    Returns an error reason string if invalid, else None.
+    Pure Pillow + NumPy photo quality metrics (sharpness via discrete 3x3 Laplacian variance,
+    brightness, and over/under-exposure ratios) used both for hard rejection of unusable frames
+    and soft farmer coaching tips on borderline lighting/focus.
     """
     try:
         im, should_close = _open_rgb_image(image_source)
         try:
             w, h = im.size
-            if w < 32 or h < 32:
-                return (
-                    "Image resolution is too small for reliable diagnosis. "
-                    "Please capture a clear close-up photo of Lettuce, Bok Choy, or Mustard Greens."
-                )
-            small = im.resize((96, 96), Image.Resampling.BILINEAR)
-            arr = np.asarray(small, dtype=np.float32)
-            spatial_std = float(arr.std(axis=(0, 1)).mean())
-            mean_brightness = float(arr.mean())
-            if spatial_std < 8.0:
-                return (
-                    "Image appears blank, uniform, or lacks visible plant detail. "
-                    "Please capture a clear, well-lit photo of Lettuce, Bok Choy, or Mustard Greens."
-                )
-            if mean_brightness < 12.0:
-                return (
-                    "Image is too dark to inspect. Move to brighter natural lighting and try again."
-                )
-            if mean_brightness > 246.0 and spatial_std < 18.0:
-                return (
-                    "Image is overexposed or mostly white. Adjust lighting and refocus on the crop leaf."
-                )
-            return None
+            small_rgb = np.asarray(im.resize((96, 96), Image.Resampling.BILINEAR), dtype=np.float32)
+            spatial_std = float(small_rgb.std(axis=(0, 1)).mean())
+            mean_brightness = float(small_rgb.mean())
+            dark_ratio = float((small_rgb.mean(axis=2) < 25.0).mean())
+            blown_white_ratio = float((small_rgb.mean(axis=2) > 245.0).mean())
+
+            gray = np.asarray(im.convert("L").resize((256, 256), Image.Resampling.BILINEAR), dtype=np.float32)
+            lap = (
+                -4.0 * gray[1:-1, 1:-1]
+                + gray[:-2, 1:-1]
+                + gray[2:, 1:-1]
+                + gray[1:-1, :-2]
+                + gray[1:-1, 2:]
+            )
+            sharpness = float(lap.var())
+
+            hint: Optional[str] = None
+            grade = "Good"
+            if sharpness < 18.0:
+                grade = "Fair"
+                hint = "Slightly soft focus — hold steady 15–25 cm from the leaf for sharper pest detail."
+            elif mean_brightness < 55.0:
+                grade = "Fair"
+                hint = "Lighting is dim — natural indirect daylight improves leaf color and lesion accuracy."
+            elif blown_white_ratio > 0.35:
+                grade = "Fair"
+                hint = "Strong glare detected — shade the leaf slightly to reduce washed-out highlights."
+
+            return {
+                "width": w,
+                "height": h,
+                "spatial_std": round(spatial_std, 2),
+                "brightness": round(mean_brightness, 1),
+                "dark_ratio": round(dark_ratio, 3),
+                "blown_white_ratio": round(blown_white_ratio, 3),
+                "sharpness": round(sharpness, 1),
+                "quality_grade": grade,
+                "quality_hint": hint,
+            }
         finally:
             if should_close:
                 im.close()
+    except Exception:
+        return {
+            "width": 0,
+            "height": 0,
+            "spatial_std": 0.0,
+            "brightness": 0.0,
+            "dark_ratio": 1.0,
+            "blown_white_ratio": 0.0,
+            "sharpness": 0.0,
+            "quality_grade": "Poor",
+            "quality_hint": "Image could not be decoded.",
+        }
+
+
+def check_image_sanity(image_source: Union[str, Image.Image]) -> Optional[str]:
+    """
+    Fast deterministic photo quality gate that rejects unusable images before inference:
+      - Tiny images (< 32x32)
+      - Blank / solid-color / pitch-black / overexposed frames
+      - Severely out-of-focus or motion-blurred photos (Laplacian variance < 3.5)
+    Returns an actionable error message if invalid, else None.
+    """
+    try:
+        q = assess_image_quality(image_source)
+        if q["width"] == 0 or q["height"] == 0:
+            return "Uploaded image file could not be decoded for analysis."
+        if q["width"] < 32 or q["height"] < 32:
+            return (
+                "Image resolution is too small for reliable diagnosis. "
+                "Please capture a clear close-up photo of Lettuce, Bok Choy, or Mustard Greens."
+            )
+        if q["spatial_std"] < 8.0:
+            return (
+                "Image appears blank, uniform, or lacks visible plant detail. "
+                "Please capture a clear, well-lit photo of Lettuce, Bok Choy, or Mustard Greens."
+            )
+        if q["brightness"] < 16.0 or q["dark_ratio"] > 0.88:
+            return (
+                "Image is too dark to inspect. Move to brighter natural lighting and try again."
+            )
+        if (q["brightness"] > 244.0 and q["spatial_std"] < 20.0) or q["blown_white_ratio"] > 0.82:
+            return (
+                "Image is overexposed or mostly white. Reduce direct glare and refocus on the crop leaf."
+            )
+        # Hard blur rejection calibrated so real soft-focus phone photos (>= 8.0) pass while
+        # severely blurred/unreadable frames (< 3.5) get immediate coaching.
+        if q["sharpness"] < 3.5 and q["width"] >= 96 and q["height"] >= 96:
+            return (
+                "Image is too blurry or out of focus for reliable pest and disease diagnosis. "
+                "Hold steady 15–25 cm from the leaf, tap to focus, and try again."
+            )
+        return None
     except Exception:
         return "Uploaded image file could not be decoded for analysis."
 

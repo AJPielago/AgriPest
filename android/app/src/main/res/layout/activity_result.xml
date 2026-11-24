@@ -221,6 +221,18 @@
                         android:background="@drawable/bg_badge_error"
                         android:paddingVertical="5dp"
                         android:paddingHorizontal="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvScanExtras"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone"
+                        android:textSize="11sp"
+                        android:textColor="@color/on_surface_variant"
+                        android:background="@drawable/bg_card_stitch"
+                        android:paddingVertical="6dp"
+                        android:paddingHorizontal="10dp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

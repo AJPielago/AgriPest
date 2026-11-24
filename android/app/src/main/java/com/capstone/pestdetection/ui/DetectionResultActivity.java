@@ -43,7 +43,7 @@ public class DetectionResultActivity extends BaseActivity {
     private BoundingBoxOverlayView overlayBoundingBox;
     private MaterialCardView cardTotalCondition, cardProbablePests, cardNutrientDeficiency;
     private TextView tvOverallCondition, tvHealthScore, tvConditionSummary;
-    private TextView tvSignalGreen, tvSignalYellow, tvSignalBrown, tvSignalHoles;
+    private TextView tvSignalGreen, tvSignalYellow, tvSignalBrown, tvSignalHoles, tvScanExtras;
     private TextView tvDamageType, tvDamageDescription;
     private LinearLayout layoutCulpritsContainer;
     private TextView tvNutrientName, tvNutrientBadge, tvNutrientSymptoms, tvNutrientCauses, tvNutrientAction;
@@ -79,6 +79,7 @@ public class DetectionResultActivity extends BaseActivity {
         tvSignalYellow = findViewById(R.id.tvSignalYellow);
         tvSignalBrown = findViewById(R.id.tvSignalBrown);
         tvSignalHoles = findViewById(R.id.tvSignalHoles);
+        tvScanExtras = findViewById(R.id.tvScanExtras);
 
         cardProbablePests = findViewById(R.id.cardProbablePests);
         tvDamageType = findViewById(R.id.tvDamageType);
@@ -342,11 +343,37 @@ public class DetectionResultActivity extends BaseActivity {
             tvSignalYellow.setText(String.format(Locale.US, "Chlorosis %.0f%%", yellow));
             tvSignalBrown.setText(String.format(Locale.US, "Necrosis %.0f%%", brown));
 
-            if (holes >= 10) {
+            if (holes >= 10 || (holes >= 4 && holeArea >= 0.80)) {
                 tvSignalHoles.setVisibility(View.VISIBLE);
                 tvSignalHoles.setText(String.format(Locale.US, "Leaf Perforations Detected: %d holes (%.1f%% blade area)", holes, holeArea));
             } else {
                 tvSignalHoles.setVisibility(View.GONE);
+            }
+        }
+
+        // Optional 2-Angle Scan & Photo Quality Tips
+        StringBuilder extras = new StringBuilder();
+        if (ca.get("two_angle_scan") instanceof Map) {
+            Map<String, Object> twoAngle = (Map<String, Object>) ca.get("two_angle_scan");
+            if (Boolean.TRUE.equals(twoAngle.get("enabled"))) {
+                extras.append("2-Angle Scan (Top + Underside): ")
+                        .append(asString(twoAngle.get("underside_summary"), "Underside analyzed."));
+            }
+        }
+        if (ca.get("image_quality") instanceof Map) {
+            Map<String, Object> iq = (Map<String, Object>) ca.get("image_quality");
+            String qHint = asString(iq.get("quality_hint"), "");
+            if (!qHint.isEmpty() && !"null".equalsIgnoreCase(qHint)) {
+                if (extras.length() > 0) extras.append("\n");
+                extras.append("Photo Tip: ").append(qHint);
+            }
+        }
+        if (tvScanExtras != null) {
+            if (extras.length() > 0) {
+                tvScanExtras.setVisibility(View.VISIBLE);
+                tvScanExtras.setText(extras.toString());
+            } else {
+                tvScanExtras.setVisibility(View.GONE);
             }
         }
 
