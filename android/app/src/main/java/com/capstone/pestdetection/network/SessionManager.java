@@ -66,9 +66,19 @@ public class SessionManager {
     }
 
     public void saveBaseUrl(String url) {
-        if (!url.endsWith("/")) {
-            url += "/";
+        if (url == null) return;
+        url = url.trim();
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "http://" + url;
         }
+        // Strip accidental /api or /api/v1 suffix because ApiService already includes api/v1/
+        url = url.replaceAll("/+$", "");
+        if (url.endsWith("/api/v1")) {
+            url = url.substring(0, url.length() - "/api/v1".length());
+        } else if (url.endsWith("/api")) {
+            url = url.substring(0, url.length() - "/api".length());
+        }
+        url = url + "/";
         editor.putString(KEY_BASE_URL, url);
         editor.apply();
     }

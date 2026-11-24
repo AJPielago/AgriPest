@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.security import get_current_admin, get_password_hash
 from app.models.user import User
+from app.models.audit_log import AuditLog
 from app.schemas.user import UserOut, UserCreate, UserUpdate
 
 router = APIRouter()
@@ -35,6 +36,12 @@ def create_user(
         is_active=True
     )
     db.add(user)
+    db.flush()
+    db.add(AuditLog(
+        user_id=admin.id,
+        action="ADMIN_USER_CREATED",
+        details=f"Admin created user {user.email} (role_id={user.role_id})",
+    ))
     db.commit()
     db.refresh(user)
     return user
@@ -58,7 +65,12 @@ def update_user(
         user.is_active = user_in.is_active
     if user_in.role_id is not None:
         user.role_id = user_in.role_id
-    
+
+    db.add(AuditLog(
+        user_id=admin.id,
+        action="ADMIN_USER_UPDATED",
+        details=f"Admin updated user #{user.id} ({user.email})",
+    ))
     db.commit()
     db.refresh(user)
     return user
@@ -74,6 +86,12 @@ def delete_user(
         raise HTTPException(status_code=404, detail="User not found.")
     if user.id == admin.id:
         raise HTTPException(status_code=400, detail="Administrators cannot delete their own active account.")
+    deleted_email = user.email
     db.delete(user)
+    db.add(AuditLog(
+        user_id=admin.id,
+        action="ADMIN_USER_DELETED",
+        details=f"Admin deleted user #{user_id} ({deleted_email})",
+    ))
     db.commit()
     return {"detail": "User deleted successfully."}

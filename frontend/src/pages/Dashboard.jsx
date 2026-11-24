@@ -318,7 +318,10 @@ export const Dashboard = () => {
                   <div className="flex-1 flex flex-col gap-1 min-w-0">
                     <div className="flex items-center justify-between w-full gap-2">
                       <span className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate">
-                        {rec.pest_name} {t('onCrop')} {rec.crop_name || (lang === 'tl' ? 'Petsay' : 'Bok Choy')}
+                        {(rec.detection_type === 'disease' || rec.pest_name === 'No Pest Detected') && rec.disease_name
+                          ? rec.disease_name
+                          : rec.pest_name}{' '}
+                        {rec.detection_type === 'healthy' ? '' : `${t('onCrop')} ${rec.crop_name || (lang === 'tl' ? 'Pananim' : 'Leafy Green')}`}
                       </span>
                       <span
                         className={`font-label-sm text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${

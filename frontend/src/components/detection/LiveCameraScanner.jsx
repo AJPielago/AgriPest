@@ -103,59 +103,76 @@ export const LiveCameraScanner = ({ selectedCropId, onCaptureFrame, loading = fa
     }
   }, [captureCanvasBlob, onCaptureFrame]);
 
-  // Live Stream Pre-Screening Loop (400ms Interval)
+  // Live Stream Pre-Screening Loop (Sequential with AbortController — prevents request pile-ups on slow links)
   useEffect(() => {
     if (!streamActive || loading || scanningStatus === 'capturing') return;
 
     let isSubscribed = true;
+    let timerId = null;
+    let activeController = null;
 
-    const pollInterval = setInterval(async () => {
+    const sampleAndEvaluate = async () => {
+      if (!isSubscribed) return;
       const video = videoRef.current;
-      if (!video || !video.videoWidth || video.paused || video.ended) return;
-
-      // Draw low-res frame to hidden sampler canvas
       const samplerCanvas = canvasRef.current;
-      if (!samplerCanvas) return;
+
+      if (!video || !video.videoWidth || video.paused || video.ended || !samplerCanvas) {
+        timerId = setTimeout(sampleAndEvaluate, 500);
+        return;
+      }
+
       samplerCanvas.width = 480;
       samplerCanvas.height = Math.round((video.videoHeight / video.videoWidth) * 480);
       const ctx = samplerCanvas.getContext('2d');
       ctx.drawImage(video, 0, 0, samplerCanvas.width, samplerCanvas.height);
 
-      samplerCanvas.toBlob(async (blob) => {
-        if (!blob || !isSubscribed) return;
-        const frameFile = new File([blob], 'sampler_frame.jpg', { type: 'image/jpeg' });
+      const blob = await new Promise((resolve) => samplerCanvas.toBlob(resolve, 'image/jpeg', 0.7));
+      if (!blob || !isSubscribed) return;
 
-        try {
-          const result = await detectionService.checkLiveFrame(frameFile, selectedCropId ? parseInt(selectedCropId) : null);
-          if (!isSubscribed) return;
+      const frameFile = new File([blob], 'sampler_frame.jpg', { type: 'image/jpeg' });
+      activeController = new AbortController();
 
-          setLiveBoxes(result.bounding_boxes || []);
-          setLiveConfidence(result.confidence || 0);
-          setStatusMessage(result.message || '');
+      try {
+        const result = await detectionService.checkLiveFrame(
+          frameFile,
+          selectedCropId ? parseInt(selectedCropId, 10) : null,
+          activeController.signal
+        );
+        if (!isSubscribed) return;
 
-          if (result.crop_recognized && result.confidence >= 0.80) {
-            setScanningStatus('recognized');
-            setStabilityCount((prev) => {
-              const nextCount = prev + 1;
-              if (autoCapture && nextCount >= 2) {
-                executeCapture();
-              }
-              return nextCount;
-            });
-          } else {
-            setScanningStatus('scanning');
-            setStabilityCount(0);
-          }
-        } catch (err) {
-          // Silent catch for rapid background polling
+        setLiveBoxes(result.bounding_boxes || []);
+        setLiveConfidence(result.confidence || 0);
+        setStatusMessage(result.message || '');
+
+        if (result.crop_recognized && result.confidence >= 0.80) {
+          setScanningStatus('recognized');
+          setStabilityCount((prev) => {
+            const nextCount = prev + 1;
+            if (autoCapture && nextCount >= 2) {
+              executeCapture();
+            }
+            return nextCount;
+          });
+        } else {
+          setScanningStatus('scanning');
+          setStabilityCount(0);
         }
-      }, 'image/jpeg', 0.7);
+      } catch (err) {
+        // Ignore expected aborts or transient offline errors during live preview
+      } finally {
+        activeController = null;
+        if (isSubscribed) {
+          timerId = setTimeout(sampleAndEvaluate, 450);
+        }
+      }
+    };
 
-    }, 400);
+    timerId = setTimeout(sampleAndEvaluate, 350);
 
     return () => {
       isSubscribed = false;
-      clearInterval(pollInterval);
+      if (timerId) clearTimeout(timerId);
+      if (activeController) activeController.abort();
     };
   }, [streamActive, loading, scanningStatus, autoCapture, selectedCropId, executeCapture]);
 

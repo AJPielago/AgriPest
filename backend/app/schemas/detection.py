@@ -38,6 +38,9 @@ class DetectionOut(BaseModel):
     # Context & Feedback
     weather_condition: Optional[str] = None
     field_location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    is_acknowledged: Optional[bool] = False
     feedback_accurate: Optional[bool] = None
     feedback_notes: Optional[str] = None
 

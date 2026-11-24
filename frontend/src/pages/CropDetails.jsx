@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { cropService } from '../services/cropService';
+import { getDetectionSummary } from '../utils/detectionUtils';
 import { pestService } from '../services/pestService';
 import { diseaseService } from '../services/diseaseService';
 import { detectionService } from '../services/detectionService';
@@ -262,7 +263,9 @@ export const CropDetails = () => {
 
           {detections.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {detections.slice(0, 3).map(det => (
+              {detections.slice(0, 3).map(det => {
+                const s = getDetectionSummary(det);
+                return (
                 <Link
                   key={det.id}
                   to={`/history?id=${det.id}`}
@@ -271,11 +274,11 @@ export const CropDetails = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <span className="font-bold text-xs text-on-surface dark:text-inverse-on-surface block">
-                        {det.detected_pest_name}
+                        {s.primaryTitle}
                       </span>
-                      {det.detected_disease_name && (
+                      {s.hasPest && s.hasDisease && (
                         <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 block">
-                          + {det.detected_disease_name}
+                          + {s.diseaseName}
                         </span>
                       )}
                     </div>
@@ -291,11 +294,12 @@ export const CropDetails = () => {
                   <div className="flex items-center justify-between text-xs pt-2 border-t border-outline-variant/50">
                     <span className="text-outline font-medium">{t('tableConfidence')}</span>
                     <span className="font-bold text-secondary dark:text-secondary-fixed">
-                      {Math.round(det.confidence_score * 100)}%
+                      {Math.round((s.primaryConfidence || 0) * 100)}%
                     </span>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-surface-container-lowest dark:bg-surface-container-low p-6 rounded-xl border border-outline-variant text-center text-xs text-on-surface-variant">

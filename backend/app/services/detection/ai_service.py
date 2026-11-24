@@ -1,192 +1,629 @@
 """
 ========================================================================================
-AI MODEL DETECTION SERVICE (PHASE 6 PLUG-IN MODULE)
+AI MODEL DETECTION SERVICE (YOLOv8 LEAFY-GREEN DETECTOR + CLIP/COCO OOD REJECTION)
 ========================================================================================
-This module is the designated integration point for the final trained Computer Vision / ML model.
+Enforces a strict, logically sound detection pipeline for the 3 target leafy greens
+(Lettuce / Litsugas, Bok Choy / Petsay, Mustard Greens / Mustasa):
 
-When the target crop and dataset have been finalized:
-1. Install your framework (e.g. `ultralytics`, `torch`, `torchvision`, or `onnxruntime`).
-2. Place your trained model weights file (e.g. `best.pt` or `model.onnx`) inside `backend/app/ml_models/`.
-3. Load the model in `__init__()` below.
-4. Implement inference inside `analyze_image()`.
-5. Change `DETECTION_MODE=ai` in `.env`.
+  1. Image Sanity Gate: Rejects blank, tiny, pitch-black, or washed-out frames.
+  2. Always-On COCO General-Object Veto (`yolov8n.pt`): Never skipped regardless of
+     YOLO confidence; rejects people, phones, laptops, furniture, fruits, potted plants, etc.
+  3. Local CLIP ViT-B-32 Semantic Domain Gate (`weights/clip/ViT-B-32.pt`):
+     - Tier 1: Rejects non-agricultural scenes, screenshots, paper/herbarium cards,
+       and non-target plants (tomatoes, flowers, trees, fruits, rice, corn, houseplants).
+     - Tier 2: Verifies leafy-green crop specificity whenever crop/disease is detected.
+  4. Strict Per-Category Confidence & Foliage HSV/Anti-Paper Gate (never bypassed).
+  5. Logical Resolution Engine:
+     - Cross-class spatial conflict suppression (IoU NMS across overlapping boxes).
+     - Botanical host-crop compatibility filtering (Lettuce vs Brassica).
+     - Clean 4-state outcomes: 'healthy', 'pest', 'disease', or 'pest_and_disease'.
+       Every scan does NOT need 1 pest and 1 disease.
 ========================================================================================
 """
 
+import asyncio
+import logging
 import os
-import random
-from typing import Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+from PIL import Image
 from sqlalchemy.orm import Session
-from app.services.detection.base import BaseDetectionService
-from app.models.pest import Pest
+
+logger = logging.getLogger("agripest.ai")
+
+from app.core.config import settings
+from app.models.crop import Crop
 from app.models.disease import Disease
-from app.models.recommendation import Recommendation
 from app.models.disease_recommendation import DiseaseRecommendation
+from app.models.pest import Pest
+from app.models.recommendation import Recommendation
+from app.services.detection.base import BaseDetectionService
+from app.services.detection.domain_gate import (
+    CLASS_REGISTRY,
+    CLIPDomainGate,
+    MIN_CONF_DISEASE,
+    MIN_CONF_HEALTHY,
+    MIN_CONF_LIVE_CHECK,
+    MIN_CONF_PEST,
+    NON_CROP_COCO_CLASSES,
+    TARGET_CROPS,
+    DomainGateResult,
+    check_image_sanity,
+    has_organic_foliage_colors,
+    resolve_logical_detections,
+)
+
+
+def _severity_from_conf(conf: float) -> str:
+    if conf >= 0.85:
+        return "Critical"
+    if conf >= 0.70:
+        return "High"
+    if conf >= 0.50:
+        return "Moderate"
+    return "Low"
+
 
 class AIDetectionService(BaseDetectionService):
     def __init__(self):
-        # Look for pluggable trained PyTorch / YOLOv8 / ONNX model weights
         self.model_dir = os.path.join(os.path.dirname(__file__), "..", "..", "ml_models")
-        self.model_path = None
+        self.model_path: Optional[str] = None
         self.model = None
+        self.ood_model = None
+        self.clip_gate: Optional[CLIPDomainGate] = None
+        self.load_error: Optional[str] = None
+        self._load_models()
 
+    def _load_models(self):
         possible_paths = [
             os.path.join(self.model_dir, "best.pt"),
             os.path.join(self.model_dir, "best.onnx"),
             os.path.join(self.model_dir, "pest_yolov8.pt"),
         ]
-
         for path in possible_paths:
             if os.path.exists(path):
                 self.model_path = path
                 break
 
-        if self.model_path:
-            try:
-                # Pluggable framework loader (e.g. ultralytics YOLO)
-                from ultralytics import YOLO
-                self.model = YOLO(self.model_path)
-            except Exception as e:
-                print(f"[AI Model Pluggability] Weights found at {self.model_path}, loader pending framework dependency: {e}")
+        if not self.model_path:
+            self.load_error = f"Trained model weights not found in {self.model_dir}."
+            logger.error("[AI Model] %s", self.load_error)
+            return
 
-    async def analyze_image(
-        self, 
-        image_path: str, 
-        crop_id: Optional[int] = None, 
-        db: Optional[Session] = None
+        try:
+            from ultralytics import YOLO
+
+            self.model = YOLO(self.model_path)
+            self.load_error = None
+            logger.info("[AI Model] Loaded trained YOLOv8 weights from %s", self.model_path)
+
+            # Load lightweight COCO yolov8n.pt for non-crop / everyday-object rejection
+            coco_candidates = [
+                os.path.join(self.model_dir, "yolov8n.pt"),
+                os.path.join(os.path.dirname(self.model_dir), "..", "yolov8n.pt"),
+            ]
+            coco_path = next((p for p in coco_candidates if os.path.exists(p)), "yolov8n.pt")
+            try:
+                self.ood_model = YOLO(coco_path)
+                logger.info("[AI Model] Loaded COCO yolov8n non-crop rejection gate (%s).", coco_path)
+            except Exception as ood_err:
+                logger.warning("[AI Model] Optional COCO veto model unavailable: %s", ood_err)
+                self.ood_model = None
+
+            # Load local CLIP ViT-B-32 semantic domain gate (rejects non-target plants & non-agri objects)
+            try:
+                self.clip_gate = CLIPDomainGate()
+            except Exception as clip_err:
+                logger.warning("[AI Model] Optional CLIP domain gate unavailable: %s", clip_err)
+                self.clip_gate = None
+        except Exception as e:
+            self.load_error = (
+                f"Failed to load Ultralytics YOLO runtime ({e}). "
+                "Run backend with datasets/.venv or install ultralytics."
+            )
+            logger.error("[AI Model] %s", self.load_error)
+
+    def _resolve_image_path(self, image_path: str) -> str:
+        if os.path.exists(image_path):
+            return image_path
+        prefix = "/static/uploads/"
+        if image_path.startswith(prefix):
+            rel = image_path[len(prefix):].lstrip("/\\")
+            candidate = os.path.join(settings.UPLOAD_DIR, rel)
+            if os.path.exists(candidate):
+                return candidate
+        return image_path
+
+    def _detect_non_crop_object(self, image_source: Union[str, Image.Image]) -> Optional[Tuple[str, float]]:
+        """
+        Always-on COCO veto: rejects prominent everyday non-crop objects and non-target produce
+        (people/selfies, phones, laptops, furniture, bottles, pets, apples, bananas, oranges,
+        carrots, potted houseplants, etc.).
+        Returns (label, confidence) if rejected, else None.
+        """
+        if self.ood_model is None:
+            return None
+        try:
+            res = self.ood_model.predict(image_source, conf=0.42, iou=0.45, verbose=False)[0]
+            if res.boxes is None or len(res.boxes) == 0:
+                return None
+            for i in range(len(res.boxes)):
+                cls_name = str(res.names.get(int(res.boxes.cls[i]), "")).lower()
+                conf = float(res.boxes.conf[i])
+                x1, y1, x2, y2 = res.boxes.xyxyn[i].tolist()
+                area = max(0.0, (x2 - x1) * (y2 - y1))
+                if cls_name in NON_CROP_COCO_CLASSES:
+                    if cls_name == "person":
+                        # Allow small hands holding a leaf (< 30% frame), reject prominent people/selfies
+                        if (conf >= 0.55 and area >= 0.30) or (conf >= 0.72 and area >= 0.22):
+                            return (cls_name, round(conf, 2))
+                    elif (conf >= 0.55 and area >= 0.12) or conf >= 0.68:
+                        return (cls_name, round(conf, 2))
+        except Exception:
+            return None
+        return None
+
+    def _parse_yolo_detections(
+        self,
+        result,
+        image_source: Union[str, Image.Image],
+        min_healthy_conf: float = MIN_CONF_HEALTHY,
+        min_disease_conf: float = MIN_CONF_DISEASE,
+        min_pest_conf: float = MIN_CONF_PEST,
+    ) -> List[Dict[str, Any]]:
+        parsed: List[Dict[str, Any]] = []
+        boxes = result.boxes
+        if boxes is None or len(boxes) == 0:
+            return parsed
+
+        for i in range(len(boxes)):
+            conf = float(boxes.conf[i])
+            cls_id = int(boxes.cls[i])
+            raw_name = str(result.names.get(cls_id, "unknown"))
+            x1, y1, x2, y2 = [max(0.0, min(1.0, float(v))) for v in boxes.xyxyn[i].tolist()]
+
+            if raw_name not in CLASS_REGISTRY:
+                # Never accept unknown / unmapped classes
+                continue
+
+            kind, display_name, valid_crops, meta = CLASS_REGISTRY[raw_name]
+
+            if kind == "pest":
+                threshold = min_pest_conf
+            elif kind == "disease":
+                threshold = min_disease_conf
+            else:
+                threshold = min_healthy_conf
+
+            if conf < threshold:
+                continue
+
+            box_dict = {
+                "x_min": round(x1, 4),
+                "y_min": round(y1, 4),
+                "x_max": round(x2, 4),
+                "y_max": round(y2, 4),
+                "label": f"{'Healthy Crop' if kind == 'healthy' else kind.capitalize()}: {display_name}",
+                "type": kind,
+                "confidence": round(conf, 2),
+            }
+
+            # ALWAYS enforce organic foliage + anti-paper check on crop & disease boxes
+            # (never bypassed even at high YOLO confidence!)
+            if kind in ("healthy", "disease"):
+                if not has_organic_foliage_colors(image_source, box_dict):
+                    continue
+
+            parsed.append({
+                "raw_name": raw_name,
+                "kind": kind,
+                "display_name": display_name,
+                "valid_crops": valid_crops,
+                "meta": meta,
+                "confidence": round(conf, 3),
+                "box": box_dict,
+            })
+
+        parsed.sort(key=lambda item: item["confidence"], reverse=True)
+        return parsed
+
+    def _run_inference_sync(
+        self,
+        image_source: Union[str, Image.Image],
+        selected_crop_name: Optional[str] = None,
+        is_live_check: bool = False,
     ) -> Dict[str, Any]:
         """
-        Runs model inference if PyTorch/YOLO model weights are present, 
-        or executes smart DB pest diagnostic pipeline if model file is pending upload.
+        Executes the full gated inference pipeline synchronously in a worker thread:
+          1. Image sanity check
+          2. Always-on COCO general-object veto
+          3. Local CLIP Tier-1 semantic domain gate (rejects non-agri & non-target plants)
+          4. YOLOv8 detection + strict thresholds + always-on foliage HSV/anti-paper check
+          5. CLIP Tier-2 leafy-green specificity verification (when crop/disease is present)
+          6. Logical conflict suppression, host-crop filtering & 4-state resolution
         """
-        if self.model is not None:
-            try:
-                results = self.model(image_path)
-                # Extract real detections from PyTorch model output
-                first_result = results[0]
-                boxes = first_result.boxes
-                if len(boxes) > 0:
-                    best_box = boxes[0]
-                    conf = float(best_box.conf[0])
-                    cls_id = int(best_box.cls[0])
-                    class_name = first_result.names.get(cls_id, "Detected Pest")
+        # 1. Image sanity gate
+        sanity_error = check_image_sanity(image_source)
+        if sanity_error:
+            return {"rejected": True, "rejection_reason": sanity_error}
 
-                    xyxy = best_box.xyxy[0].tolist()
-                    return {
-                        "pest_name": class_name,
-                        "confidence": round(conf, 2),
-                        "severity": "High" if conf > 0.8 else "Moderate",
-                        "bounding_boxes": [{"x": xyxy[0], "y": xyxy[1], "width": xyxy[2] - xyxy[0], "height": xyxy[3] - xyxy[1], "label": class_name, "confidence": round(conf, 2)}],
-                        "recommended_action": "Execute DA biological pest management protocol."
-                    }
-            except Exception as e:
-                print(f"[AI Model Pluggability] Real inference exception, running fallback: {e}")
+        # 2. Always-on COCO veto (never skipped regardless of YOLO confidence)
+        non_crop = self._detect_non_crop_object(image_source)
+        if non_crop:
+            obj_label, obj_conf = non_crop
+            return {
+                "rejected": True,
+                "rejection_reason": (
+                    f"Unrecognized non-crop object detected ({obj_label}, {int(obj_conf * 100)}%). "
+                    "Please scan only Lettuce (Litsugas), Bok Choy (Petsay), Mustard Greens (Mustasa), "
+                    "or their pests and diseases."
+                ),
+                "non_crop_label": obj_label,
+            }
 
-        # Pluggable fallback DB matching when weights file is pending upload
-        pest_records = db.query(Pest).all() if db else []
-        selected_pest = random.choice(pest_records) if pest_records else None
+        # 3. CLIP Tier-1 semantic domain gate (fast GPU/CPU check)
+        clip_t1: Optional[DomainGateResult] = None
+        if self.clip_gate is not None and self.clip_gate.available:
+            clip_t1 = self.clip_gate.evaluate(image_source, require_leafy_crop=False)
+            if not clip_t1.allowed:
+                return {
+                    "rejected": True,
+                    "rejection_reason": clip_t1.reason,
+                    "gate_category": clip_t1.category,
+                }
 
-        pest_name = selected_pest.name if selected_pest else "Green Peach Aphid"
-        scientific_name = selected_pest.scientific_name if selected_pest else "Myzus persicae"
-        description = selected_pest.description if selected_pest else "Sap-sucking pest attacking leafy salad greens."
-        pest_id = selected_pest.id if selected_pest else None
+        # 4. Run trained YOLOv8 detector
+        results = self.model.predict(image_source, conf=0.45, iou=0.45, verbose=False)
+        min_crop_conf = MIN_CONF_LIVE_CHECK if is_live_check else MIN_CONF_HEALTHY
+        min_dis_conf = MIN_CONF_LIVE_CHECK if is_live_check else MIN_CONF_DISEASE
+        detections = self._parse_yolo_detections(
+            results[0],
+            image_source,
+            min_healthy_conf=min_crop_conf,
+            min_disease_conf=min_dis_conf,
+            min_pest_conf=MIN_CONF_PEST,
+        )
 
-        rec = db.query(Recommendation).filter(Recommendation.pest_id == pest_id).first() if (db and pest_id) else None
-        rec_action = rec.action_title + ": " + rec.description if rec else "Apply cold-pressed neem oil spray (5ml/L) focusing on leaf undersides."
+        if not detections:
+            return {
+                "rejected": True,
+                "rejection_reason": (
+                    "Unrecognized specimen: This image does not clearly match Lettuce (Litsugas), "
+                    "Bok Choy (Petsay), Mustard Greens (Mustasa), or any known crop pest/disease. "
+                    "Please capture a clear, well-lit close-up of the crop leaf or pest."
+                ),
+            }
 
-        conf = round(random.uniform(0.82, 0.97), 2)
-        severity = "Critical" if conf > 0.92 else "High" if conf > 0.86 else "Moderate"
+        # 5. CLIP Tier-2 leafy-green specificity gate:
+        #    Whenever the primary finding is a crop or foliar disease (not a pure macro pest),
+        #    verify the plant is actually one of the 3 leafy greens (not tomato/flower/tree/grass/houseplant).
+        has_crop_or_disease = any(d["kind"] in ("healthy", "disease") for d in detections)
+        has_strong_pest = any(d["kind"] == "pest" and d["confidence"] >= 0.65 for d in detections)
+        if (
+            has_crop_or_disease
+            and not has_strong_pest
+            and self.clip_gate is not None
+            and self.clip_gate.available
+        ):
+            clip_t2 = self.clip_gate.evaluate(image_source, require_leafy_crop=True)
+            if not clip_t2.allowed:
+                return {
+                    "rejected": True,
+                    "rejection_reason": clip_t2.reason,
+                    "gate_category": clip_t2.category,
+                }
+            clip_inferred_crop = clip_t2.inferred_crop
+        else:
+            clip_inferred_crop = clip_t1.inferred_crop if clip_t1 else None
 
-        # Plant Disease Assessment (Always included with pest detection)
-        disease_records = db.query(Disease).all() if db else []
-        selected_disease = random.choice(disease_records) if disease_records else None
+        # 6. Logical resolution (spatial NMS, host-crop compatibility, 4-state outcome)
+        resolved = resolve_logical_detections(
+            detections,
+            selected_crop_name=selected_crop_name,
+            clip_inferred_crop=clip_inferred_crop,
+        )
+        return resolved
 
-        dis_name = selected_disease.name if selected_disease else "Downy Mildew of Lettuce"
-        dis_scientific = selected_disease.scientific_name if selected_disease else "Bremia lactucae"
-        dis_pathogen = selected_disease.pathogen_type if selected_disease else "Fungal"
-        dis_symptoms = selected_disease.symptoms if selected_disease else "Pale yellow angular chlorotic spots on upper leaf surfaces."
-        dis_desc = selected_disease.description if selected_disease else "Aggressive oomycete foliar pathogen attacking leafy greens."
-        dis_id = selected_disease.id if selected_disease else None
-
-        dis_rec = db.query(DiseaseRecommendation).filter(DiseaseRecommendation.disease_id == dis_id).first() if (db and dis_id) else None
-        dis_action = dis_rec.action_title + ": " + dis_rec.description if dis_rec else "Apply targeted foliar fungicide and remove infected debris."
-
-        dis_conf = round(random.uniform(0.80, 0.95), 2)
-        dis_severity = "High" if dis_conf > 0.88 else "Moderate"
-
+    def _reject(self, reason: str, http_status: int = 422) -> Dict[str, Any]:
         return {
-            "detection_type": "pest_and_disease",
-            "pest_id": pest_id,
-            "crop_id": crop_id,
-            "pest_name": pest_name,
-            "scientific_name": scientific_name,
-            "description": description,
-            "confidence": conf,
-            "severity": severity,
-            "recommended_action": rec_action,
-
-            # Disease Assessment
-            "disease_id": dis_id,
-            "detected_disease_name": dis_name,
-            "disease_scientific_name": dis_scientific,
-            "disease_pathogen_type": dis_pathogen,
-            "disease_confidence_score": dis_conf,
-            "disease_severity": dis_severity,
-            "disease_symptoms": dis_symptoms,
-            "disease_recommended_action": dis_action,
-            "disease_details": {
-                "name": dis_name,
-                "scientific_name": dis_scientific,
-                "pathogen_type": dis_pathogen,
-                "severity": dis_severity,
-                "symptoms": dis_symptoms,
-                "description": dis_desc,
-                "recommended_action": dis_action,
-                "confidence": dis_conf
-            },
-
-            "bounding_boxes": [
-                {"x_min": 0.18, "y_min": 0.28, "x_max": 0.52, "y_max": 0.65, "label": f"Pest: {pest_name}", "type": "pest", "confidence": conf},
-                {"x_min": 0.56, "y_min": 0.35, "x_max": 0.88, "y_max": 0.78, "label": f"Disease: {dis_name}", "type": "disease", "confidence": dis_conf}
-            ]
+            "rejected": True,
+            "http_status": http_status,
+            "rejection_reason": reason,
+            "detection_type": "rejected",
+            "confidence": 0.0,
+            "bounding_boxes": [],
         }
 
-    async def check_live_frame(
+    def _lookup_crop_name(self, db: Optional[Session], crop_id: Optional[int]) -> Optional[str]:
+        if db and crop_id:
+            crop_obj = db.query(Crop).filter(Crop.id == crop_id).first()
+            if crop_obj and crop_obj.name in TARGET_CROPS:
+                return crop_obj.name
+        return None
+
+    async def analyze_image(
         self,
         image_path: str,
         crop_id: Optional[int] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
     ) -> Dict[str, Any]:
-        """Pre-screens frame via trained PyTorch/YOLO model or smart DB fallback."""
-        if self.model is not None:
-            try:
-                results = self.model(image_path)
-                first_result = results[0]
-                boxes = first_result.boxes
-                if len(boxes) > 0:
-                    best_box = boxes[0]
-                    conf = float(best_box.conf[0])
-                    cls_id = int(best_box.cls[0])
-                    class_name = first_result.names.get(cls_id, "Target Crop")
-                    xyxy = best_box.xyxy[0].tolist()
-                    return {
-                        "detected": conf > 0.6,
-                        "crop_recognized": True,
-                        "pest_detected": conf > 0.7,
-                        "confidence": round(conf, 2),
-                        "bounding_boxes": [{"x_min": xyxy[0], "y_min": xyxy[1], "x_max": xyxy[2], "y_max": xyxy[3], "label": class_name, "confidence": round(conf, 2)}],
-                        "message": "Crop specimen recognized" if conf > 0.75 else "Align camera to crop"
-                    }
-            except Exception as e:
-                print(f"[AI Model Live Check] Model evaluation exception, fallback: {e}")
+        """Runs strict gated YOLOv8 inference and returns a logically consistent 4-state diagnosis."""
+        if self.model is None:
+            self._load_models()
 
-        conf = round(random.uniform(0.85, 0.96), 2)
-        return {
-            "detected": True,
-            "crop_recognized": True,
-            "pest_detected": True,
-            "confidence": conf,
-            "bounding_boxes": [{"x_min": 0.2, "y_min": 0.2, "x_max": 0.8, "y_max": 0.8, "label": "Host Crop Leaf", "confidence": conf}],
-            "message": "Crop specimen recognized. Hold steady for auto-capture."
-        }
+        if self.model is None:
+            return self._reject(
+                f"AI detection engine is offline: {self.load_error or 'Model not loaded.'}",
+                http_status=503,
+            )
 
+        disk_path = self._resolve_image_path(image_path)
+        if not os.path.exists(disk_path):
+            return self._reject("Uploaded image file could not be read for analysis.", http_status=400)
+
+        selected_crop_name = self._lookup_crop_name(db, crop_id)
+
+        try:
+            resolved = await asyncio.to_thread(
+                self._run_inference_sync,
+                disk_path,
+                selected_crop_name,
+                False,
+            )
+
+            if resolved.get("rejected"):
+                return self._reject(
+                    resolved.get(
+                        "rejection_reason",
+                        "Unrecognized specimen. Please scan Lettuce, Bok Choy, Mustard Greens, or their pests/diseases.",
+                    )
+                )
+
+            det_type: str = resolved["detection_type"]
+            pest_hits: List[Dict[str, Any]] = resolved["pest_hits"]
+            disease_hits: List[Dict[str, Any]] = resolved["disease_hits"]
+            healthy_hits: List[Dict[str, Any]] = resolved["healthy_hits"]
+            bounding_boxes: List[Dict[str, Any]] = resolved["final_boxes"]
+            resolved_crop_name: Optional[str] = resolved.get("resolved_crop_name")
+
+            resolved_crop_id = crop_id
+            if resolved_crop_id is None and db and resolved_crop_name:
+                crop_obj = db.query(Crop).filter(Crop.name == resolved_crop_name).first()
+                if crop_obj:
+                    resolved_crop_id = crop_obj.id
+
+            # --- Resolve Pest Finding (ONLY if pest_hits is non-empty) ---
+            pest_id = None
+            pest_name = "No Pest Detected"
+            scientific_name = None
+            description = "No active insect pest detected on this specimen."
+            pest_conf = 0.0
+            pest_severity = "Low"
+            rec_action = "Continue regular field monitoring and preventive IPM."
+
+            if pest_hits:
+                top_pest = pest_hits[0]
+                pest_name = top_pest["display_name"]
+                pest_conf = round(top_pest["confidence"], 2)
+                pest_severity = _severity_from_conf(pest_conf)
+                scientific_name = top_pest["meta"].get("scientific_name")
+                rec_action = top_pest["meta"].get("action", rec_action)
+                if db:
+                    p_obj = db.query(Pest).filter(Pest.name == pest_name).first()
+                    if p_obj:
+                        pest_id = p_obj.id
+                        scientific_name = p_obj.scientific_name
+                        description = p_obj.description
+                        rec = db.query(Recommendation).filter(Recommendation.pest_id == p_obj.id).first()
+                        if rec:
+                            rec_action = f"{rec.action_title}: {rec.description}"
+
+            # --- Resolve Disease Finding (ONLY if disease_hits is non-empty) ---
+            disease_id = None
+            dis_name = None
+            dis_scientific = None
+            dis_pathogen = None
+            dis_symptoms = None
+            dis_desc = None
+            dis_conf = None
+            dis_severity = None
+            dis_action = None
+            disease_details: Dict[str, Any] = {}
+
+            if disease_hits:
+                top_dis = disease_hits[0]
+                dis_name = top_dis["display_name"]
+                dis_conf = round(top_dis["confidence"], 2)
+                dis_severity = _severity_from_conf(dis_conf)
+                dis_scientific = top_dis["meta"].get("scientific_name")
+                dis_pathogen = top_dis["meta"].get("pathogen_type", "Fungal")
+                dis_action = top_dis["meta"].get("action")
+                if db:
+                    d_obj = db.query(Disease).filter(Disease.name == dis_name).first()
+                    if d_obj:
+                        disease_id = d_obj.id
+                        dis_scientific = d_obj.scientific_name
+                        dis_pathogen = d_obj.pathogen_type
+                        dis_symptoms = d_obj.symptoms
+                        dis_desc = d_obj.description
+                        d_rec = (
+                            db.query(DiseaseRecommendation)
+                            .filter(DiseaseRecommendation.disease_id == d_obj.id)
+                            .first()
+                        )
+                        if d_rec:
+                            dis_action = f"{d_rec.action_title}: {d_rec.description}"
+                disease_details = {
+                    "name": dis_name,
+                    "scientific_name": dis_scientific,
+                    "pathogen_type": dis_pathogen,
+                    "severity": dis_severity,
+                    "symptoms": dis_symptoms,
+                    "description": dis_desc,
+                    "recommended_action": dis_action,
+                    "confidence": dis_conf,
+                }
+
+            # --- Finalize Clean 4-State Payload ---
+            if det_type == "disease":
+                # Disease ONLY — do NOT fabricate a pest name!
+                pest_id = None
+                pest_name = "No Pest Detected"
+                scientific_name = None
+                description = "No active insect pest detected. Foliar disease symptoms were identified."
+                # Primary record confidence & severity mirror the detected disease for alerts/analytics
+                pest_conf = dis_conf or 0.0
+                pest_severity = dis_severity or "Moderate"
+                rec_action = dis_action or rec_action
+            elif det_type == "healthy":
+                top_h = healthy_hits[0]
+                crop_label = resolved_crop_name or top_h["display_name"]
+                pest_id = None
+                pest_name = f"Healthy {crop_label}"
+                scientific_name = top_h["meta"].get("scientific_name")
+                pest_conf = round(top_h["confidence"], 2)
+                pest_severity = "Low"
+                description = (
+                    f"Specimen classified as healthy {crop_label} with no active insect pest or foliar disease detected."
+                )
+                rec_action = top_h["meta"].get("action", rec_action)
+
+            return {
+                "rejected": False,
+                "detection_type": det_type,
+                "crop_id": resolved_crop_id,
+                "crop_name": resolved_crop_name,
+                "pest_id": pest_id,
+                "pest_name": pest_name,
+                "scientific_name": scientific_name,
+                "description": description,
+                "confidence": pest_conf,
+                "severity": pest_severity,
+                "recommended_action": rec_action,
+                "disease_id": disease_id,
+                "detected_disease_name": dis_name,
+                "disease_scientific_name": dis_scientific,
+                "disease_pathogen_type": dis_pathogen,
+                "disease_confidence_score": dis_conf,
+                "disease_severity": dis_severity,
+                "disease_symptoms": dis_symptoms,
+                "disease_recommended_action": dis_action,
+                "disease_details": disease_details,
+                "bounding_boxes": bounding_boxes,
+            }
+        except Exception as e:
+            logger.exception("[AI Model Inference] Exception during YOLO inference: %s", e)
+            return self._reject(f"AI inference failed to process this image: {e}", http_status=500)
+
+    async def check_live_frame(
+        self,
+        image_path: Optional[str] = None,
+        crop_id: Optional[int] = None,
+        db: Optional[Session] = None,
+        image_obj: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Strict live-camera pre-screening using the exact same OOD & crop-consistency gate."""
+        if self.model is None:
+            self._load_models()
+
+        if self.model is None:
+            return {
+                "detected": False,
+                "crop_recognized": False,
+                "pest_detected": False,
+                "disease_detected": False,
+                "detection_type": "rejected",
+                "confidence": 0.0,
+                "bounding_boxes": [],
+                "message": "AI model not loaded on server.",
+            }
+
+        image_source: Union[str, Image.Image, None] = image_obj
+        if image_source is None:
+            disk_path = self._resolve_image_path(image_path or "")
+            if not disk_path or not os.path.exists(disk_path):
+                return {
+                    "detected": False,
+                    "crop_recognized": False,
+                    "pest_detected": False,
+                    "disease_detected": False,
+                    "detection_type": "rejected",
+                    "confidence": 0.0,
+                    "bounding_boxes": [],
+                    "message": "Invalid camera frame.",
+                }
+            image_source = disk_path
+
+        selected_crop_name = self._lookup_crop_name(db, crop_id)
+
+        try:
+            resolved = await asyncio.to_thread(
+                self._run_inference_sync,
+                image_source,
+                selected_crop_name,
+                True,
+            )
+
+            if resolved.get("rejected"):
+                non_crop_lbl = resolved.get("non_crop_label")
+                msg = (
+                    f"Ignored non-crop object ({non_crop_lbl}). Aim at Lettuce, Bok Choy, or Mustard Greens."
+                    if non_crop_lbl
+                    else resolved.get(
+                        "rejection_reason",
+                        "No target leafy green recognized. Aim at Lettuce, Bok Choy, or Mustard Greens.",
+                    )
+                )
+                return {
+                    "detected": False,
+                    "crop_recognized": False,
+                    "pest_detected": False,
+                    "disease_detected": False,
+                    "detection_type": "rejected",
+                    "confidence": 0.0,
+                    "bounding_boxes": [],
+                    "message": msg,
+                }
+
+            det_type = resolved["detection_type"]
+            pest_hits = resolved["pest_hits"]
+            disease_hits = resolved["disease_hits"]
+            healthy_hits = resolved["healthy_hits"]
+            all_hits = sorted(pest_hits + disease_hits + healthy_hits, key=lambda d: d["confidence"], reverse=True)
+            top = all_hits[0]
+            conf = round(top["confidence"], 2)
+
+            if det_type == "healthy":
+                summary = f"Healthy {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
+            elif det_type == "pest":
+                summary = f"Pest detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
+            elif det_type == "disease":
+                summary = f"Disease detected: {top['display_name']} ({int(conf * 100)}%). Hold steady for capture."
+            else:
+                summary = (
+                    f"Detected {pest_hits[0]['display_name']} & {disease_hits[0]['display_name']} "
+                    f"({int(conf * 100)}%). Hold steady for capture."
+                )
+
+            return {
+                "detected": True,
+                "crop_recognized": True,
+                "pest_detected": bool(pest_hits),
+                "disease_detected": bool(disease_hits),
+                "detection_type": det_type,
+                "confidence": conf,
+                "bounding_boxes": resolved["final_boxes"][:5],
+                "message": summary,
+            }
+        except Exception as e:
+            logger.exception("AI live-check exception: %s", e)
+            return {
+                "detected": False,
+                "crop_recognized": False,
+                "pest_detected": False,
+                "disease_detected": False,
+                "detection_type": "rejected",
+                "confidence": 0.0,
+                "bounding_boxes": [],
+                "message": "Unable to evaluate frame. Hold steady and try again.",
+            }

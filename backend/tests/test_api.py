@@ -31,12 +31,15 @@ def test_login_and_me():
     assert me_resp.status_code == 200
     assert me_resp.json()["email"] == "farmer@pestdetect.com"
 
+from app.core.config import settings
+from app.core.rate_limiter import login_limiter, detection_limiter
+
 def test_list_crops():
     response = client.get("/api/v1/crops")
     assert response.status_code == 200
     crops = response.json()
     assert len(crops) >= 1
-    assert any(c["name"] == "Corn" for c in crops)
+    assert any(c["name"] in ("Lettuce", "Bok Choy", "Mustard Greens") for c in crops)
 
 def test_list_pests():
     response = client.get("/api/v1/pests")
@@ -44,7 +47,9 @@ def test_list_pests():
     pests = response.json()
     assert len(pests) >= 1
 
-def test_mock_detection_upload():
+def test_mock_detection_upload(monkeypatch):
+    monkeypatch.setattr(settings, "DETECTION_MODE", "mock")
+    detection_limiter.clear_all()
     # 1. Login
     login_resp = client.post(
         "/api/v1/auth/login",
@@ -59,7 +64,7 @@ def test_mock_detection_upload():
     img.save(img_byte_arr, format="JPEG")
     img_bytes = img_byte_arr.getvalue()
 
-    # 3. Post to /api/v1/detect
+    # 3. Post to /api/v1/detections/detect
     files = {"file": ("test_crop.jpg", img_bytes, "image/jpeg")}
     data = {"crop_id": 1}
 
@@ -72,6 +77,9 @@ def test_mock_detection_upload():
     assert det_result["confidence_score"] > 0.0
     assert "recommended_action" in det_result
     assert det_result["severity"] in ["Low", "Moderate", "High", "Critical"]
+
+    # Clean up test record
+    client.delete(f"/api/v1/detections/{det_result['id']}", headers=headers)
 
 def test_dashboard_stats():
     login_resp = client.post(

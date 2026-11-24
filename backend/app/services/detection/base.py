@@ -30,19 +30,14 @@ class BaseDetectionService(ABC):
     @abstractmethod
     async def check_live_frame(
         self,
-        image_path: str,
+        image_path: Optional[str] = None,
         crop_id: Optional[int] = None,
-        db: Optional[Session] = None
+        db: Optional[Session] = None,
+        image_obj: Optional[Any] = None,
     ) -> Dict[str, Any]:
         """
         Pre-screens a live camera frame to check if crop/pest is recognized with high confidence.
-
-        Expected Return Keys:
-        - detected (bool)
-        - crop_recognized (bool)
-        - confidence (float)
-        - bounding_boxes (list)
-        - message (str)
+        Accepts either an in-memory PIL image (`image_obj`) or a disk path (`image_path`).
         """
         pass
 

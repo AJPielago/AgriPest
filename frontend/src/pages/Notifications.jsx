@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { detectionService } from '../services/detectionService';
+import { getDetectionSummary } from '../utils/detectionUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
@@ -9,14 +10,22 @@ export const Notifications = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [markingRead, setMarkingRead] = useState(false);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const data = await detectionService.getHistory();
+        const [data, unreadData] = await Promise.all([
+          detectionService.getHistory(),
+          detectionService.getUnreadNotificationCount().catch(() => ({ unread_count: null }))
+        ]);
         const items = data?.items || [];
         setHistory(items);
-        setUnreadCount(items.filter(i => i.severity === 'Critical' || i.severity === 'High').length);
+        if (unreadData && typeof unreadData.unread_count === 'number') {
+          setUnreadCount(unreadData.unread_count);
+        } else {
+          setUnreadCount(items.filter(i => (i.severity === 'Critical' || i.severity === 'High') && !i.is_acknowledged).length);
+        }
       } catch (err) {
         console.error("Error fetching notifications:", err);
       } finally {
@@ -26,8 +35,17 @@ export const Notifications = () => {
     fetchNotifications();
   }, []);
 
-  const handleMarkAllRead = () => {
-    setUnreadCount(0);
+  const handleMarkAllRead = async () => {
+    setMarkingRead(true);
+    try {
+      await detectionService.markNotificationsRead();
+      setUnreadCount(0);
+      setHistory(prev => prev.map(item => ({ ...item, is_acknowledged: true })));
+    } catch (err) {
+      console.error("Error acknowledging notifications:", err);
+    } finally {
+      setMarkingRead(false);
+    }
   };
 
   if (loading) return <LoadingSpinner label={lang === 'tl' ? "Ikinakarga ang mga abiso..." : "Retrieving notification stream..."} size="lg" />;
@@ -52,9 +70,10 @@ export const Notifications = () => {
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllRead}
-            className="text-xs font-bold text-primary dark:text-primary-fixed hover:underline cursor-pointer"
+            disabled={markingRead}
+            className="text-xs font-bold text-primary dark:text-primary-fixed hover:underline cursor-pointer disabled:opacity-50"
           >
-            {t('markAllRead')}
+            {t('markAllRead')} ({unreadCount})
           </button>
         )}
       </div>
@@ -81,7 +100,7 @@ export const Notifications = () => {
                   <div className="flex-1 min-w-0 pl-2">
                     <div className="flex justify-between items-start mb-1 gap-2">
                       <h3 className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface truncate">
-                        {det.detected_pest_name} ({det.severity})
+                        {getDetectionSummary(det).primaryTitle} ({det.severity})
                       </h3>
                       <span className="text-[11px] text-outline font-medium flex-shrink-0">
                         {new Date(det.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -121,7 +140,7 @@ export const Notifications = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start mb-1 gap-2">
                     <h3 className="font-title-lg text-sm font-bold text-on-surface dark:text-inverse-on-surface truncate">
-                      {det.detected_pest_name} {lang === 'tl' ? 'Pagtukoy' : 'Identification'}
+                      {getDetectionSummary(det).primaryTitle} {lang === 'tl' ? 'Pagtukoy' : 'Assessment'}
                     </h3>
                     <span className="text-[11px] text-outline font-medium flex-shrink-0">
                       {new Date(det.created_at).toLocaleDateString(lang === 'tl' ? 'fil-PH' : undefined)}

@@ -10,6 +10,8 @@ import { Modal } from '../components/ui/Modal';
 import { DetectionReportCard } from '../components/detection/DetectionReportCard';
 import { DetectionCompareModal } from '../components/detection/DetectionCompareModal';
 import { DownloadReportDropdown } from '../components/common/DownloadReportDropdown';
+import { downloadCsv } from '../utils/csvExport';
+import { getDetectionSummary } from '../utils/detectionUtils';
 import '../components/common/ChartConfig';
 import { STITCH_COLORS } from '../components/common/ChartConfig';
 
@@ -96,23 +98,16 @@ export const DetectionHistory = () => {
     const headers = ["ID", "Pest Name", "Disease Name", "Crop Name", "Pest Confidence", "Disease Confidence", "Severity", "Logged Date"];
     const rows = filteredDetections.map(d => [
       d.id,
-      `"${d.detected_pest_name}"`,
-      `"${d.detected_disease_name || 'N/A'}"`,
-      `"${d.crop_name || 'N/A'}"`,
-      `${Math.round(d.confidence_score * 100)}%`,
-      `${d.disease_confidence_score ? Math.round(d.disease_confidence_score * 100) + '%' : 'N/A'}`,
-      `"${d.severity}"`,
-      `"${new Date(d.created_at).toLocaleString()}"`
+      d.detected_pest_name,
+      d.detected_disease_name || 'N/A',
+      d.crop_name || 'N/A',
+      `${Math.round((d.confidence_score || 0) * 100)}%`,
+      d.disease_confidence_score ? `${Math.round(d.disease_confidence_score * 100)}%` : 'N/A',
+      d.severity,
+      new Date(d.created_at).toLocaleString()
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `agripest_detections_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`agripest_detections_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   };
 
   const filteredDetections = useMemo(() => {
@@ -127,12 +122,17 @@ export const DetectionHistory = () => {
     });
   }, [detections, searchQuery, selectedSeverityFilter]);
 
-  // Chart 1: Pests by Type (Bar Chart)
+  // Chart 1: Pests & Diseases by Type (Bar Chart — excludes healthy / no-pest placeholders)
   const pestsByTypeData = useMemo(() => {
     const counts = {};
     detections.forEach(d => {
-      const name = d.detected_pest_name || 'Unknown';
-      counts[name] = (counts[name] || 0) + 1;
+      const s = getDetectionSummary(d);
+      if (s.hasPest && s.pestName) {
+        counts[s.pestName] = (counts[s.pestName] || 0) + 1;
+      }
+      if (s.hasDisease && s.diseaseName) {
+        counts[s.diseaseName] = (counts[s.diseaseName] || 0) + 1;
+      }
     });
 
     const entries = Object.entries(counts);
@@ -425,6 +425,17 @@ export const DetectionHistory = () => {
         {filteredDetections.length > 0 ? (
           filteredDetections.slice(0, displayCount).map((rec) => {
             const isCompared = compareList.some(item => item.id === rec.id);
+            const summary = getDetectionSummary(rec);
+            const primaryIcon = summary.isHealthy
+              ? 'eco'
+              : summary.hasPest
+                ? 'bug_report'
+                : 'coronavirus';
+            const primaryIconColor = summary.isHealthy
+              ? 'text-teal-600'
+              : summary.hasPest
+                ? 'text-rose-600'
+                : 'text-amber-600';
             return (
               <div
                 key={rec.id}
@@ -438,7 +449,7 @@ export const DetectionHistory = () => {
                   {/* Specimen Thumbnail */}
                   <img
                     src={rec.image_path || 'https://images.unsplash.com/photo-1594282486552-05b4d80fbb9f?auto=format&fit=crop&w=200&q=80'}
-                    alt={rec.detected_pest_name}
+                    alt={summary.primaryTitle}
                     className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover flex-shrink-0 border border-outline-variant"
                     onError={(e) => {
                       e.target.onerror = null;
@@ -451,13 +462,13 @@ export const DetectionHistory = () => {
                     <div className="flex justify-between items-start mb-1 gap-2">
                       <div>
                         <h3 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[16px] text-emerald-600">bug_report</span>
-                          <span>{rec.detected_pest_name}</span>
+                          <span className={`material-symbols-outlined text-[16px] ${primaryIconColor}`}>{primaryIcon}</span>
+                          <span>{summary.primaryTitle}</span>
                         </h3>
-                        {rec.detected_disease_name && (
+                        {summary.hasPest && summary.hasDisease && (
                           <div className="flex items-center gap-1 mt-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
                             <span className="material-symbols-outlined text-[14px]">coronavirus</span>
-                            <span>{rec.detected_disease_name}</span>
+                            <span>{summary.diseaseName}</span>
                           </div>
                         )}
                       </div>
@@ -465,13 +476,13 @@ export const DetectionHistory = () => {
                     </div>
                     <p className="font-body-md text-xs text-on-surface-variant flex items-center gap-1 mb-1">
                       <span className="material-symbols-outlined text-[16px] text-primary">downloading</span>
-                      <span>{rec.crop_name || (lang === 'tl' ? 'Hindi Naitakda' : 'General Crop')} · {rec.field_location || (lang === 'tl' ? 'Zone 2: Taniman ng Pechay' : 'Zone 2: Pechay Plot')}</span>
+                      <span>{rec.crop_name || (lang === 'tl' ? 'Hindi Naitakda' : 'Leafy Green')} · {rec.field_location || (lang === 'tl' ? 'Sona ng Bukid' : 'Field Sector')}</span>
                     </p>
                     <p className="font-label-sm text-[11px] text-outline flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">schedule</span>
                       <span>{new Date(rec.created_at).toLocaleDateString(lang === 'tl' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}, {new Date(rec.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                       <span className="mx-1">•</span>
-                      <span className="font-semibold text-primary">{Math.round((rec.confidence_score || 0) * 100)}% {lang === 'tl' ? 'Katiyakan' : 'Confidence'}</span>
+                      <span className="font-semibold text-primary">{Math.round((summary.primaryConfidence || 0) * 100)}% {lang === 'tl' ? 'Katiyakan' : 'Confidence'}</span>
                     </p>
                   </div>
 
@@ -527,7 +538,7 @@ export const DetectionHistory = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedDetection?.detected_pest_name || "Detection Detail"}
+        title={selectedDetection ? getDetectionSummary(selectedDetection).primaryTitle : "Detection Detail"}
         size="lg"
       >
         <DetectionReportCard detection={selectedDetection} />

@@ -2,6 +2,8 @@ package com.capstone.pestdetection.network;
 
 import android.content.Context;
 
+import com.capstone.pestdetection.BuildConfig;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -18,7 +20,9 @@ public class ApiClient {
 
         if (apiService == null || retrofit == null || !retrofit.baseUrl().toString().equals(baseUrl)) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            logging.setLevel(BuildConfig.DEBUG
+                    ? HttpLoggingInterceptor.Level.BASIC
+                    : HttpLoggingInterceptor.Level.NONE);
 
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(45, java.util.concurrent.TimeUnit.SECONDS)

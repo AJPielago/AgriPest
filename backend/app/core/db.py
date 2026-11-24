@@ -37,7 +37,10 @@ def ensure_schema_compatibility():
                     ("disease_confidence_score", "FLOAT"),
                     ("disease_severity", "VARCHAR(50)"),
                     ("disease_recommended_action", "TEXT"),
-                    ("disease_details", "JSON")
+                    ("disease_details", "JSON"),
+                    ("latitude", "FLOAT"),
+                    ("longitude", "FLOAT"),
+                    ("is_acknowledged", "BOOLEAN DEFAULT 0"),
                 ]
                 for col_name, col_type in new_cols:
                     if cols and col_name not in cols:

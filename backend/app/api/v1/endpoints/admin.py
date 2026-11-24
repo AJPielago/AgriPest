@@ -27,10 +27,21 @@ def get_system_health(
     except Exception:
         db_healthy = False
 
-    # Upload storage directory stats
+    # Upload storage directory stats (recursively count actual image files)
     upload_path = settings.UPLOAD_DIR
     upload_exists = os.path.exists(upload_path)
-    file_count = len(os.listdir(upload_path)) if upload_exists else 0
+    file_count = 0
+    total_bytes = 0
+    if upload_exists:
+        for root, _, files in os.walk(upload_path):
+            for fname in files:
+                if fname.startswith("."):
+                    continue
+                file_count += 1
+                try:
+                    total_bytes += os.path.getsize(os.path.join(root, fname))
+                except OSError:
+                    pass
 
     return {
         "status": "healthy" if db_healthy else "unhealthy",
@@ -39,6 +50,7 @@ def get_system_health(
         "python_version": sys.version.split()[0],
         "upload_dir_exists": upload_exists,
         "upload_file_count": file_count,
+        "upload_total_size_mb": round(total_bytes / (1024 * 1024), 2),
         "max_upload_size_mb": settings.MAX_UPLOAD_SIZE_MB
     }
 

@@ -30,11 +30,11 @@ export const DetectPest = () => {
     loadCrops();
   }, []);
 
-  const handleAnalyze = async (file, cropId, weatherCondition, fieldLocation) => {
+  const handleAnalyze = async (file, cropId, weatherCondition, fieldLocation, coords = null) => {
     setError(null);
     setAnalyzing(true);
     try {
-      const result = await detectionService.detectPest(file, cropId, weatherCondition, fieldLocation);
+      const result = await detectionService.detectPest(file, cropId, weatherCondition, fieldLocation, coords);
       setDetectionResult(result);
     } catch (err) {
       setError(err.response?.data?.detail || (lang === 'tl' ? 'Nabigo ang pagsusuri sa halaman. Pakisuri ang koneksyon.' : 'Failed to process specimen diagnostic. Please check connection.'));
@@ -118,7 +118,7 @@ export const DetectPest = () => {
                   <span>{lang === 'tl' ? '✓ Pagsusuri sa mga sakit at pathogen sa dahon' : '✓ Foliar plant disease & pathogen diagnostic'}</span>
                 </p>
                 <p className="text-primary dark:text-primary-fixed animate-pulse font-bold">
-                  <span>{lang === 'tl' ? 'Kinakalkula ang pinagsamang resulta...' : 'Synthesizing dual pest & disease diagnostic...'}</span>
+                  <span>{lang === 'tl' ? 'Kinakalkula ang resulta ng pagsusuri...' : 'Verifying leafy green specimen & findings...'}</span>
                 </p>
               </div>
             </div>

@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { DownloadReportDropdown } from '../components/common/DownloadReportDropdown';
+import { downloadCsv } from '../utils/csvExport';
 import '../components/common/ChartConfig';
 import { STITCH_COLORS } from '../components/common/ChartConfig';
 
@@ -40,17 +41,21 @@ export const FarmMonitoring = () => {
     r => r.severity === 'Critical' || r.severity === 'High'
   );
 
-  // Health Trend 30-day Chart.js configuration
+  // Health Trend Chart.js configuration backed by real backend daily_health_trend
+  const dailyTrend = stats?.daily_health_trend || [];
   const healthTrendData = useMemo(() => {
-    const labels = [
-      'Day 1', 'Day 5', 'Day 10', 'Day 15', 'Day 20', 'Day 25', 'Today'
-    ];
+    const labels = dailyTrend.length > 0
+      ? dailyTrend.map((d) => new Date(d.date).toLocaleDateString(lang === 'tl' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric' }))
+      : [lang === 'tl' ? 'Walang Datos' : 'No Data'];
+    const values = dailyTrend.length > 0
+      ? dailyTrend.map((d) => d.health_score)
+      : [stats?.overall_health_score ?? 100];
     return {
       labels,
       datasets: [
         {
           label: lang === 'tl' ? 'Kalusugan ng Bukid (%)' : 'Farm Health (%)',
-          data: [72, 75, 78, 82, 80, 88, 85],
+          data: values,
           borderColor: isDark ? '#62df7d' : STITCH_COLORS.secondary,
           backgroundColor: isDark ? 'rgba(98, 223, 125, 0.15)' : 'rgba(0, 110, 45, 0.12)',
           borderWidth: 2,
@@ -63,7 +68,7 @@ export const FarmMonitoring = () => {
         }
       ]
     };
-  }, [lang, isDark]);
+  }, [dailyTrend, stats, lang, isDark]);
 
   const healthTrendOptions = useMemo(() => ({
     responsive: true,
@@ -100,64 +105,47 @@ export const FarmMonitoring = () => {
 
   if (loading) return <LoadingSpinner label={lang === 'tl' ? "Ikinakarga ang telemetry ng bukid..." : "Aggregating farm zone metrics..."} size="lg" />;
 
-  const zonesData = [
-    {
-      name: lang === 'tl' ? 'Sona 1: Greenhouse Hydroponics' : 'Zone 1: Greenhouse Hydroponics',
-      crop: lang === 'tl' ? 'Litsugas (Romaine at Green Ice)' : 'Lettuce (Romaine & Green Ice)',
-      icon: 'eco',
-      health: 96,
-      isHealthy: true,
-      lastMonitored: lang === 'tl' ? 'Ngayong Araw, 08:30 AM' : 'Today, 08:30 AM',
-      alerts: 0
-    },
-    {
-      name: lang === 'tl' ? 'Sona 2: Bukid ng mga Brassica' : 'Zone 2: Open-Field Brassicas',
-      crop: lang === 'tl' ? 'Pechay at Mustasa' : 'Bok Choy & Mustard Greens',
-      icon: 'grass',
-      health: 64,
-      isHealthy: false,
-      lastMonitored: lang === 'tl' ? 'Ngayong Araw, 11:15 AM' : 'Today, 11:15 AM',
-      alerts: criticalRecords.length > 0 ? criticalRecords.length : 2
-    },
-    {
-      name: lang === 'tl' ? 'Sona 3: Halamang Gamot at Panimpla' : 'Zone 3: Culinary & Medicinal Herbs',
-      crop: lang === 'tl' ? 'Sweet Basil at Rosemary' : 'Sweet Basil & Rosemary',
-      icon: 'psychology',
-      health: 94,
-      isHealthy: true,
-      lastMonitored: lang === 'tl' ? 'Kahapon, 02:40 PM' : 'Yesterday, 02:40 PM',
-      alerts: 0
-    },
-    {
-      name: lang === 'tl' ? 'Sona 4: Bio-Dynamic at Vermiculture' : 'Zone 4: Bio-Dynamic & Vermiculture',
-      crop: lang === 'tl' ? 'Organikong Pataba at IMO' : 'Organic Compost & IMO Beds',
-      icon: 'local_florist',
-      health: 98,
-      isHealthy: true,
-      lastMonitored: lang === 'tl' ? 'Kahapon, 04:10 PM' : 'Yesterday, 04:10 PM',
-      alerts: 0
-    }
-  ];
+  const cropSummary = stats?.crop_health_summary || [];
+  const zonesData = cropSummary.length > 0
+    ? cropSummary.map((item, idx) => ({
+        name: `${lang === 'tl' ? 'Sektor' : 'Sector'} ${idx + 1}: ${lang === 'tl' ? item.crop_name_tl : item.crop_name}`,
+        crop: lang === 'tl' ? item.crop_name_tl : item.crop_name,
+        icon: idx === 0 ? 'eco' : idx === 1 ? 'grass' : 'local_florist',
+        health: item.health_score,
+        isHealthy: item.health_score >= 75 && item.active_alerts === 0,
+        lastMonitored: item.last_monitored
+          ? new Date(item.last_monitored).toLocaleString(lang === 'tl' ? 'fil-PH' : undefined, { dateStyle: 'medium', timeStyle: 'short' })
+          : (lang === 'tl' ? 'Wala pang pagsusuri' : 'No scans yet'),
+        alerts: item.active_alerts,
+        scanCount: item.scan_count,
+      }))
+    : crops.map((c, idx) => ({
+        name: `${lang === 'tl' ? 'Sektor' : 'Sector'} ${idx + 1}: ${lang === 'tl' && c.name_tl ? c.name_tl : c.name}`,
+        crop: lang === 'tl' && c.name_tl ? c.name_tl : c.name,
+        icon: 'eco',
+        health: 100,
+        isHealthy: true,
+        lastMonitored: lang === 'tl' ? 'Wala pang pagsusuri' : 'No scans yet',
+        alerts: 0,
+        scanCount: 0,
+      }));
+
+  const overallHealth = stats?.overall_health_score ?? 100;
+  const totalAlertsCount = zonesData.reduce((acc, z) => acc + (z.alerts || 0), 0);
+  const totalScansCount = stats?.total_detections ?? 0;
 
   const handleExportCSV = () => {
-    const headers = ["Zone_Name", "Host_Crop", "Health_Percentage", "Status", "Active_Alerts", "Last_Monitored"];
+    const headers = ["Zone_Name", "Host_Crop", "Total_Scans", "Health_Percentage", "Status", "Active_Alerts", "Last_Monitored"];
     const rows = zonesData.map(z => [
-      `"${z.name}"`,
-      `"${z.crop}"`,
+      z.name,
+      z.crop,
+      z.scanCount ?? 0,
       `${z.health}%`,
-      `"${z.isHealthy ? 'Healthy' : 'Needs Attention'}"`,
+      z.isHealthy ? 'Healthy' : 'Needs Attention',
       z.alerts,
-      `"${z.lastMonitored}"`
+      z.lastMonitored
     ]);
-
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `farm_zone_monitoring_${new Date().toISOString().slice(0,10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`farm_zone_monitoring_${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   };
 
   return (
@@ -207,14 +195,14 @@ export const FarmMonitoring = () => {
 
       {/* Stats Grid (Bento Style from Stitch) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {/* Total Area */}
+        {/* Total Scans */}
         <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 sm:p-5 shadow-sm relative overflow-hidden group hover:border-primary transition-colors">
           <div className="flex justify-between items-start mb-2">
-            <p className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('totalFarmArea') || 'Total Area'}</p>
+            <p className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{lang === 'tl' ? 'Kabuuang Pagsusuri' : 'Total Scans'}</p>
             <span className="material-symbols-outlined text-outline text-[20px]">landscape</span>
           </div>
           <p className="font-headline-md text-2xl sm:text-3xl font-bold text-on-surface dark:text-inverse-on-surface">
-            8.0 <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">ha (Organic)</span>
+            {totalScansCount} <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">{lang === 'tl' ? 'naitala' : 'logged'}</span>
           </p>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
         </div>
@@ -226,7 +214,7 @@ export const FarmMonitoring = () => {
             <span className="material-symbols-outlined text-outline text-[20px]">my_location</span>
           </div>
           <p className="font-headline-md text-2xl sm:text-3xl font-bold text-on-surface dark:text-inverse-on-surface">
-            4 <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">{lang === 'tl' ? 'Aktibo' : 'Active'}</span>
+            {zonesData.length} <span className="font-body-md text-xs font-normal text-on-surface-variant font-sans">{lang === 'tl' ? 'Aktibo' : 'Active'}</span>
           </p>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-primary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
         </div>
@@ -237,7 +225,7 @@ export const FarmMonitoring = () => {
             <p className="font-label-md text-xs font-semibold text-on-surface-variant uppercase tracking-wider">{t('overallHealth')}</p>
             <span className="material-symbols-outlined text-secondary text-[20px]">health_and_safety</span>
           </div>
-          <p className="font-headline-md text-2xl sm:text-3xl font-bold text-secondary dark:text-secondary-fixed">85%</p>
+          <p className="font-headline-md text-2xl sm:text-3xl font-bold text-secondary dark:text-secondary-fixed">{overallHealth}%</p>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-secondary transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
         </div>
 
@@ -248,7 +236,7 @@ export const FarmMonitoring = () => {
             <span className="material-symbols-outlined text-error text-[20px]">warning</span>
           </div>
           <p className="font-headline-md text-2xl sm:text-3xl font-bold text-error">
-            2 <span className="font-body-md text-xs font-medium text-error/70 font-sans">{t('requiresAction')}</span>
+            {totalAlertsCount} <span className="font-body-md text-xs font-medium text-error/70 font-sans">{t('requiresAction')}</span>
           </p>
           <div className="absolute bottom-0 left-0 w-full h-1 bg-error transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
         </div>
@@ -301,101 +289,57 @@ export const FarmMonitoring = () => {
 
         </div>
 
-        {/* Right Column: Zone Details Cards */}
+        {/* Right Column: Live Sector Details Cards */}
         <div className="flex flex-col gap-4">
           <h3 className="font-headline-sm text-base sm:text-lg font-bold text-on-surface dark:text-inverse-on-surface">
             {lang === 'tl' ? 'Mga Detalye ng Sona' : 'Zone Details'}
           </h3>
 
-          {/* Card Zone 1 (Healthy) */}
-          <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm hover:border-primary transition-colors flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-outline text-[20px]">eco</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 1: Greenhouse Hydroponics' : 'Zone 1: Greenhouse Hydroponics'}</h4>
-              </div>
-              <span className="bg-secondary/10 text-secondary px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-secondary/20 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">check</span> {t('healthy')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Lettuce (Romaine)</p>
-              </div>
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Today, 08:30 AM</p>
-              </div>
-            </div>
-            <Link to="/history" className="mt-2 text-primary font-label-md text-xs font-bold hover:underline self-start">
-              {lang === 'tl' ? 'Tingnan ang Kasaysayan' : 'View History'} →
-            </Link>
-          </div>
-
-          {/* Card Zone 2 (Needs Attention / Alert State) */}
-          <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline border-l-4 border-l-error rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-2 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-error/5 rounded-bl-full pointer-events-none"></div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-outline text-[20px]">grass</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 2: Bukid ng mga Brassica' : 'Zone 2: Open-Field Brassicas'}</h4>
-              </div>
-              <span className="bg-error/10 text-error px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-error/20 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">error</span> {t('needsAttention')}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Bok Choy &amp; Pechay</p>
-              </div>
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Today, 11:15 AM</p>
-              </div>
-            </div>
-            <div className="mt-2 bg-error-container/30 p-2.5 rounded-lg border border-error-container flex items-start gap-2">
-              <span className="material-symbols-outlined text-error text-[18px] shrink-0 mt-0.5">bug_report</span>
-              <div>
-                <p className="font-label-md text-xs font-bold text-error">2 {t('alertsDetected')}</p>
-                <p className="font-label-sm text-[11px] text-on-surface-variant mt-0.5">{t('pestThresholdExceeded')}</p>
-              </div>
-            </div>
-            <Link
-              to="/history?severity=high"
-              className="mt-2 bg-primary text-on-primary font-label-md text-xs font-bold py-2 px-3.5 rounded-lg hover:bg-primary/90 transition-colors self-start text-center shadow-xs"
+          {zonesData.map((z) => (
+            <div
+              key={z.name}
+              className={`bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm transition-colors flex flex-col gap-2 ${
+                z.isHealthy ? 'hover:border-primary' : 'border-l-4 border-l-error'
+              }`}
             >
-              {t('reviewAlerts')}
-            </Link>
-          </div>
-
-          {/* Card Zone 3 */}
-          <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-4 shadow-sm hover:border-primary transition-colors flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-outline text-[20px]">psychology</span>
-                <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface">{lang === 'tl' ? 'Sona 3: Halamang Gamot at Panimpla' : 'Zone 3: Culinary Herbs'}</h4>
+              <div className="flex justify-between items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="material-symbols-outlined text-outline text-[20px]">{z.icon}</span>
+                  <h4 className="font-title-lg text-sm sm:text-base font-bold text-on-surface dark:text-inverse-on-surface truncate">{z.name}</h4>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border flex items-center gap-1 shrink-0 ${
+                  z.isHealthy
+                    ? 'bg-secondary/10 text-secondary border-secondary/20'
+                    : 'bg-error/10 text-error border-error/20'
+                }`}>
+                  <span className="material-symbols-outlined text-[14px]">{z.isHealthy ? 'check' : 'error'}</span>
+                  {z.isHealthy ? t('healthy') : t('needsAttention')}
+                </span>
               </div>
-              <span className="bg-secondary/10 text-secondary px-2.5 py-0.5 rounded-full font-label-sm text-xs font-bold border border-secondary/20 flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">check</span> {t('healthy')}
-              </span>
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
+                <div>
+                  <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
+                  <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">{z.crop} ({z.scanCount ?? 0} {lang === 'tl' ? 'suri' : 'scans'})</p>
+                </div>
+                <div>
+                  <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
+                  <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">{z.lastMonitored}</p>
+                </div>
+              </div>
+              {z.alerts > 0 && (
+                <div className="mt-1 bg-error-container/30 p-2.5 rounded-lg border border-error-container flex items-start gap-2">
+                  <span className="material-symbols-outlined text-error text-[18px] shrink-0 mt-0.5">bug_report</span>
+                  <div>
+                    <p className="font-label-md text-xs font-bold text-error">{z.alerts} {t('alertsDetected')}</p>
+                    <p className="font-label-sm text-[11px] text-on-surface-variant mt-0.5">{t('pestThresholdExceeded')}</p>
+                  </div>
+                </div>
+              )}
+              <Link to="/history" className="mt-1 text-primary font-label-md text-xs font-bold hover:underline self-start">
+                {z.alerts > 0 ? t('reviewAlerts') : (lang === 'tl' ? 'Tingnan ang Kasaysayan' : 'View History')} →
+              </Link>
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-surface-variant dark:border-outline-variant/40">
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{t('crops')}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Sweet Basil &amp; Rosemary</p>
-              </div>
-              <div>
-                <p className="font-label-sm text-[10px] text-outline">{lang === 'tl' ? 'Huling Sinuri' : 'Last Monitored'}</p>
-                <p className="font-body-md text-xs font-semibold text-on-surface dark:text-inverse-on-surface">Yesterday</p>
-              </div>
-            </div>
-            <Link to="/history" className="mt-2 text-primary font-label-md text-xs font-bold hover:underline self-start">
-              {lang === 'tl' ? 'Tingnan ang Kasaysayan' : 'View History'} →
-            </Link>
-          </div>
-
+          ))}
         </div>
 
       </div>

@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BoundingBoxOverlay } from './BoundingBoxOverlay';
 import { FieldInspectionReportModal } from './FieldInspectionReportModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { detectionService } from '../../services/detectionService';
+import { getDetectionSummary } from '../../utils/detectionUtils';
 
 export const DetectionReportCard = ({ detection }) => {
   const { lang, t } = useLanguage();
   const [feedbackAccurate, setFeedbackAccurate] = useState(detection?.feedback_accurate);
   const [feedbackNotes, setFeedbackNotes] = useState(detection?.feedback_notes || '');
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(detection?.feedback_accurate !== null && detection?.feedback_accurate !== undefined);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(
+    detection?.feedback_accurate !== null && detection?.feedback_accurate !== undefined
+  );
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('both'); // 'both' | 'pest' | 'disease'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'pest' | 'disease'
+
+  useEffect(() => {
+    setActiveTab('all');
+    setFeedbackAccurate(detection?.feedback_accurate);
+    setFeedbackNotes(detection?.feedback_notes || '');
+    setFeedbackSubmitted(
+      detection?.feedback_accurate !== null && detection?.feedback_accurate !== undefined
+    );
+  }, [detection?.id]);
 
   if (!detection) return null;
 
@@ -30,7 +42,6 @@ export const DetectionReportCard = ({ detection }) => {
     weather_condition,
     field_location,
     created_at,
-    // Disease assessment attributes
     detected_disease_name,
     disease_scientific_name,
     disease_pathogen_type,
@@ -38,18 +49,53 @@ export const DetectionReportCard = ({ detection }) => {
     disease_severity,
     disease_symptoms,
     disease_recommended_action,
-    disease_details
+    disease_details,
   } = detection;
 
-  const pestConfPercent = Math.round((confidence_score || 0) * 100);
-  const diseaseConfPercent = Math.round((disease_confidence_score || (confidence_score ? confidence_score - 0.03 : 0.88)) * 100);
-  const hasDisease = !!(detected_disease_name || disease_details?.name);
-  const resolvedDiseaseName = detected_disease_name || disease_details?.name || "Downy Mildew of Lettuce";
-  const resolvedDiseaseSci = disease_scientific_name || disease_details?.scientific_name || "Bremia lactucae";
-  const resolvedDiseasePathogen = disease_pathogen_type || disease_details?.pathogen_type || "Fungal";
-  const resolvedDiseaseSev = disease_severity || disease_details?.severity || "High";
-  const resolvedDiseaseSymptoms = disease_symptoms || disease_details?.symptoms || "Angular pale yellow chlorotic lesions with white downy mold underneath.";
-  const resolvedDiseaseAction = disease_recommended_action || disease_details?.recommended_action || "Ensure 30cm spacing for canopy airflow and apply protectant bio-fungicide.";
+  const summary = getDetectionSummary(detection);
+  const { outcome, isHealthy, hasPest, hasDisease, primaryTitle } = summary;
+
+  const pestConfPercent = hasPest ? Math.round((confidence_score || 0) * 100) : 0;
+  const healthyConfPercent = isHealthy ? Math.round((confidence_score || 0) * 100) : 0;
+  const diseaseConfPercent = hasDisease
+    ? Math.round((disease_confidence_score ?? disease_details?.confidence ?? 0) * 100)
+    : 0;
+
+  const resolvedDiseaseName = detected_disease_name || disease_details?.name || null;
+  const resolvedDiseaseSci = disease_scientific_name || disease_details?.scientific_name || null;
+  const resolvedDiseasePathogen = disease_pathogen_type || disease_details?.pathogen_type || null;
+  const resolvedDiseaseSev = disease_severity || disease_details?.severity || severity || 'Moderate';
+  const resolvedDiseaseSymptoms = disease_symptoms || disease_details?.symptoms || null;
+  const resolvedDiseaseAction = disease_recommended_action || disease_details?.recommended_action || recommended_action || null;
+
+  const getOutcomeBadge = () => {
+    if (outcome === 'healthy') {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-bold text-[10px] uppercase tracking-wider border border-teal-500/20">
+          {lang === 'tl' ? 'Malusog na Pananim' : 'Healthy Leafy Green'}
+        </span>
+      );
+    }
+    if (outcome === 'pest') {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-700 dark:text-rose-300 font-bold text-[10px] uppercase tracking-wider border border-rose-500/20">
+          {lang === 'tl' ? 'Peste Lamang ang Natukoy' : 'Pest Detected (No Disease)'}
+        </span>
+      );
+    }
+    if (outcome === 'disease') {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-300 font-bold text-[10px] uppercase tracking-wider border border-amber-500/20">
+          {lang === 'tl' ? 'Sakit Lamang ang Natukoy' : 'Disease Detected (No Pest)'}
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-0.5 rounded-full bg-error/10 text-error font-bold text-[10px] uppercase tracking-wider border border-error/20">
+        {lang === 'tl' ? 'Peste at Sakit Natukoy' : 'Pest & Disease Detected'}
+      </span>
+    );
+  };
 
   const getSeverityBadge = (level) => {
     switch (level?.toLowerCase()) {
@@ -78,16 +124,17 @@ export const DetectionReportCard = ({ detection }) => {
     }
   };
 
-  const handleFeedbackSubmit = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (feedbackAccurate === undefined || feedbackAccurate === null) return;
-    
+  const handleFeedbackSubmit = async (isAccurateOverride = undefined) => {
+    const accurateValue = isAccurateOverride !== undefined ? isAccurateOverride : feedbackAccurate;
+    if (accurateValue === undefined || accurateValue === null) return;
+
+    setFeedbackAccurate(accurateValue);
     setSubmittingFeedback(true);
     try {
-      await detectionService.submitFeedback(id, feedbackAccurate, feedbackNotes);
+      await detectionService.submitFeedback(id, accurateValue, feedbackNotes);
       setFeedbackSubmitted(true);
     } catch (err) {
-      alert(lang === 'tl' ? "Nabigong i-save ang puna." : "Failed to save feedback.");
+      alert(lang === 'tl' ? 'Nabigong i-save ang puna.' : 'Failed to save feedback.');
     } finally {
       setSubmittingFeedback(false);
     }
@@ -95,7 +142,7 @@ export const DetectionReportCard = ({ detection }) => {
 
   const handleSpeakAudio = () => {
     if (!('speechSynthesis' in window)) {
-      alert(lang === 'tl' ? "Hindi suportado ang audio narration sa browser na ito." : "Audio narration is not supported in this browser.");
+      alert(lang === 'tl' ? 'Hindi suportado ang audio narration sa browser na ito.' : 'Audio narration is not supported in this browser.');
       return;
     }
 
@@ -105,9 +152,24 @@ export const DetectionReportCard = ({ detection }) => {
       return;
     }
 
-    const narrationText = lang === 'tl'
-      ? `Ulat ng Pagsusuri Bilang ${id}. Peste: ${detected_pest_name}, antas ng banta: ${severity || 'Katamtaman'}. Hakbang: ${recommended_action}. Sakit ng pananim: ${resolvedDiseaseName}, antas ng banta: ${resolvedDiseaseSev}. Hakbang sa sakit: ${resolvedDiseaseAction}`
-      : `Diagnostic Report Number ${id}. Pest: ${detected_pest_name}, threat level: ${severity}. Management action: ${recommended_action}. Plant Disease: ${resolvedDiseaseName}, pathogen: ${resolvedDiseasePathogen}, severity: ${resolvedDiseaseSev}. Disease control: ${resolvedDiseaseAction}`;
+    let narrationText = '';
+    if (isHealthy) {
+      narrationText = lang === 'tl'
+        ? `Ulat Bilang ${id}. ${primaryTitle}. Walang natukoy na peste o sakit sa dahon. Payo: ${recommended_action}`
+        : `Diagnostic Report Number ${id}. ${primaryTitle}. No active insect pest or foliar plant disease was detected. Recommendation: ${recommended_action}`;
+    } else if (hasPest && !hasDisease) {
+      narrationText = lang === 'tl'
+        ? `Ulat Bilang ${id}. Natukoy na peste: ${detected_pest_name}, antas ng banta: ${severity}. Walang natukoy na sakit sa dahon. Hakbang: ${recommended_action}`
+        : `Diagnostic Report Number ${id}. Insect pest detected: ${detected_pest_name}, threat level: ${severity}. No foliar plant disease was detected. Management action: ${recommended_action}`;
+    } else if (!hasPest && hasDisease) {
+      narrationText = lang === 'tl'
+        ? `Ulat Bilang ${id}. Walang natukoy na insektong peste. Natukoy na sakit sa dahon: ${resolvedDiseaseName}, antas ng banta: ${resolvedDiseaseSev}. Hakbang sa paggamot: ${resolvedDiseaseAction || ''}`
+        : `Diagnostic Report Number ${id}. No insect pest detected. Plant disease detected: ${resolvedDiseaseName}${resolvedDiseasePathogen ? `, pathogen: ${resolvedDiseasePathogen}` : ''}, severity: ${resolvedDiseaseSev}. Disease treatment: ${resolvedDiseaseAction || ''}`;
+    } else {
+      narrationText = lang === 'tl'
+        ? `Ulat Bilang ${id}. Peste: ${detected_pest_name}, banta: ${severity}. Hakbang sa peste: ${recommended_action}. Sakit sa dahon: ${resolvedDiseaseName}, banta: ${resolvedDiseaseSev}. Hakbang sa sakit: ${resolvedDiseaseAction || ''}`
+        : `Diagnostic Report Number ${id}. Pest detected: ${detected_pest_name}, threat level: ${severity}. Pest action: ${recommended_action}. Plant disease detected: ${resolvedDiseaseName}, severity: ${resolvedDiseaseSev}. Disease control: ${resolvedDiseaseAction || ''}`;
+    }
 
     const utterance = new SpeechSynthesisUtterance(narrationText);
     utterance.lang = lang === 'tl' ? 'tl-PH' : 'en-US';
@@ -120,13 +182,16 @@ export const DetectionReportCard = ({ detection }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  const formattedDate = created_at 
+  const formattedDate = created_at
     ? new Date(created_at).toLocaleString(lang === 'tl' ? 'fil-PH' : undefined, { dateStyle: 'medium', timeStyle: 'short' })
     : 'N/A';
 
+  const hasPestBoxes = (bounding_boxes || []).some((b) => (b.type || '').toLowerCase() === 'pest');
+  const hasDiseaseBoxes = (bounding_boxes || []).some((b) => (b.type || '').toLowerCase() === 'disease');
+  const hasHealthyBoxes = (bounding_boxes || []).some((b) => (b.type || '').toLowerCase() === 'healthy');
+
   return (
     <div className="space-y-5">
-      
       {/* Field Inspection Report Modal */}
       <FieldInspectionReportModal
         isOpen={isReportModalOpen}
@@ -136,15 +201,10 @@ export const DetectionReportCard = ({ detection }) => {
 
       {/* Main Analysis Card */}
       <div className="bg-surface-container-lowest dark:bg-surface-container-low rounded-xl border border-outline-variant dark:border-outline shadow-sm overflow-hidden flex flex-col">
-        
         {/* Card Header */}
         <div className="p-4 sm:p-5 border-b border-outline-variant dark:border-outline flex flex-wrap justify-between items-center bg-surface-bright dark:bg-surface-container gap-3">
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-wider border border-emerald-500/20">
-                Pest & Disease Scanned
-              </span>
-            </div>
+            <div className="flex items-center gap-2 mb-0.5">{getOutcomeBadge()}</div>
             <h3 className="font-title-lg text-base sm:text-lg font-bold text-on-surface dark:text-inverse-on-surface">
               {lang === 'tl' ? 'Tapos na ang Pagsusuri' : 'Diagnostic Analysis Complete'}
             </h3>
@@ -174,72 +234,79 @@ export const DetectionReportCard = ({ detection }) => {
           </div>
         </div>
 
-        {/* View Switcher: Both | Pest Only | Disease Only */}
-        <div className="px-5 pt-4 flex items-center gap-2 border-b border-outline-variant dark:border-outline bg-surface-container-low/30">
-          <button
-            onClick={() => setActiveTab('both')}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'both'
-                ? 'border-primary text-primary dark:text-primary-fixed'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">biotech</span>
-            <span>{lang === 'tl' ? 'Lahat ng Pagsusuri (Peste at Sakit)' : 'Dual Pest & Disease Findings'}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('pest')}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'pest'
-                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">bug_report</span>
-            <span>{lang === 'tl' ? 'Peste Lamang' : 'Pest Findings'}</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('disease')}
-            className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'disease'
-                ? 'border-amber-600 text-amber-700 dark:text-amber-400'
-                : 'border-transparent text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">coronavirus</span>
-            <span>{lang === 'tl' ? 'Sakit Lamang' : 'Disease Findings'}</span>
-          </button>
-        </div>
+        {/* View Switcher: Only show Pest/Disease tabs when BOTH are detected */}
+        {hasPest && hasDisease && (
+          <div className="px-5 pt-4 flex items-center gap-2 border-b border-outline-variant dark:border-outline bg-surface-container-low/30">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'all'
+                  ? 'border-primary text-primary dark:text-primary-fixed'
+                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">biotech</span>
+              <span>{lang === 'tl' ? 'Lahat (Peste at Sakit)' : 'All Findings'}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('pest')}
+              className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'pest'
+                  ? 'border-rose-600 text-rose-700 dark:text-rose-400'
+                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">bug_report</span>
+              <span>{lang === 'tl' ? 'Peste Lamang' : 'Pest Findings'}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('disease')}
+              className={`px-3.5 py-2 text-xs font-bold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                activeTab === 'disease'
+                  ? 'border-amber-600 text-amber-700 dark:text-amber-400'
+                  : 'border-transparent text-on-surface-variant hover:text-on-surface'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">coronavirus</span>
+              <span>{lang === 'tl' ? 'Sakit Lamang' : 'Disease Findings'}</span>
+            </button>
+          </div>
+        )}
 
         {/* Specimen Content Layout */}
         <div className="p-5 sm:p-6 flex flex-col xl:flex-row gap-6">
-          
           {/* Specimen Visual Area with Bounding Boxes */}
-          <div className="w-full xl:w-2/5 aspect-square rounded-xl overflow-hidden border border-outline-variant bg-surface relative flex-shrink-0 shadow-xs">
-            <BoundingBoxOverlay
-              imagePath={image_path}
-              boundingBoxes={bounding_boxes}
-            />
-            {/* Visual legend under preview */}
-            <div className="p-2.5 bg-surface-container-lowest/90 dark:bg-slate-900/90 border-t border-outline-variant flex items-center justify-around text-[10px] font-bold">
-              <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500"></span>
-                <span>Pest Insect Detection</span>
-              </span>
-              <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400">
-                <span className="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
-                <span>Plant Disease Lesion</span>
-              </span>
+          <div className="w-full xl:w-2/5 rounded-xl overflow-hidden border border-outline-variant bg-surface relative flex-shrink-0 shadow-xs flex flex-col justify-between">
+            <BoundingBoxOverlay imagePath={image_path} boundingBoxes={bounding_boxes} />
+            {/* Dynamic visual legend matching actual drawn box types */}
+            <div className="p-2.5 bg-surface-container-lowest/90 dark:bg-slate-900/90 border-t border-outline-variant flex items-center justify-around flex-wrap gap-2 text-[10px] font-bold">
+              {hasHealthyBoxes && (
+                <span className="flex items-center gap-1 text-teal-700 dark:text-teal-400">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-teal-500"></span>
+                  <span>{lang === 'tl' ? 'Malusog na Pananim' : 'Healthy Leafy Crop'}</span>
+                </span>
+              )}
+              {hasPestBoxes && (
+                <span className="flex items-center gap-1 text-rose-700 dark:text-rose-400">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-rose-500"></span>
+                  <span>{lang === 'tl' ? 'Insektong Peste' : 'Insect Pest'}</span>
+                </span>
+              )}
+              {hasDiseaseBoxes && (
+                <span className="flex items-center gap-1 text-amber-700 dark:text-amber-400">
+                  <span className="w-2.5 h-2.5 rounded-xs bg-amber-500"></span>
+                  <span>{lang === 'tl' ? 'Sakit sa Dahon' : 'Plant Disease'}</span>
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Diagnosis Details Split View */}
+          {/* Diagnosis Details View */}
           <div className="flex flex-col flex-1 gap-4 justify-between">
-            
             {/* Environmental & Field Metadata */}
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="px-3 py-1 rounded-full bg-surface-container text-on-surface font-bold">
-                Host: {crop_name || (lang === 'tl' ? 'Pananim' : 'Crop')}
+                Host: {crop_name || (lang === 'tl' ? 'Pananim' : 'Leafy Green')}
               </span>
               {weather_condition && (
                 <span className="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant font-medium">
@@ -255,18 +322,67 @@ export const DetectionReportCard = ({ detection }) => {
 
             {/* Findings Container */}
             <div className="space-y-4">
-              
-              {/* SECTION 1: Pest Detection Card */}
-              {(activeTab === 'both' || activeTab === 'pest') && (
-                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 space-y-3">
+              {/* STATE 1: Healthy Leafy Green (No Pest, No Disease) */}
+              {isHealthy && (
+                <div className="p-4 rounded-xl border border-teal-500/30 bg-teal-500/5 dark:bg-teal-950/20 space-y-3">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex items-start gap-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                      <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-[18px]">eco</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-teal-800 dark:text-teal-300">
+                          {lang === 'tl' ? 'Kalusugan ng Pananim' : 'Crop Health Assessment'}
+                        </span>
+                        <h4 className="font-bold text-base sm:text-lg text-on-surface dark:text-inverse-on-surface">
+                          {primaryTitle}
+                        </h4>
+                        {scientific_name && (
+                          <p className="text-xs text-on-surface-variant italic font-serif">{scientific_name}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>{getSeverityBadge('Low')}</div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-on-surface-variant font-medium">
+                        {lang === 'tl' ? 'Katiyakan ng Pagsusuri' : 'Crop Recognition Confidence'}
+                      </span>
+                      <span className="text-teal-700 dark:text-teal-300 font-bold">{healthyConfPercent}%</span>
+                    </div>
+                    <div className="w-full bg-surface-variant dark:bg-surface-container rounded-full h-2 overflow-hidden">
+                      <div className="bg-teal-600 h-2 rounded-full transition-all duration-500" style={{ width: `${healthyConfPercent}%` }}></div>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-on-surface-variant leading-relaxed">
+                    {pest_description || (lang === 'tl'
+                      ? 'Walang nakitang insektong peste o sakit sa dahon sa specimen na ito.'
+                      : 'No active insect pest or foliar plant disease was detected on this specimen.')}
+                  </p>
+
+                  <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60 text-xs">
+                    <span className="font-bold text-teal-800 dark:text-teal-300 block mb-0.5 text-[11px] uppercase tracking-wider">
+                      {lang === 'tl' ? 'Gabay sa Pangangalaga' : 'Preventive Crop Care'}
+                    </span>
+                    <p className="text-on-surface-variant leading-relaxed font-medium">{recommended_action}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* STATE 2: Pest Detection Card (Rendered ONLY when an insect pest was actually detected) */}
+              {hasPest && (activeTab === 'all' || activeTab === 'pest') && (
+                <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/5 dark:bg-rose-950/20 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-700 dark:text-rose-300 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
                         <span className="material-symbols-outlined text-[18px]">bug_report</span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 dark:text-emerald-400">
-                          {lang === 'tl' ? 'Pagsusuri sa Peste' : 'Pest Assessment'}
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-rose-800 dark:text-rose-300">
+                          {lang === 'tl' ? 'Pagsusuri sa Peste' : 'Insect Pest Assessment'}
                         </span>
                         <h4 className="font-bold text-base sm:text-lg text-on-surface dark:text-inverse-on-surface">
                           {detected_pest_name}
@@ -279,33 +395,33 @@ export const DetectionReportCard = ({ detection }) => {
                     <div>{getSeverityBadge(severity)}</div>
                   </div>
 
-                  {/* Pest Confidence Bar */}
                   <div>
                     <div className="flex justify-between text-[11px] mb-1">
                       <span className="text-on-surface-variant font-medium">
                         {lang === 'tl' ? 'Katiyakan sa Peste' : 'Pest Confidence'}
                       </span>
-                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">{pestConfPercent}%</span>
+                      <span className="text-rose-700 dark:text-rose-300 font-bold">{pestConfPercent}%</span>
                     </div>
                     <div className="w-full bg-surface-variant dark:bg-surface-container rounded-full h-2 overflow-hidden">
-                      <div className="bg-emerald-600 h-2 rounded-full transition-all duration-500" style={{ width: `${pestConfPercent}%` }}></div>
+                      <div className="bg-rose-600 h-2 rounded-full transition-all duration-500" style={{ width: `${pestConfPercent}%` }}></div>
                     </div>
                   </div>
 
-                  {/* Pest Recommended Action */}
+                  {pest_description && (
+                    <p className="text-xs text-on-surface-variant leading-relaxed">{pest_description}</p>
+                  )}
+
                   <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60 text-xs">
-                    <span className="font-bold text-emerald-800 dark:text-emerald-300 block mb-0.5 text-[11px] uppercase tracking-wider">
+                    <span className="font-bold text-rose-800 dark:text-rose-300 block mb-0.5 text-[11px] uppercase tracking-wider">
                       {lang === 'tl' ? 'Hakbang sa Pagsugpo ng Peste' : 'IPM Pest Protocol'}
                     </span>
-                    <p className="text-on-surface-variant leading-relaxed font-medium">
-                      {recommended_action}
-                    </p>
+                    <p className="text-on-surface-variant leading-relaxed font-medium">{recommended_action}</p>
                   </div>
                 </div>
               )}
 
-              {/* SECTION 2: Disease Detection Card (Always included along with pest detection) */}
-              {(activeTab === 'both' || activeTab === 'disease') && (
+              {/* STATE 3: Plant Disease Detection Card (Rendered ONLY when a foliar disease was actually detected) */}
+              {hasDisease && (activeTab === 'all' || activeTab === 'disease') && (
                 <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-500/5 dark:bg-amber-950/20 space-y-3">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex items-start gap-2.5">
@@ -317,9 +433,11 @@ export const DetectionReportCard = ({ detection }) => {
                           <span className="text-[10px] uppercase font-bold tracking-wider text-amber-800 dark:text-amber-400">
                             {lang === 'tl' ? 'Pagsusuri sa Sakit' : 'Plant Disease Assessment'}
                           </span>
-                          <span className="px-1.5 py-0.2 rounded-xs bg-amber-200/60 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 font-bold text-[9px] uppercase tracking-wider">
-                            {resolvedDiseasePathogen}
-                          </span>
+                          {resolvedDiseasePathogen && (
+                            <span className="px-1.5 py-0.2 rounded-xs bg-amber-200/60 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 font-bold text-[9px] uppercase tracking-wider">
+                              {resolvedDiseasePathogen}
+                            </span>
+                          )}
                         </div>
                         <h4 className="font-bold text-base sm:text-lg text-on-surface dark:text-inverse-on-surface">
                           {resolvedDiseaseName}
@@ -332,7 +450,6 @@ export const DetectionReportCard = ({ detection }) => {
                     <div>{getSeverityBadge(resolvedDiseaseSev)}</div>
                   </div>
 
-                  {/* Disease Confidence Bar */}
                   <div>
                     <div className="flex justify-between text-[11px] mb-1">
                       <span className="text-on-surface-variant font-medium">
@@ -345,7 +462,6 @@ export const DetectionReportCard = ({ detection }) => {
                     </div>
                   </div>
 
-                  {/* Symptoms & Action */}
                   <div className="space-y-2 text-xs">
                     {resolvedDiseaseSymptoms && (
                       <div className="p-2.5 bg-amber-500/10 rounded-lg border border-amber-400/20 text-amber-950 dark:text-amber-200">
@@ -356,22 +472,41 @@ export const DetectionReportCard = ({ detection }) => {
                       </div>
                     )}
 
-                    <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60">
-                      <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5 text-[11px] uppercase tracking-wider">
-                        {lang === 'tl' ? 'Hakbang sa Paggamot ng Sakit' : 'IDM Disease Treatment Protocol'}
-                      </span>
-                      <p className="text-on-surface-variant leading-relaxed font-medium">
-                        {resolvedDiseaseAction}
-                      </p>
-                    </div>
+                    {resolvedDiseaseAction && (
+                      <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60">
+                        <span className="font-bold text-amber-800 dark:text-amber-300 block mb-0.5 text-[11px] uppercase tracking-wider">
+                          {lang === 'tl' ? 'Hakbang sa Paggamot ng Sakit' : 'IDM Disease Treatment Protocol'}
+                        </span>
+                        <p className="text-on-surface-variant leading-relaxed font-medium">{resolvedDiseaseAction}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
 
+              {/* Compact Reassurance Note when only ONE category (pest OR disease) was detected */}
+              {hasPest && !hasDisease && (
+                <div className="p-3 rounded-xl border border-secondary/30 bg-secondary/5 text-xs text-on-surface-variant flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                  <span>
+                    {lang === 'tl'
+                      ? 'Walang natukoy na sakit sa dahon para sa pagsusuring ito.'
+                      : 'No foliar plant disease was detected on this specimen.'}
+                  </span>
+                </div>
+              )}
+              {!hasPest && hasDisease && (
+                <div className="p-3 rounded-xl border border-secondary/30 bg-secondary/5 text-xs text-on-surface-variant flex items-center gap-2">
+                  <span className="material-symbols-outlined text-secondary text-[18px]">check_circle</span>
+                  <span>
+                    {lang === 'tl'
+                      ? 'Walang natukoy na insektong peste para sa pagsusuring ito.'
+                      : 'No active insect pest was detected on this specimen.'}
+                  </span>
+                </div>
+              )}
             </div>
-
           </div>
-
         </div>
 
         {/* Farmer Accuracy Feedback Footer */}
@@ -379,10 +514,10 @@ export const DetectionReportCard = ({ detection }) => {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <p className="font-label-sm text-xs font-bold text-on-surface dark:text-inverse-on-surface">
-                {t('confirmAccuracy') || (lang === 'tl' ? 'Wasto ba ang pagsusuri sa peste at sakit na ito?' : 'Was this dual pest and disease diagnostic accurate?')}
+                {t('confirmAccuracy') || (lang === 'tl' ? 'Wasto ba ang pagsusuring ito?' : 'Was this diagnostic accurate?')}
               </p>
               <p className="text-[11px] text-on-surface-variant">
-                {lang === 'tl' ? 'Ang iyong puna ay nakatutulong sa pagpapabuti ng AI models.' : 'Your feedback continually refines field inference precision for both pests and plant diseases.'}
+                {lang === 'tl' ? 'Ang iyong puna ay nakatutulong sa pagpapabuti ng AI models.' : 'Your feedback continually refines field inference precision.'}
               </p>
             </div>
 
@@ -393,16 +528,20 @@ export const DetectionReportCard = ({ detection }) => {
             ) : (
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
-                  onClick={() => { setFeedbackAccurate(true); handleFeedbackSubmit({ preventDefault: () => {} }); }}
-                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold border border-outline-variant transition-colors cursor-pointer ${
+                  type="button"
+                  disabled={submittingFeedback}
+                  onClick={() => handleFeedbackSubmit(true)}
+                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold border border-outline-variant transition-colors cursor-pointer disabled:opacity-50 ${
                     feedbackAccurate === true ? 'bg-secondary text-on-secondary border-secondary' : 'bg-surface hover:bg-surface-variant text-on-surface'
                   }`}
                 >
                   {t('accurate')}
                 </button>
                 <button
-                  onClick={() => { setFeedbackAccurate(false); handleFeedbackSubmit({ preventDefault: () => {} }); }}
-                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold border border-outline-variant transition-colors cursor-pointer ${
+                  type="button"
+                  disabled={submittingFeedback}
+                  onClick={() => handleFeedbackSubmit(false)}
+                  className={`flex-1 sm:flex-initial px-3.5 py-1.5 rounded-lg text-xs font-bold border border-outline-variant transition-colors cursor-pointer disabled:opacity-50 ${
                     feedbackAccurate === false ? 'bg-error text-on-error border-error' : 'bg-surface hover:bg-surface-variant text-on-surface'
                   }`}
                 >
@@ -412,9 +551,7 @@ export const DetectionReportCard = ({ detection }) => {
             )}
           </div>
         </div>
-
       </div>
-
     </div>
   );
 };

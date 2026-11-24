@@ -12,3 +12,7 @@ class DashboardStatsOut(BaseModel):
     severity_dist: Optional[Dict[str, int]] = {}
     monthly_trends: Optional[List[Dict[str, Any]]] = []
     location_breakdown: Optional[List[Dict[str, Any]]] = []
+    crop_health_summary: Optional[List[Dict[str, Any]]] = []
+    daily_health_trend: Optional[List[Dict[str, Any]]] = []
+    overall_health_score: Optional[int] = 100
+    unread_alerts_count: Optional[int] = 0

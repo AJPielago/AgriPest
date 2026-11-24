@@ -1,9 +1,13 @@
+import os
+from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from sqlalchemy import desc
+from sqlalchemy import desc, or_
 
+from app.core.config import settings
 from app.core.db import get_db
+from app.core.rate_limiter import detection_limiter
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.detection import Detection
@@ -11,10 +15,25 @@ from app.models.crop import Crop
 from app.models.pest import Pest
 from app.models.audit_log import AuditLog
 from app.schemas.detection import DetectionOut, DetectionListOut, DetectionFeedbackIn
-from app.services.storage import validate_and_save_upload
+from app.services.storage import validate_and_save_upload, validate_upload_in_memory
 from app.services.detection.factory import get_detection_service
 
 router = APIRouter()
+
+
+def _remove_uploaded_file(image_url: str) -> None:
+    """Deletes a temporary or rejected uploaded file from UPLOAD_DIR."""
+    prefix = "/static/uploads/"
+    if not image_url or not image_url.startswith(prefix):
+        return
+    rel = image_url[len(prefix):].lstrip("/\\")
+    disk_path = os.path.join(settings.UPLOAD_DIR, rel)
+    try:
+        if os.path.exists(disk_path):
+            os.remove(disk_path)
+    except OSError:
+        pass
+
 
 @router.post("/live-check")
 async def live_check_frame(
@@ -25,22 +44,27 @@ async def live_check_frame(
 ):
     """
     Rapid Live Camera Pre-screening Endpoint.
-    Evaluates sampled camera video frame and returns recognition status and auto-trigger flag.
+    Evaluates sampled camera video frame purely in memory (zero temp disk writes)
+    and returns recognition status and auto-trigger flag.
     """
-    image_url = validate_and_save_upload(file)
+    pil_image = validate_upload_in_memory(file)
     detection_service = get_detection_service()
     result = await detection_service.check_live_frame(
-        image_path=image_url,
+        image_path=None,
         crop_id=crop_id,
-        db=db
+        db=db,
+        image_obj=pil_image,
     )
+
     conf = result.get("confidence", 0.0)
-    auto_trigger = result.get("crop_recognized", False) and (conf >= 0.80)
+    auto_trigger = result.get("crop_recognized", False) and (conf >= 0.70)
     
     return {
         "detected": result.get("detected", False),
         "crop_recognized": result.get("crop_recognized", False),
         "pest_detected": result.get("pest_detected", False),
+        "disease_detected": result.get("disease_detected", False),
+        "detection_type": result.get("detection_type", "rejected"),
         "confidence": conf,
         "auto_trigger": auto_trigger,
         "bounding_boxes": result.get("bounding_boxes", []),
@@ -51,10 +75,13 @@ async def live_check_frame(
 
 @router.post("", response_model=DetectionOut, status_code=status.HTTP_201_CREATED)
 async def detect_pest(
+    request: Request,
     file: UploadFile = File(...),
     crop_id: Optional[int] = Form(None),
     weather_condition: Optional[str] = Form(None),
     field_location: Optional[str] = Form(None),
+    latitude: Optional[float] = Form(None),
+    longitude: Optional[float] = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -63,6 +90,8 @@ async def detect_pest(
     Accepts image, optional crop host, weather, and field location tags.
     Executes active detection engine and logs detection audit record.
     """
+    detection_limiter.check_and_record(request)
+
     # 1. Secure file upload & validation
     image_url = validate_and_save_upload(file)
 
@@ -73,6 +102,17 @@ async def detect_pest(
         crop_id=crop_id,
         db=db
     )
+
+    # 2b. Reject unclassified / non-crop images instead of saving a guessed diagnosis
+    if result.get("rejected"):
+        _remove_uploaded_file(image_url)
+        raise HTTPException(
+            status_code=result.get("http_status", status.HTTP_422_UNPROCESSABLE_ENTITY),
+            detail=result.get(
+                "rejection_reason",
+                "Unrecognized specimen. Please scan a clear close-up of Lettuce, Bok Choy, Mustard Greens, or a known pest/disease."
+            )
+        )
 
     # 3. Create database record with metadata
     detection_record = Detection(
@@ -94,6 +134,9 @@ async def detect_pest(
         disease_details=result.get("disease_details", {}),
         weather_condition=weather_condition,
         field_location=field_location,
+        latitude=latitude,
+        longitude=longitude,
+        is_acknowledged=False,
         status="completed"
     )
 
@@ -103,7 +146,11 @@ async def detect_pest(
     audit = AuditLog(
         user_id=current_user.id,
         action="DETECTION_RUN",
-        details=f"Ran detection: Pest={detection_record.detected_pest_name} ({int(detection_record.confidence_score * 100)}%), Disease={detection_record.detected_disease_name or 'None'} ({int((detection_record.disease_confidence_score or 0) * 100)}%)"
+        details=(
+            f"Ran detection ({detection_record.detection_type}): "
+            f"Pest={detection_record.detected_pest_name} ({int(detection_record.confidence_score * 100)}%), "
+            f"Disease={detection_record.detected_disease_name or 'None'} ({int((detection_record.disease_confidence_score or 0) * 100)}%)"
+        )
     )
     db.add(audit)
 
@@ -170,15 +217,52 @@ def submit_detection_feedback(
 
     return _enrich_detection_out(rec)
 
+@router.get("/notifications/unread-count")
+def get_unread_notification_count(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Returns count of unacknowledged High/Critical detection alerts for the current user."""
+    query = db.query(Detection).filter(
+        Detection.severity.in_(["High", "Critical"]),
+        or_(Detection.is_acknowledged == False, Detection.is_acknowledged.is_(None)),
+    )
+    is_admin = getattr(current_user, "role", None) and getattr(current_user.role, "name", "") == "admin"
+    if not is_admin:
+        query = query.filter(Detection.user_id == current_user.id)
+    return {"unread_count": query.count()}
+
+
+@router.post("/notifications/mark-read")
+def mark_notifications_read(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Persists notification read state across sessions."""
+    query = db.query(Detection).filter(
+        or_(Detection.is_acknowledged == False, Detection.is_acknowledged.is_(None))
+    )
+    is_admin = getattr(current_user, "role", None) and getattr(current_user.role, "name", "") == "admin"
+    if not is_admin:
+        query = query.filter(Detection.user_id == current_user.id)
+    updated = query.update({Detection.is_acknowledged: True}, synchronize_session=False)
+    db.commit()
+    return {"updated": updated, "unread_count": 0}
+
+
 @router.get("", response_model=DetectionListOut)
 def list_detection_history(
-    skip: int = 0,
-    limit: int = 50,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     crop_id: Optional[int] = None,
+    severity: Optional[str] = None,
+    search: Optional[str] = None,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Retrieve detection records (Administrators see all farm detections; farmers see their own)."""
+    """Retrieve detection records with optional server-side filtering and pagination."""
     query = db.query(Detection)
     
     # Non-admin users only see their own detections
@@ -188,6 +272,33 @@ def list_detection_history(
 
     if crop_id:
         query = query.filter(Detection.crop_id == crop_id)
+
+    if severity:
+        query = query.filter(Detection.severity.ilike(severity.strip()))
+
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
+        query = query.filter(
+            or_(
+                Detection.detected_pest_name.ilike(pattern),
+                Detection.detected_disease_name.ilike(pattern),
+                Detection.field_location.ilike(pattern),
+            )
+        )
+
+    if from_date:
+        try:
+            dt_from = datetime.fromisoformat(from_date)
+            query = query.filter(Detection.created_at >= dt_from)
+        except ValueError:
+            pass
+
+    if to_date:
+        try:
+            dt_to = datetime.fromisoformat(to_date)
+            query = query.filter(Detection.created_at <= dt_to)
+        except ValueError:
+            pass
     
     total = query.count()
     records = query.order_by(desc(Detection.created_at)).offset(skip).limit(limit).all()
@@ -224,6 +335,13 @@ def delete_detection(
     if rec.user_id != current_user.id and current_user.role.name != "admin":
         raise HTTPException(status_code=403, detail="Not authorized to delete this record.")
 
+    image_path = rec.image_path
     db.delete(rec)
+    db.add(AuditLog(
+        user_id=current_user.id,
+        action="DETECTION_DELETED",
+        details=f"Deleted Detection #{detection_id}",
+    ))
     db.commit()
+    _remove_uploaded_file(image_path)
     return {"detail": "Detection history entry deleted successfully."}

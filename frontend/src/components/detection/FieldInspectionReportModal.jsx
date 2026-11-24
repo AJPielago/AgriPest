@@ -6,6 +6,7 @@ import { BoundingBoxOverlay } from './BoundingBoxOverlay';
 import { SignaturePad } from '../ui/SignaturePad';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
+import { getDetectionSummary } from '../../utils/detectionUtils';
 
 export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
   const { lang, t } = useLanguage();
@@ -40,7 +41,8 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
     disease_recommended_action,
   } = detection;
 
-  const confPercent = Math.round((confidence_score || 0) * 100);
+  const { isHealthy, hasPest, hasDisease, primaryTitle, primaryConfidence } = getDetectionSummary(detection);
+  const confPercent = Math.round((primaryConfidence || confidence_score || 0) * 100);
   const diseaseConfPercent = disease_confidence_score ? Math.round(disease_confidence_score * 100) : null;
 
   const formattedDate = created_at 
@@ -184,37 +186,57 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
 
             {/* Right Column: Diagnostic Findings & Evaluation */}
             <div className="md:col-span-7 space-y-3 text-xs">
-              
-              {/* Species Box - Pest */}
-              <div className="p-3 bg-emerald-50/70 border border-emerald-900 rounded-sm space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                    {detected_pest_name}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded border border-emerald-700 font-mono font-bold text-[10px] uppercase bg-emerald-100 text-emerald-900">
-                      {confPercent}%
+
+              {/* Healthy Crop Box (When no pest and no disease detected) */}
+              {isHealthy && (
+                <div className="p-3 bg-teal-50/70 border border-teal-900 rounded-sm space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-teal-600"></span>
+                      {primaryTitle}
                     </span>
-                    <span className="px-2 py-0.5 rounded border border-slate-900 font-mono font-bold text-xs uppercase bg-white">
-                      {t('severity')}: {severity}
+                    <span className="px-2 py-0.5 rounded border border-teal-800 font-mono font-bold text-xs uppercase bg-white">
+                      {lang === 'tl' ? 'MALUSOG' : 'HEALTHY'} ({confPercent}%)
                     </span>
                   </div>
+                  <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-teal-200">
+                    {pest_description || (lang === 'tl' ? 'Walang natukoy na peste o sakit sa dahon.' : 'No active insect pest or foliar plant disease detected.')}
+                  </p>
                 </div>
-                {scientific_name && (
-                  <p className="text-xs text-slate-700 italic font-mono font-bold">
-                    {lang === 'tl' ? 'Siyentipikong Pangalan:' : 'Scientific Name:'} {scientific_name}
-                  </p>
-                )}
-                {pest_description && (
-                  <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-emerald-200">
-                    {pest_description}
-                  </p>
-                )}
-              </div>
+              )}
 
-              {/* Plant Disease Box (If detected) */}
-              {detected_disease_name && (
+              {/* Species Box - Pest (Only when a pest was actually detected) */}
+              {hasPest && (
+                <div className="p-3 bg-emerald-50/70 border border-emerald-900 rounded-sm space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+                      {detected_pest_name}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 rounded border border-emerald-700 font-mono font-bold text-[10px] uppercase bg-emerald-100 text-emerald-900">
+                        {Math.round((confidence_score || 0) * 100)}%
+                      </span>
+                      <span className="px-2 py-0.5 rounded border border-slate-900 font-mono font-bold text-xs uppercase bg-white">
+                        {t('severity')}: {severity}
+                      </span>
+                    </div>
+                  </div>
+                  {scientific_name && (
+                    <p className="text-xs text-slate-700 italic font-mono font-bold">
+                      {lang === 'tl' ? 'Siyentipikong Pangalan:' : 'Scientific Name:'} {scientific_name}
+                    </p>
+                  )}
+                  {pest_description && (
+                    <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-emerald-200">
+                      {pest_description}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Plant Disease Box (Only when a disease was actually detected) */}
+              {hasDisease && detected_disease_name && (
                 <div className="p-3 bg-amber-50/70 border border-amber-900 rounded-sm space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
@@ -275,26 +297,38 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
               {lang === 'tl' ? 'Inirerekomendang Aksyon at Paraan ng Pagsugpo (IPM & IDM):' : 'Recommended Action / Integrated Pest & Disease Protocols (IPM/IDM):'}
             </span>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {/* IPM Protocol */}
-              <div className="p-3 bg-emerald-50/50 border-2 border-emerald-900 rounded-sm text-xs text-slate-950 space-y-1">
-                <span className="font-mono font-bold text-[10px] uppercase text-emerald-950 block">
-                  {lang === 'tl' ? 'Protokol sa Peste (IPM):' : 'Pest Management Protocol (IPM):'}
-                </span>
-                <p className="leading-relaxed font-bold">
-                  {recommended_action}
-                </p>
-              </div>
+            <div className={`grid grid-cols-1 ${hasPest && hasDisease ? 'md:grid-cols-2' : ''} gap-3`}>
+              {/* Healthy Preventive Care */}
+              {isHealthy && (
+                <div className="p-3 bg-teal-50/50 border-2 border-teal-900 rounded-sm text-xs text-slate-950 space-y-1">
+                  <span className="font-mono font-bold text-[10px] uppercase text-teal-950 block">
+                    {lang === 'tl' ? 'Gabay sa Pangangalaga ng Pananim:' : 'Preventive Crop Maintenance:'}
+                  </span>
+                  <p className="leading-relaxed font-bold">{recommended_action}</p>
+                </div>
+              )}
 
-              {/* IDM Protocol */}
-              <div className="p-3 bg-amber-50/50 border-2 border-amber-900 rounded-sm text-xs text-slate-950 space-y-1">
-                <span className="font-mono font-bold text-[10px] uppercase text-amber-950 block">
-                  {lang === 'tl' ? 'Protokol sa Sakit (IDM):' : 'Disease Management Protocol (IDM):'}
-                </span>
-                <p className="leading-relaxed font-bold">
-                  {disease_recommended_action || (lang === 'tl' ? 'Isagawa ang sanitation at tanggalin ang apektadong dahon.' : 'Isolate infected foliage and maintain proper canopy aeration.')}
-                </p>
-              </div>
+              {/* IPM Protocol (Only if pest detected) */}
+              {hasPest && (
+                <div className="p-3 bg-emerald-50/50 border-2 border-emerald-900 rounded-sm text-xs text-slate-950 space-y-1">
+                  <span className="font-mono font-bold text-[10px] uppercase text-emerald-950 block">
+                    {lang === 'tl' ? 'Protokol sa Peste (IPM):' : 'Pest Management Protocol (IPM):'}
+                  </span>
+                  <p className="leading-relaxed font-bold">{recommended_action}</p>
+                </div>
+              )}
+
+              {/* IDM Protocol (Only if disease detected) */}
+              {hasDisease && (
+                <div className="p-3 bg-amber-50/50 border-2 border-amber-900 rounded-sm text-xs text-slate-950 space-y-1">
+                  <span className="font-mono font-bold text-[10px] uppercase text-amber-950 block">
+                    {lang === 'tl' ? 'Protokol sa Sakit (IDM):' : 'Disease Management Protocol (IDM):'}
+                  </span>
+                  <p className="leading-relaxed font-bold">
+                    {disease_recommended_action || recommended_action}
+                  </p>
+                </div>
+              )}
             </div>
 
             <p className="text-[11px] text-slate-600 font-medium italic pt-1 border-t border-slate-300">

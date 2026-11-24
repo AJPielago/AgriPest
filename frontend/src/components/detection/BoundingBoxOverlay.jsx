@@ -14,7 +14,6 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
 
       {/* Render Object Detection Bounding Box Overlays */}
       {boundingBoxes && boundingBoxes.length > 0 && boundingBoxes.map((box, index) => {
-        // Calculate percentages
         let left = 0;
         let top = 0;
         let width = 0;
@@ -32,9 +31,21 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
           height = `${(box.height / 640) * 100}%`;
         }
 
-        const isDisease = box.type === 'disease' || (box.label && box.label.toLowerCase().includes('disease'));
-        const borderColor = isDisease ? 'border-amber-500 bg-amber-500/15' : 'border-emerald-500 bg-emerald-500/15';
-        const badgeBg = isDisease ? 'bg-amber-600 text-white' : 'bg-emerald-700 text-white';
+        const boxType = (box.type || '').toLowerCase();
+        const isDisease = boxType === 'disease' || (box.label && box.label.toLowerCase().includes('disease'));
+        const isHealthy = boxType === 'healthy' || (box.label && box.label.toLowerCase().includes('healthy'));
+
+        const borderColor = isDisease
+          ? 'border-amber-500 bg-amber-500/15'
+          : isHealthy
+            ? 'border-teal-500 bg-teal-500/15'
+            : 'border-rose-500 bg-rose-500/15';
+        const badgeBg = isDisease
+          ? 'bg-amber-600 text-white'
+          : isHealthy
+            ? 'bg-teal-700 text-white'
+            : 'bg-rose-600 text-white';
+        const iconName = isDisease ? 'coronavirus' : isHealthy ? 'eco' : 'bug_report';
 
         return (
           <div
@@ -43,10 +54,8 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
             className={`absolute border-2 ${borderColor} rounded-xs transition-all pointer-events-none`}
           >
             <div className={`absolute -top-6 left-0 ${badgeBg} text-[10px] font-bold px-1.5 py-0.5 rounded-xs shadow-sm whitespace-nowrap flex items-center gap-1`}>
-              <span className="material-symbols-outlined text-[11px]">
-                {isDisease ? 'coronavirus' : 'bug_report'}
-              </span>
-              <span>{box.label || (isDisease ? 'Disease Lesion' : 'Pest Specimen')}</span>
+              <span className="material-symbols-outlined text-[11px]">{iconName}</span>
+              <span>{box.label || (isDisease ? 'Disease Lesion' : isHealthy ? 'Healthy Crop' : 'Pest Specimen')}</span>
               {box.confidence && <span>({Math.round(box.confidence * 100)}%)</span>}
             </div>
           </div>

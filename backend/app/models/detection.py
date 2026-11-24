@@ -33,6 +33,11 @@ class Detection(Base):
     # Domain Context & Environmental Metadata
     weather_condition = Column(String(100), nullable=True)  # Sunny, Rainy, Humid, Overcast, etc.
     field_location = Column(String(255), nullable=True)     # Barangay / Field ID / Farm Location
+    latitude = Column(Float, nullable=True)
+    longitude = Column(Float, nullable=True)
+
+    # Notification read state
+    is_acknowledged = Column(Boolean, nullable=False, default=False)
 
     # Farmer Feedback Loop (Ground Truth for Model Retraining)
     feedback_accurate = Column(Boolean, nullable=True)     # True = Correct, False = Incorrect

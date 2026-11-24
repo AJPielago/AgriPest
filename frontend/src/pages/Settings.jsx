@@ -19,7 +19,7 @@ export const Settings = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -47,7 +47,7 @@ export const Settings = () => {
 
       {/* Settings Bento Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Account Settings Card */}
         <div className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant dark:border-outline rounded-xl p-5 shadow-sm space-y-4">
           <div className="border-b border-outline-variant/60 pb-3">
@@ -212,28 +212,28 @@ export const Settings = () => {
               <span className="font-bold text-primary dark:text-primary-fixed">Web Speech API</span>
             </div>
 
-            <div className="pt-2 flex flex-col gap-2">
-              <a
-                href="https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-fixed text-center font-bold flex items-center justify-center gap-2 border border-primary/30 transition-colors shadow-xs"
-              >
-                <span className="material-symbols-outlined text-[18px]">install_mobile</span>
-                <span>{lang === 'tl' ? 'I-install ang Mobile App (Google Drive APK)' : 'Install Mobile App (Google Drive APK)'}</span>
-              </a>
-              <Link
-                to="/history"
-                className="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface text-center font-bold block border border-outline-variant transition-colors"
-              >
-                {t('detectionRecords')}
-              </Link>
+              <div className="pt-2 flex flex-col gap-2">
+                <a
+                  href="https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-primary-fixed text-center font-bold flex items-center justify-center gap-2 border border-primary/30 transition-colors shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-[18px]">install_mobile</span>
+                  <span>{lang === 'tl' ? 'I-install ang Mobile App (Google Drive APK)' : 'Install Mobile App (Google Drive APK)'}</span>
+                </a>
+                <Link
+                  to="/history"
+                  className="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface text-center font-bold block border border-outline-variant transition-colors"
+                >
+                  {t('detectionRecords')}
+                </Link>
+              </div>
             </div>
           </div>
+
         </div>
 
       </div>
-
-    </div>
-  );
+      );
 };

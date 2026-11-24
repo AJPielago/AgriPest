@@ -17,15 +17,16 @@ import com.google.android.material.navigation.NavigationView;
 
 public class NavigationDrawerHelper {
 
-    public static void setupDrawer(final Activity activity, final DrawerLayout drawerLayout, Toolbar toolbar, int activeMenuItemId) {
-        if (drawerLayout == null || toolbar == null) return;
+    public static void setupDrawer(final Activity activity, final DrawerLayout drawerLayout, Toolbar toolbar,
+            int activeMenuItemId) {
+        if (drawerLayout == null || toolbar == null)
+            return;
 
         final SessionManager sessionManager = new SessionManager(activity);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 activity, drawerLayout, toolbar,
-                R.string.navigation_drawer_open, R.string.navigation_drawer_close
-        );
+                R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -69,7 +70,8 @@ public class NavigationDrawerHelper {
                 int id = item.getItemId();
                 drawerLayout.closeDrawer(GravityCompat.START);
 
-                if (id == activeMenuItemId) return true;
+                if (id == activeMenuItemId)
+                    return true;
 
                 if (id == R.id.nav_dashboard) {
                     activity.startActivity(new Intent(activity, MainActivity.class));
@@ -92,14 +94,16 @@ public class NavigationDrawerHelper {
                 } else if (id == R.id.nav_settings) {
                     activity.startActivity(new Intent(activity, SettingsActivity.class));
                 } else if (id == R.id.nav_install_app) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"));
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri
+                            .parse("https://drive.google.com/drive/folders/1yNTXrAt92d6L1nB0SQVe8zG-OukoPrbH"));
                     activity.startActivity(browserIntent);
                     return false;
                 } else if (id == R.id.nav_admin_dashboard) {
                     activity.startActivity(new Intent(activity, AdminDashboardActivity.class));
                 } else if (id == R.id.nav_logout) {
                     sessionManager.clearSession();
-                    Toast.makeText(activity, activity.getString(R.string.logged_out_success), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, activity.getString(R.string.logged_out_success), Toast.LENGTH_SHORT)
+                            .show();
                     Intent intent = new Intent(activity, LoginActivity.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     activity.startActivity(intent);

@@ -41,10 +41,16 @@ def test_get_disease_detail():
     assert disease["id"] == first_id
     assert "symptoms" in disease
 
-def test_mock_detection_always_includes_disease():
+from app.core.config import settings
+from app.core.rate_limiter import detection_limiter
+
+def test_mock_detection_returns_logical_single_or_dual_outcome(monkeypatch):
+    monkeypatch.setattr(settings, "DETECTION_MODE", "mock")
+    detection_limiter.clear_all()
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
 
+    # 1. Valid leafy-green-colored image should produce one of the 4 logical states
     img = Image.new("RGB", (200, 200), color="green")
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format="JPEG")
@@ -57,24 +63,38 @@ def test_mock_detection_always_includes_disease():
     assert detect_resp.status_code == 201
     det = detect_resp.json()
 
-    # Pest fields
-    assert "detected_pest_name" in det
-    assert det["detected_pest_name"] is not None
+    assert det["detection_type"] in {"healthy", "pest", "disease", "pest_and_disease"}
+    assert det["confidence_score"] > 0.0
+    assert len(det.get("bounding_boxes", [])) >= 1
 
-    # Disease fields (Always included alongside pest detection)
-    assert "detected_disease_name" in det
-    assert det["detected_disease_name"] is not None
-    assert "disease_confidence_score" in det
-    assert det["disease_confidence_score"] > 0.0
-    assert "disease_severity" in det
-    assert det["disease_recommended_action"] is not None
+    if det["detection_type"] == "healthy":
+        assert det["pest_id"] is None
+        assert det["detected_disease_name"] is None
+    elif det["detection_type"] == "pest":
+        assert det["detected_disease_name"] is None
+    elif det["detection_type"] == "disease":
+        assert det["pest_id"] is None
+        assert det["detected_pest_name"] == "No Pest Detected"
+        assert det["detected_disease_name"] is not None
+        assert det["disease_confidence_score"] > 0.0
+    else:
+        assert det["detected_pest_name"] is not None
+        assert det["detected_disease_name"] is not None
 
-    # Bounding boxes should contain both pest and disease boxes
-    boxes = det.get("bounding_boxes", [])
-    assert len(boxes) >= 2
-    types = [b.get("type") for b in boxes]
-    assert "pest" in types
-    assert "disease" in types
+    # Clean up test record
+    client.delete(f"/api/v1/detections/{det['id']}", headers=headers)
+
+    # 2. Pure black / non-leafy image must be rejected even in mock mode
+    black_img = Image.new("RGB", (200, 200), color=(0, 0, 0))
+    black_buf = BytesIO()
+    black_img.save(black_buf, format="JPEG")
+    rej_resp = client.post(
+        "/api/v1/detections/detect",
+        headers=headers,
+        files={"file": ("black.jpg", black_buf.getvalue(), "image/jpeg")},
+        data={"crop_id": 1},
+    )
+    assert rej_resp.status_code == 422
 
 def test_admin_create_and_manage_disease():
     admin_token = get_auth_token("admin@pestdetect.com", "admin123")

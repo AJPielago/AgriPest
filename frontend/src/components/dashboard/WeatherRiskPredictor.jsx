@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CloudSun, Thermometer, Wind, RefreshCw, MapPin } from 'lucide-react';
+import { Thermometer, Wind, Droplets, RefreshCw, MapPin } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Badge } from '../ui/Badge';
 
@@ -14,19 +14,28 @@ export const WeatherRiskPredictor = () => {
   const { lang } = useLanguage();
   const [selectedRegion, setSelectedRegion] = useState(PH_REGIONS[0]);
   const [weatherData, setWeatherData] = useState(null);
+  const [isFallback, setIsFallback] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchLiveWeather = async (region) => {
     setLoading(true);
+    setIsFallback(false);
     try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&current_weather=true`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${region.lat}&longitude=${region.lon}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`;
       const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setWeatherData(data.current_weather);
+      const cur = data.current || {};
+      setWeatherData({
+        temperature: cur.temperature_2m ?? 28.0,
+        humidity: cur.relative_humidity_2m ?? 78,
+        windspeed: cur.wind_speed_10m ?? 12.0,
+        weathercode: cur.weather_code ?? 2,
+      });
     } catch (err) {
       console.error("Error fetching live PH weather:", err);
-      // Fallback fallback default
-      setWeatherData({ temperature: 28.5, windspeed: 14.0, weathercode: 2 });
+      setIsFallback(true);
+      setWeatherData({ temperature: 28.5, humidity: 80, windspeed: 14.0, weathercode: 2 });
     } finally {
       setLoading(false);
     }
@@ -36,51 +45,52 @@ export const WeatherRiskPredictor = () => {
     fetchLiveWeather(selectedRegion);
   }, [selectedRegion]);
 
-  const calculatePestRisk = (currentWeather) => {
+  const calculatePestRisk = (currentWeather, regionName) => {
     if (!currentWeather) return { threat: 'Analyzing PH Weather...', riskLevel: 50, severity: 'Moderate', advisory: '' };
 
-    const temp = currentWeather.temperature || 28;
-    const code = currentWeather.weathercode || 0;
+    const temp = currentWeather.temperature ?? 28;
+    const humidity = currentWeather.humidity ?? 75;
+    const code = currentWeather.weathercode ?? 0;
 
-    // Rainy (codes 51-99)
-    if (code >= 51) {
+    // Rainy or very high humidity (>85%): high fungal/bacterial blight risk for leafy greens
+    if (code >= 51 || humidity >= 85) {
+      const risk = Math.min(92, Math.round(50 + humidity * 0.45));
       return {
-        conditionLabel: lang === 'tl' ? 'Maulan / Basa' : 'Rainy / Wet',
-        threat: lang === 'tl' ? 'Uod na Harabas sa Palay at Mais (Fall Armyworm)' : 'Fall Armyworm (Spodoptera frugiperda)',
-        riskLevel: Math.min(88, Math.round(temp * 2.8)),
+        conditionLabel: lang === 'tl' ? 'Maulan / Mataas na Halumigmig' : 'Wet / High Humidity',
+        threat: lang === 'tl' ? 'Downy Mildew at Bacterial Soft Rot (Litsugas at Petsay)' : 'Downy Mildew & Bacterial Soft Rot (Lettuce & Bok Choy)',
+        riskLevel: risk,
         severity: 'Critical',
         advisory: lang === 'tl'
-          ? 'May pag-ulan sa paanan ng Mt. Banahaw. Ang basang dahon ay madaling pamugaran ng peste. Suriin ang taniman ng litsugas at brassicas. Mag-spray ng FPJ at Bacillus thuringiensis (Bt).'
-          : 'Active rainfall detected in Mt. Banahaw foothills microclimate. Wet foliage promotes larval hatch. Inspect organic lettuce and brassica canopies. Apply biological Bt and FPJ.'
+          ? `Mataas ang halumigmig (${humidity}%) sa ${regionName}. Ang basang dahon ay mabilis kapitan ng Downy Mildew at Soft Rot sa litsugas at petsay. Iwasan ang overhead watering at maglagay ng Trichoderma bio-fungicide.`
+          : `Wet or high-humidity conditions (${humidity}% RH) in ${regionName} strongly favor Downy Mildew and Bacterial Soft Rot on Lettuce, Bok Choy, and Mustard Greens. Switch to morning drip irrigation and apply preventative bio-fungicide.`
       };
     }
-    // Warm / Sunny (codes 0-1 & temp > 30)
-    else if (temp >= 30) {
+    // Warm / Sunny (>= 30°C): fast insect reproduction for crucifer/leafy pests
+    if (temp >= 30) {
+      const risk = Math.min(86, Math.round(temp * 2.5));
       return {
-        conditionLabel: lang === 'tl' ? 'Mainit / Maaraw' : 'Hot & Sunny',
-        threat: lang === 'tl' ? 'Uod ng Repolyo at Gulay (Diamondback Moth)' : 'Diamondback Moth (Plutella xylostella)',
-        riskLevel: Math.min(82, Math.round(temp * 2.5)),
+        conditionLabel: lang === 'tl' ? 'Mainit / Maaraw' : 'Hot & Dry',
+        threat: lang === 'tl' ? 'Diamondback Moth at Striped Flea Beetle (Petsay at Mustasa)' : 'Diamondback Moth & Striped Flea Beetle (Brassicas)',
+        riskLevel: risk,
         severity: 'High',
         advisory: lang === 'tl'
-          ? `Mataas ang temperatura sa Majayjay (${temp}°C). Mabilis magparami ang mga peste sa gulayan. Mag-spray ng neem oil o magpakawala ng parasitoid biological controls.`
-          : `High ambient temperature in Majayjay (${temp}°C). Accelerates pest reproduction in organic brassicas. Apply cold-pressed neem oil or release Trichogramma.`
+          ? `Mataas ang temperatura (${temp}°C) sa ${regionName}. Mabilis dumami ang Diamondback Moth at Flea Beetle sa petsay at mustasa. Mag-install ng 32-mesh net at mag-spray ng Bacillus thuringiensis (Bt) sa dapithapon.`
+          : `Warm temperatures (${temp}°C) in ${regionName} accelerate Diamondback Moth and Striped Flea Beetle cycles in Bok Choy and Mustard Greens. Check undersides of leaves and apply Bt kurstaki or neem oil at dusk.`
       };
     }
-    // Humid / Overcast / Moderate (codes 2-48)
-    else {
-      return {
-        conditionLabel: lang === 'tl' ? 'Makulimlim / Humid' : 'Humid & Overcast',
-        threat: lang === 'tl' ? 'Amag sa Dahon (Downy Mildew & Blast)' : 'Downy Mildew & Foliar Blight',
-        riskLevel: 75,
-        severity: 'High',
-        advisory: lang === 'tl'
-          ? `Malamig at mahalumigmig sa paanan ng Mt. Banahaw (${temp}°C). Pumapabor sa fungal spores sa hydroponics at gulayan. Panatilihing maayos ang bentilasyon at mag-apply ng Trichoderma.`
-          : `Highland humidity near Mt. Banahaw (${temp}°C). Favorable for foliar fungal spore dispersal in hydroponics. Ensure canopy spacing and apply bio-fungicide (Trichoderma).`
-      };
-    }
+    // Mild / Overcast
+    return {
+      conditionLabel: lang === 'tl' ? 'Katamtaman / Makulimlim' : 'Mild & Overcast',
+      threat: lang === 'tl' ? 'Green Peach Aphid at Serpentine Leafminer' : 'Green Peach Aphid & Serpentine Leafminer',
+      riskLevel: Math.min(74, Math.round(35 + humidity * 0.45)),
+      severity: 'Moderate',
+      advisory: lang === 'tl'
+        ? `Katamtamang klima (${temp}°C, ${humidity}% RH) sa ${regionName}. Bantayan ang ilalim ng dahon ng litsugas at mustasa para sa aphids at leafminers. Gumamit ng yellow sticky traps at insecticidal soap.`
+        : `Moderate conditions (${temp}°C, ${humidity}% RH) in ${regionName} support Green Peach Aphid and Leafminer activity on leafy greens. Maintain yellow sticky traps and inspect new shoots twice weekly.`
+    };
   };
 
-  const riskModel = calculatePestRisk(weatherData);
+  const riskModel = calculatePestRisk(weatherData, selectedRegion.name);
 
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4 shadow-sm space-y-3 transition-colors">
@@ -134,9 +144,18 @@ export const WeatherRiskPredictor = () => {
                   <strong>{weatherData.temperature}°C</strong>
                 </span>
                 <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                  <Droplets className="w-3.5 h-3.5 text-blue-500" />
+                  {weatherData.humidity}% RH
+                </span>
+                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                   <Wind className="w-3.5 h-3.5 text-sky-500" />
                   {weatherData.windspeed} km/h
                 </span>
+                {isFallback && (
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                    ({lang === 'tl' ? 'Offline Estimate' : 'Offline Estimate'})
+                  </span>
+                )}
               </>
             )}
           </div>

@@ -3,6 +3,8 @@ package com.capstone.pestdetection.ui;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -272,7 +274,18 @@ public class DetectActivity extends BaseActivity {
                     startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(DetectActivity.this, getString(R.string.diagnostic_analysis_failed, response.code()), Toast.LENGTH_LONG).show();
+                    String errorMsg = getString(R.string.diagnostic_analysis_failed, response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            String errJson = response.errorBody().string();
+                            org.json.JSONObject obj = new org.json.JSONObject(errJson);
+                            if (obj.has("detail") && !obj.isNull("detail")) {
+                                errorMsg = obj.getString("detail");
+                            }
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    Toast.makeText(DetectActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -285,23 +298,83 @@ public class DetectActivity extends BaseActivity {
     }
 
     private File getFileFromUri(Uri uri) {
-        if ("file".equalsIgnoreCase(uri.getScheme())) {
-            return new File(uri.getPath());
-        }
-
-        try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
-            File tempFile = File.createTempFile("upload_crop_", ".jpg", getCacheDir());
-            try (FileOutputStream out = new FileOutputStream(tempFile)) {
-                byte[] buffer = new byte[1024];
-                int read;
-                while ((read = inputStream.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
+        File sourceFile = null;
+        if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getPath() != null) {
+            sourceFile = new File(uri.getPath());
+        } else {
+            try (InputStream inputStream = getContentResolver().openInputStream(uri)) {
+                if (inputStream == null) return null;
+                File tempFile = File.createTempFile("upload_crop_raw_", ".jpg", getCacheDir());
+                try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = inputStream.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                    }
+                    out.flush();
                 }
-                out.flush();
+                sourceFile = tempFile;
+            } catch (IOException e) {
+                return null;
             }
-            return tempFile;
-        } catch (IOException e) {
-            return null;
+        }
+        return compressImageIfNeeded(sourceFile, 1280, 85);
+    }
+
+    /**
+     * Downscales oversized smartphone photos to <= maxDimension px JPEG to speed up rural uploads
+     * and reduce mobile data usage without sacrificing detection clarity.
+     */
+    private File compressImageIfNeeded(File sourceFile, int maxDimension, int jpegQuality) {
+        if (sourceFile == null || !sourceFile.exists()) return sourceFile;
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(sourceFile.getAbsolutePath(), bounds);
+            int width = bounds.outWidth;
+            int height = bounds.outHeight;
+            if (width <= 0 || height <= 0) return sourceFile;
+
+            if (Math.max(width, height) <= maxDimension && sourceFile.length() <= 800 * 1024) {
+                return sourceFile;
+            }
+
+            int inSampleSize = 1;
+            while ((width / inSampleSize) > maxDimension * 2 || (height / inSampleSize) > maxDimension * 2) {
+                inSampleSize *= 2;
+            }
+
+            BitmapFactory.Options decodeOpts = new BitmapFactory.Options();
+            decodeOpts.inSampleSize = inSampleSize;
+            Bitmap bitmap = BitmapFactory.decodeFile(sourceFile.getAbsolutePath(), decodeOpts);
+            if (bitmap == null) return sourceFile;
+
+            int curW = bitmap.getWidth();
+            int curH = bitmap.getHeight();
+            float scale = Math.min(1.0f, (float) maxDimension / Math.max(curW, curH));
+            Bitmap finalBitmap = bitmap;
+            if (scale < 1.0f) {
+                finalBitmap = Bitmap.createScaledBitmap(
+                        bitmap,
+                        Math.max(1, Math.round(curW * scale)),
+                        Math.max(1, Math.round(curH * scale)),
+                        true
+                );
+                if (finalBitmap != bitmap) {
+                    bitmap.recycle();
+                }
+            }
+
+            File compressedFile = File.createTempFile("upload_crop_opt_", ".jpg", getCacheDir());
+            try (FileOutputStream out = new FileOutputStream(compressedFile)) {
+                finalBitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, out);
+                out.flush();
+            } finally {
+                finalBitmap.recycle();
+            }
+            return compressedFile.length() < sourceFile.length() ? compressedFile : sourceFile;
+        } catch (Exception e) {
+            return sourceFile;
         }
     }
 

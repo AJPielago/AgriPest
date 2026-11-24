@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { LiveCameraScanner } from './LiveCameraScanner';
-import { saveOfflineScan } from '../../utils/offlineQueue';
+import { saveOfflineScan, getOfflineQueue, syncOfflineQueue, OFFLINE_QUEUE_EVENT } from '../../utils/offlineQueue';
+import { compressAndInspectImage } from '../../utils/imageUtils';
+import { detectionService } from '../../services/detectionService';
 import { Alert } from '../ui/Alert';
 
 export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
@@ -10,14 +12,60 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
   const [selectedCropId, setSelectedCropId] = useState('');
   const [weatherCondition, setWeatherCondition] = useState('Sunny');
   const [fieldLocation, setFieldLocation] = useState('');
+  const [coords, setCoords] = useState(null);
+  const [locatingGps, setLocatingGps] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [qualityWarning, setQualityWarning] = useState(null);
   const [error, setError] = useState(null);
   const [offlineQueued, setOfflineQueued] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [syncingQueue, setSyncingQueue] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (file) => {
+  useEffect(() => {
+    const refreshQueueCount = async () => {
+      const q = await getOfflineQueue();
+      setPendingCount(q.length);
+    };
+    refreshQueueCount();
+    window.addEventListener(OFFLINE_QUEUE_EVENT, refreshQueueCount);
+    return () => window.removeEventListener(OFFLINE_QUEUE_EVENT, refreshQueueCount);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const handleLocateGps = () => {
+    if (!('geolocation' in navigator)) {
+      setError(lang === 'tl' ? 'Hindi suportado ang GPS sa browser na ito.' : 'GPS geolocation is not supported in this browser.');
+      return;
+    }
+    setLocatingGps(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = Number(pos.coords.latitude.toFixed(5));
+        const lon = Number(pos.coords.longitude.toFixed(5));
+        setCoords({ latitude: lat, longitude: lon });
+        if (!fieldLocation.trim()) {
+          setFieldLocation(`GPS (${lat}, ${lon})`);
+        }
+        setLocatingGps(false);
+      },
+      () => {
+        setError(lang === 'tl' ? 'Hindi makuha ang lokasyon ng GPS. Pakisuri ang pahintulot.' : 'Unable to retrieve GPS location. Please check location permission.');
+        setLocatingGps(false);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  const handleFileChange = async (file) => {
     setError(null);
+    setQualityWarning(null);
     if (!file) return;
 
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
@@ -31,9 +79,23 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
       return;
     }
 
-    setSelectedFile(file);
-    const url = URL.createObjectURL(file);
-    setPreviewUrl(url);
+    const { file: optimizedFile, qualityReport } = await compressAndInspectImage(file);
+    if (qualityReport?.isDark) {
+      setQualityWarning(lang === 'tl'
+        ? 'Medyo madilim ang larawan. Gumamit ng mas maliwanag na ilaw para sa mas malinaw na resulta.'
+        : 'Photo appears dark. Brighter natural lighting will improve leaf visibility.');
+    } else if (qualityReport?.isBlurry) {
+      setQualityWarning(lang === 'tl'
+        ? 'Medyo malabo ang larawan. Subukang patatagin ang kamera at lumapit nang bahagya.'
+        : 'Photo looks slightly blurry. Hold steady and refocus closer to the leaf if possible.');
+    }
+
+    setSelectedFile(optimizedFile);
+    const url = URL.createObjectURL(optimizedFile);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return url;
+    });
   };
 
   const handleLiveCapturedFile = (capturedFile) => {
@@ -49,14 +111,26 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
 
   const handleReset = () => {
     setSelectedFile(null);
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
+    setPreviewUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setQualityWarning(null);
     setError(null);
     setOfflineQueued(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = (e) => {
+  const handleManualSync = async () => {
+    setSyncingQueue(true);
+    try {
+      await syncOfflineQueue(detectionService.detectPest);
+    } finally {
+      setSyncingQueue(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!selectedFile) {
       setError(lang === 'tl' ? 'Mangyaring kumuha o pumili ng larawan bago magpadala.' : 'Please capture or select an image before submitting.');
@@ -64,12 +138,16 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
     }
 
     if (!navigator.onLine) {
-      saveOfflineScan(selectedFile, selectedCropId, weatherCondition, fieldLocation);
-      setOfflineQueued(true);
+      try {
+        await saveOfflineScan(selectedFile, selectedCropId, weatherCondition, fieldLocation, coords);
+        setOfflineQueued(true);
+      } catch {
+        setError(lang === 'tl' ? 'Nabigong i-save ang offline scan.' : 'Failed to store scan in offline queue.');
+      }
       return;
     }
 
-    onAnalyze(selectedFile, selectedCropId ? parseInt(selectedCropId) : null, weatherCondition, fieldLocation);
+    onAnalyze(selectedFile, selectedCropId ? parseInt(selectedCropId, 10) : null, weatherCondition, fieldLocation, coords);
   };
 
   return (
@@ -115,9 +193,19 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-              {t('fieldSectorLocation')}
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                {t('fieldSectorLocation')}
+              </label>
+              <button
+                type="button"
+                onClick={handleLocateGps}
+                disabled={loading || locatingGps}
+                className="text-[11px] font-bold text-primary dark:text-primary-fixed hover:underline cursor-pointer disabled:opacity-50"
+              >
+                {locatingGps ? (lang === 'tl' ? 'Hinahanap...' : 'Locating...') : (coords ? 'GPS ✓' : (lang === 'tl' ? 'Gamitin GPS' : 'Use GPS'))}
+              </button>
+            </div>
             <input
               type="text"
               value={fieldLocation}
@@ -131,6 +219,34 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
       </div>
 
       {error && <Alert type="danger">{error}</Alert>}
+
+      {qualityWarning && (
+        <Alert type="warning" title={lang === 'tl' ? 'Paalala sa Kalidad ng Larawan' : 'Image Quality Tip'}>
+          {qualityWarning}
+        </Alert>
+      )}
+
+      {pendingCount > 0 && (
+        <Alert type="info" title={lang === 'tl' ? `May ${pendingCount} Naka-queue na Offline Scan` : `${pendingCount} Offline Scan(s) Pending Sync`}>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span>
+              {lang === 'tl'
+                ? 'Naka-save nang ligtas ang larawan sa device at awtomatikong ipapadala kapag online.'
+                : 'Images are safely stored on your device and will upload automatically when online.'}
+            </span>
+            {navigator.onLine && (
+              <button
+                type="button"
+                onClick={handleManualSync}
+                disabled={syncingQueue}
+                className="px-2.5 py-1 rounded bg-primary text-on-primary text-[11px] font-bold cursor-pointer disabled:opacity-50"
+              >
+                {syncingQueue ? (lang === 'tl' ? 'Nagsi-sync...' : 'Syncing...') : (lang === 'tl' ? 'I-sync Ngayon' : 'Sync Now')}
+              </button>
+            )}
+          </div>
+        </Alert>
+      )}
 
       {offlineQueued && (
         <Alert type="warning" title={lang === 'tl' ? "Naka-save sa Offline Queue" : "Offline Queue Enabled"}>
