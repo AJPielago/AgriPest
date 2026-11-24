@@ -109,3 +109,76 @@ export function getDetectionSummary(detection) {
     conditionAssessment: cond,
   };
 }
+
+/**
+ * Host-crop-specific catalog of detectable pests, plant diseases, and
+ * nutrient/abiotic disorders screened by the system (mirrors backend CLASS_REGISTRY).
+ */
+export function getScreenedTargetsForCrop(cropName, conditionAssessment = null) {
+  const fromBackend = conditionAssessment?.screened_targets;
+  if (fromBackend && Array.isArray(fromBackend.pests) && Array.isArray(fromBackend.diseases)) {
+    return {
+      pests: [...fromBackend.pests],
+      diseases: [...fromBackend.diseases],
+      nutrients: Array.isArray(fromBackend.nutrients) ? [...fromBackend.nutrients] : [],
+    };
+  }
+
+  const lower = (cropName || '').toLowerCase();
+  const isBrassica =
+    lower.includes('bok') ||
+    lower.includes('pechay') ||
+    lower.includes('petsay') ||
+    lower.includes('mustard') ||
+    lower.includes('mustasa');
+
+  return {
+    pests: isBrassica
+      ? [
+          'Diamondback Moth',
+          'Striped Flea Beetle',
+          'Turnip / Mustard Aphid',
+          'Green Peach Aphid',
+          'Cabbage Looper',
+          'Common Cutworm',
+          'Beet Armyworm',
+          'Cabbage Cluster Caterpillar',
+          'Cabbage Webworm',
+          'Serpentine Leafminer',
+          'Silverleaf Whitefly',
+          'Onion / Leaf Thrips',
+        ]
+      : [
+          'Green Peach Aphid',
+          'Cabbage Looper',
+          'Common Cutworm',
+          'Beet Armyworm',
+          'Serpentine Leafminer',
+          'Silverleaf Whitefly',
+          'Onion / Leaf Thrips',
+        ],
+    diseases: isBrassica
+      ? [
+          'Alternaria Leaf Spot of Brassicas',
+          'Black Rot of Brassicas',
+          'Downy Mildew of Brassicas',
+          'White Rust of Crucifers',
+          'Bacterial Soft Rot',
+        ]
+      : [
+          'Downy Mildew of Lettuce',
+          'Powdery Mildew of Lettuce',
+          'Bacterial Soft Rot',
+          'Bottom Rot & Drop of Lettuce',
+          'Septoria Leaf Spot of Lettuce',
+          'Lettuce Mosaic / Viral Infection',
+        ],
+    nutrients: [
+      'Nitrogen (N) Deficiency',
+      'Calcium (Ca) Deficiency / Tipburn',
+      'Potassium (K) Deficiency / Marginal Scorch',
+      'Magnesium (Mg) / Iron (Fe) Interveinal Chlorosis',
+      'Heat / Water / Sunscald Stress (Abiotic)',
+    ],
+  };
+}

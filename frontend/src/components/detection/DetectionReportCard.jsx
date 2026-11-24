@@ -3,7 +3,7 @@ import { BoundingBoxOverlay } from './BoundingBoxOverlay';
 import { FieldInspectionReportModal } from './FieldInspectionReportModal';
 import { useLanguage } from '../../context/LanguageContext';
 import { detectionService } from '../../services/detectionService';
-import { getDetectionSummary } from '../../utils/detectionUtils';
+import { getDetectionSummary, getScreenedTargetsForCrop } from '../../utils/detectionUtils';
 
 export const DetectionReportCard = ({ detection }) => {
   const { lang, t } = useLanguage();
@@ -731,6 +731,146 @@ export const DetectionReportCard = ({ detection }) => {
                   </span>
                 </div>
               )}
+
+              {/* FULL SCREENED PEST, DISEASE & NUTRIENT BREAKDOWN */}
+              {(() => {
+                const screened = getScreenedTargetsForCrop(crop_name, conditionAssessment);
+                const detectedPestLower = hasPest && detected_pest_name ? detected_pest_name.trim().toLowerCase() : '';
+                const detectedDiseaseLower = hasDisease && resolvedDiseaseName ? resolvedDiseaseName.trim().toLowerCase() : '';
+                const detectedNutLower = nutrientInfo?.name ? nutrientInfo.name.trim().toLowerCase() : '';
+                const probableSet = new Set(
+                  probablePests.map((c) => (c?.name || '').trim().toLowerCase()).filter(Boolean)
+                );
+                const pestsList = [...screened.pests];
+                probablePests.forEach((c) => {
+                  if (c?.name && !pestsList.some((p) => p.toLowerCase() === c.name.toLowerCase())) {
+                    pestsList.unshift(c.name);
+                  }
+                });
+
+                return (
+                  <div className="p-3.5 rounded-xl border border-outline-variant dark:border-outline bg-surface-container-low/40 dark:bg-surface-container/60 space-y-3">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-primary block">
+                        {lang === 'tl' ? 'Breakdown ng Peste at Sakit na Sinusuri' : 'Pest & Disease Screening Breakdown'}
+                      </span>
+                      <p className="text-[11px] text-on-surface-variant">
+                        {lang === 'tl'
+                          ? `Sinuri para sa ${crop_name || 'Pananim'}: ${pestsList.length} peste, ${screened.diseases.length} sakit, at ${screened.nutrients.length} kakulangan sa sustansya`
+                          : `Screened for ${crop_name || 'Leafy Green'}: ${pestsList.length} pests, ${screened.diseases.length} plant diseases, and ${screened.nutrients.length} nutrient/abiotic conditions`}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                      {/* Detectable Pests */}
+                      <div className="space-y-1">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant block">
+                          {lang === 'tl' ? `Mga Peste (${pestsList.length})` : `Detectable Pests (${pestsList.length})`}
+                        </span>
+                        <div className="space-y-1">
+                          {pestsList.map((pest) => {
+                            const lower = pest.toLowerCase();
+                            const isMatched = Boolean(detectedPestLower && lower === detectedPestLower);
+                            const isProbable = !isMatched && probableSet.has(lower);
+                            return (
+                              <div
+                                key={pest}
+                                className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md ${
+                                  isMatched
+                                    ? 'bg-rose-500/15 border border-rose-500/30 font-bold text-on-surface dark:text-inverse-on-surface'
+                                    : isProbable
+                                      ? 'bg-orange-500/15 border border-orange-500/30 font-bold text-on-surface dark:text-inverse-on-surface'
+                                      : 'bg-surface-container-lowest/70 dark:bg-slate-900/50 text-on-surface-variant'
+                                }`}
+                              >
+                                <span className="truncate">{pest}</span>
+                                <span
+                                  className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase whitespace-nowrap ${
+                                    isMatched
+                                      ? 'bg-rose-600 text-white'
+                                      : isProbable
+                                        ? 'bg-orange-600 text-white'
+                                        : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
+                                  }`}
+                                >
+                                  {isMatched ? 'Detected' : isProbable ? 'Probable' : 'Clear'}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Detectable Diseases + Nutrients */}
+                      <div className="space-y-2.5">
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant block">
+                            {lang === 'tl' ? `Mga Sakit (${screened.diseases.length})` : `Detectable Diseases (${screened.diseases.length})`}
+                          </span>
+                          <div className="space-y-1">
+                            {screened.diseases.map((dis) => {
+                              const isMatched = Boolean(detectedDiseaseLower && dis.toLowerCase() === detectedDiseaseLower);
+                              return (
+                                <div
+                                  key={dis}
+                                  className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md ${
+                                    isMatched
+                                      ? 'bg-amber-500/15 border border-amber-500/30 font-bold text-on-surface dark:text-inverse-on-surface'
+                                      : 'bg-surface-container-lowest/70 dark:bg-slate-900/50 text-on-surface-variant'
+                                  }`}
+                                >
+                                  <span className="truncate">{dis}</span>
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase whitespace-nowrap ${
+                                      isMatched
+                                        ? 'bg-amber-600 text-white'
+                                        : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
+                                    }`}
+                                  >
+                                    {isMatched ? 'Detected' : 'Clear'}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant block">
+                            {lang === 'tl' ? `Sustansya / Abiotic (${screened.nutrients.length})` : `Nutrient & Abiotic (${screened.nutrients.length})`}
+                          </span>
+                          <div className="space-y-1">
+                            {screened.nutrients.map((nut) => {
+                              const isMatched = Boolean(detectedNutLower && nut.toLowerCase() === detectedNutLower);
+                              return (
+                                <div
+                                  key={nut}
+                                  className={`flex items-center justify-between gap-2 px-2 py-1 rounded-md ${
+                                    isMatched
+                                      ? 'bg-sky-500/15 border border-sky-500/30 font-bold text-on-surface dark:text-inverse-on-surface'
+                                      : 'bg-surface-container-lowest/70 dark:bg-slate-900/50 text-on-surface-variant'
+                                  }`}
+                                >
+                                  <span className="truncate">{nut}</span>
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase whitespace-nowrap ${
+                                      isMatched
+                                        ? 'bg-sky-600 text-white'
+                                        : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
+                                    }`}
+                                  >
+                                    {isMatched ? 'Detected' : 'Clear'}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>

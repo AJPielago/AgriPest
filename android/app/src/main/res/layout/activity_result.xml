@@ -738,6 +738,106 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Card 3E: Detectable Pest & Disease Screening Breakdown -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardDiagnosticBreakdown"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/outline_variant"
+                app:strokeWidth="1dp"
+                app:cardBackgroundColor="@color/surface_container_lowest">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PEST &amp; DISEASE SCREENING BREAKDOWN"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:letterSpacing="0.05" />
+
+                    <TextView
+                        android:id="@+id/tvBreakdownSubtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Detectable pests, plant diseases, and nutrient disorders screened for this crop"
+                        android:textSize="12sp"
+                        android:textColor="@color/on_surface_variant" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="10dp"
+                        android:background="@color/surface_variant" />
+
+                    <!-- Detectable Insect Pests -->
+                    <TextView
+                        android:id="@+id/tvBreakdownPestsHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="INSECT PESTS SCREENED"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/outline"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="6dp" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutBreakdownPests"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Detectable Plant Diseases -->
+                    <TextView
+                        android:id="@+id/tvBreakdownDiseasesHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PLANT DISEASES SCREENED"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/outline"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="6dp" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutBreakdownDiseases"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Nutrient & Abiotic Conditions -->
+                    <TextView
+                        android:id="@+id/tvBreakdownNutrientsHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="NUTRIENT &amp; ABIOTIC CONDITIONS SCREENED"
+                        android:textSize="10sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/outline"
+                        android:letterSpacing="0.05"
+                        android:layout_marginBottom="6dp" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutBreakdownNutrients"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Card 4: Telemetry Metadata -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"

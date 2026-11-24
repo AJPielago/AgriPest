@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import numpy as np
 from PIL import Image, ImageFilter
 
-from app.services.detection.domain_gate import BRASSICA_CROPS, TARGET_CROPS
+from app.services.detection.domain_gate import BRASSICA_CROPS, CLASS_REGISTRY, TARGET_CROPS
 
 logger = logging.getLogger("agripest.condition")
 
@@ -466,6 +466,29 @@ def get_probable_culprits(damage_key: str, crop_name: Optional[str]) -> List[Dic
     return [dict(c) for c in entry["culprits_by_crop"].get(family, entry["culprits_by_crop"]["Lettuce"])]
 
 
+def get_screened_targets(crop_name: Optional[str]) -> Dict[str, List[str]]:
+    """
+    Returns the exact host-crop-compatible list of insect pests, plant diseases,
+    and nutrient/abiotic disorders that the system screens for on a given scan.
+    """
+    resolved_crop = crop_name if crop_name in TARGET_CROPS else None
+    pests: List[str] = []
+    diseases: List[str] = []
+    for _, (kind, display_name, valid_crops, _) in CLASS_REGISTRY.items():
+        if resolved_crop and resolved_crop not in valid_crops:
+            continue
+        if kind == "pest" and display_name not in pests:
+            pests.append(display_name)
+        elif kind == "disease" and display_name not in diseases:
+            diseases.append(display_name)
+    nutrients = [meta["name"] for meta in NUTRIENT_DEFICIENCY_CATALOG.values()]
+    return {
+        "pests": pests,
+        "diseases": diseases,
+        "nutrients": nutrients,
+    }
+
+
 class HolisticConditionAnalyzer:
     """
     Zero-shot visual plant condition, indirect pest-damage, and nutrient-deficiency analyzer.
@@ -828,5 +851,6 @@ def synthesize_total_condition(
             "pest_damage": pest_damage_obj,
             "nutrient_deficiency": nutrient_def_obj,
             "visual_signals": visual,
+            "screened_targets": get_screened_targets(crop_name),
         },
     }

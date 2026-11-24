@@ -306,6 +306,10 @@ def test_synthesize_overrides_high_conf_healthy_when_leaf_is_riddled_with_insect
     assert ca["health_score"] < 60
     assert ca["pest_damage"]["key"] == "chewing_damage"
     assert any(c["name"] == "Cabbage Looper" for c in ca["probable_pests"])
+    assert "screened_targets" in ca
+    assert "Green Peach Aphid" in ca["screened_targets"]["pests"]
+    assert "Downy Mildew of Lettuce" in ca["screened_targets"]["diseases"]
+    assert "Alternaria Leaf Spot of Brassicas" not in ca["screened_targets"]["diseases"]
 
 
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():

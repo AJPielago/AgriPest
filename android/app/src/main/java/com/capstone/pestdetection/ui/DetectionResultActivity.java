@@ -25,9 +25,13 @@ import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,6 +47,8 @@ public class DetectionResultActivity extends BaseActivity {
     private TextView tvDamageType, tvDamageDescription;
     private LinearLayout layoutCulpritsContainer;
     private TextView tvNutrientName, tvNutrientBadge, tvNutrientSymptoms, tvNutrientCauses, tvNutrientAction;
+    private TextView tvBreakdownSubtitle, tvBreakdownPestsHeader, tvBreakdownDiseasesHeader, tvBreakdownNutrientsHeader;
+    private LinearLayout layoutBreakdownPests, layoutBreakdownDiseases, layoutBreakdownNutrients;
     private TextView tvPestName, tvScientificName, tvSeverityBadge, tvConfidenceScore, tvResultCropName, tvRecommendation;
     private TextView tvResultLocation, tvResultWeather, tvResultTimestamp;
     private View cardDiseaseDiagnosis;
@@ -85,6 +91,14 @@ public class DetectionResultActivity extends BaseActivity {
         tvNutrientSymptoms = findViewById(R.id.tvNutrientSymptoms);
         tvNutrientCauses = findViewById(R.id.tvNutrientCauses);
         tvNutrientAction = findViewById(R.id.tvNutrientAction);
+
+        tvBreakdownSubtitle = findViewById(R.id.tvBreakdownSubtitle);
+        tvBreakdownPestsHeader = findViewById(R.id.tvBreakdownPestsHeader);
+        tvBreakdownDiseasesHeader = findViewById(R.id.tvBreakdownDiseasesHeader);
+        tvBreakdownNutrientsHeader = findViewById(R.id.tvBreakdownNutrientsHeader);
+        layoutBreakdownPests = findViewById(R.id.layoutBreakdownPests);
+        layoutBreakdownDiseases = findViewById(R.id.layoutBreakdownDiseases);
+        layoutBreakdownNutrients = findViewById(R.id.layoutBreakdownNutrients);
 
         tvPestName = findViewById(R.id.tvPestName);
         tvScientificName = findViewById(R.id.tvScientificName);
@@ -215,6 +229,9 @@ public class DetectionResultActivity extends BaseActivity {
 
         String cropName = detectionResult.getCropName() != null ? detectionResult.getCropName() : getString(R.string.crop_cabbage_default);
         tvResultCropName.setText(cropName);
+
+        // Always render full Detectable Pest, Disease & Nutrient Screening Breakdown
+        renderDiagnosticBreakdown(cropName, detType, rawPestName, rawDiseaseName, detectionResult.getConditionAssessment());
 
         String action = isDiseaseOnly && detectionResult.getDiseaseRecommendedAction() != null
                 ? detectionResult.getDiseaseRecommendedAction()
@@ -442,6 +459,212 @@ public class DetectionResultActivity extends BaseActivity {
         } catch (Exception ignored) {
             return fallback;
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void renderDiagnosticBreakdown(
+            String cropName,
+            String detType,
+            String rawPestName,
+            String rawDiseaseName,
+            Map<String, Object> ca
+    ) {
+        boolean isBrassica = cropName != null && (
+                cropName.toLowerCase(Locale.US).contains("bok")
+                        || cropName.toLowerCase(Locale.US).contains("pechay")
+                        || cropName.toLowerCase(Locale.US).contains("petsay")
+                        || cropName.toLowerCase(Locale.US).contains("mustard")
+                        || cropName.toLowerCase(Locale.US).contains("mustasa")
+        );
+
+        List<String> pests = null;
+        List<String> diseases = null;
+        List<String> nutrients = null;
+
+        if (ca != null && ca.get("screened_targets") instanceof Map) {
+            Map<String, Object> targets = (Map<String, Object>) ca.get("screened_targets");
+            pests = toStringList(targets.get("pests"));
+            diseases = toStringList(targets.get("diseases"));
+            nutrients = toStringList(targets.get("nutrients"));
+        }
+
+        if (pests == null || pests.isEmpty()) {
+            pests = isBrassica
+                    ? new ArrayList<>(Arrays.asList(
+                            "Diamondback Moth", "Striped Flea Beetle", "Turnip / Mustard Aphid",
+                            "Green Peach Aphid", "Cabbage Looper", "Common Cutworm",
+                            "Beet Armyworm", "Cabbage Cluster Caterpillar", "Cabbage Webworm",
+                            "Serpentine Leafminer", "Silverleaf Whitefly", "Onion / Leaf Thrips"))
+                    : new ArrayList<>(Arrays.asList(
+                            "Green Peach Aphid", "Cabbage Looper", "Common Cutworm",
+                            "Beet Armyworm", "Serpentine Leafminer", "Silverleaf Whitefly",
+                            "Onion / Leaf Thrips"));
+        }
+        if (diseases == null || diseases.isEmpty()) {
+            diseases = isBrassica
+                    ? new ArrayList<>(Arrays.asList(
+                            "Alternaria Leaf Spot of Brassicas", "Black Rot of Brassicas",
+                            "Downy Mildew of Brassicas", "White Rust of Crucifers",
+                            "Bacterial Soft Rot"))
+                    : new ArrayList<>(Arrays.asList(
+                            "Downy Mildew of Lettuce", "Powdery Mildew of Lettuce",
+                            "Bacterial Soft Rot", "Bottom Rot & Drop of Lettuce",
+                            "Septoria Leaf Spot of Lettuce", "Lettuce Mosaic / Viral Infection"));
+        }
+        if (nutrients == null || nutrients.isEmpty()) {
+            nutrients = new ArrayList<>(Arrays.asList(
+                    "Nitrogen (N) Deficiency",
+                    "Calcium (Ca) Deficiency / Tipburn",
+                    "Potassium (K) Deficiency / Marginal Scorch",
+                    "Magnesium (Mg) / Iron (Fe) Interveinal Chlorosis",
+                    "Heat / Water / Sunscald Stress (Abiotic)"
+            ));
+        }
+
+        // Collect matched names for status badges
+        String detectedPestLower = ("pest".equals(detType) || "pest_and_disease".equals(detType)) && rawPestName != null
+                ? rawPestName.trim().toLowerCase(Locale.US)
+                : "";
+        String detectedDiseaseLower = ("disease".equals(detType) || "pest_and_disease".equals(detType)) && rawDiseaseName != null
+                ? rawDiseaseName.trim().toLowerCase(Locale.US)
+                : "";
+
+        Set<String> probablePestLower = new HashSet<>();
+        String detectedNutrientLower = "";
+        if (ca != null) {
+            if (ca.get("probable_pests") instanceof List) {
+                for (Object item : (List<Object>) ca.get("probable_pests")) {
+                    if (item instanceof Map) {
+                        String cName = asString(((Map<String, Object>) item).get("name"), "").trim();
+                        if (!cName.isEmpty()) {
+                            probablePestLower.add(cName.toLowerCase(Locale.US));
+                            // Ensure cross-crop probable culprits (e.g. Striped Flea Beetle on lettuce) appear in the list
+                            boolean exists = false;
+                            for (String existing : pests) {
+                                if (existing.equalsIgnoreCase(cName)) {
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if (!exists) {
+                                pests.add(0, cName);
+                            }
+                        }
+                    }
+                }
+            }
+            if (ca.get("nutrient_deficiency") instanceof Map) {
+                detectedNutrientLower = asString(((Map<String, Object>) ca.get("nutrient_deficiency")).get("name"), "")
+                        .trim().toLowerCase(Locale.US);
+            }
+        }
+
+        String displayCrop = (cropName != null && !cropName.isEmpty()) ? cropName : "Leafy Green";
+        tvBreakdownSubtitle.setText(String.format(
+                Locale.US,
+                "Screened for %s: %d insect pests, %d plant diseases & %d nutrient/abiotic disorders",
+                displayCrop, pests.size(), diseases.size(), nutrients.size()
+        ));
+        tvBreakdownPestsHeader.setText(String.format(Locale.US, "DETECTABLE INSECT PESTS (%d)", pests.size()));
+        tvBreakdownDiseasesHeader.setText(String.format(Locale.US, "DETECTABLE PLANT DISEASES (%d)", diseases.size()));
+        tvBreakdownNutrientsHeader.setText(String.format(Locale.US, "NUTRIENT & ABIOTIC CONDITIONS (%d)", nutrients.size()));
+
+        layoutBreakdownPests.removeAllViews();
+        for (String pest : pests) {
+            String lower = pest.toLowerCase(Locale.US);
+            if (!detectedPestLower.isEmpty() && lower.equals(detectedPestLower)) {
+                addBreakdownRow(layoutBreakdownPests, pest, "DETECTED", R.drawable.bg_badge_error, R.color.error, true);
+            } else if (probablePestLower.contains(lower)) {
+                addBreakdownRow(layoutBreakdownPests, pest, "PROBABLE", R.drawable.bg_badge_warning, R.color.amber_accent, true);
+            } else {
+                addBreakdownRow(layoutBreakdownPests, pest, "CLEAR", R.drawable.bg_badge_success, R.color.primary, false);
+            }
+        }
+
+        layoutBreakdownDiseases.removeAllViews();
+        for (String dis : diseases) {
+            String lower = dis.toLowerCase(Locale.US);
+            if (!detectedDiseaseLower.isEmpty() && lower.equals(detectedDiseaseLower)) {
+                addBreakdownRow(layoutBreakdownDiseases, dis, "DETECTED", R.drawable.bg_badge_warning, R.color.amber_accent, true);
+            } else {
+                addBreakdownRow(layoutBreakdownDiseases, dis, "CLEAR", R.drawable.bg_badge_success, R.color.primary, false);
+            }
+        }
+
+        layoutBreakdownNutrients.removeAllViews();
+        for (String nut : nutrients) {
+            String lower = nut.toLowerCase(Locale.US);
+            if (!detectedNutrientLower.isEmpty() && lower.equals(detectedNutrientLower)) {
+                addBreakdownRow(layoutBreakdownNutrients, nut, "DETECTED", R.drawable.bg_badge_warning, R.color.blue_accent, true);
+            } else {
+                addBreakdownRow(layoutBreakdownNutrients, nut, "CLEAR", R.drawable.bg_badge_success, R.color.primary, false);
+            }
+        }
+    }
+
+    private void addBreakdownRow(
+            LinearLayout container,
+            String label,
+            String statusText,
+            int badgeBgRes,
+            int badgeColorRes,
+            boolean highlight
+    ) {
+        float density = getResources().getDisplayMetrics().density;
+        int dp4 = Math.round(4 * density);
+        int dp6 = Math.round(6 * density);
+        int dp8 = Math.round(8 * density);
+
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        row.setPadding(dp8, dp6, dp8, dp6);
+        if (highlight) {
+            row.setBackgroundResource(R.drawable.bg_card_stitch);
+        }
+        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        rowParams.bottomMargin = dp4;
+        row.setLayoutParams(rowParams);
+
+        TextView tvName = new TextView(this);
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+        );
+        nameParams.setMarginEnd(dp8);
+        tvName.setLayoutParams(nameParams);
+        tvName.setText(label);
+        tvName.setTextSize(12f);
+        tvName.setTypeface(null, highlight ? Typeface.BOLD : Typeface.NORMAL);
+        tvName.setTextColor(ContextCompat.getColor(this, highlight ? R.color.on_surface : R.color.on_surface_variant));
+        row.addView(tvName);
+
+        TextView tvBadge = new TextView(this);
+        tvBadge.setText(statusText);
+        tvBadge.setTextSize(9f);
+        tvBadge.setTypeface(null, Typeface.BOLD);
+        tvBadge.setBackgroundResource(badgeBgRes);
+        tvBadge.setTextColor(ContextCompat.getColor(this, badgeColorRes));
+        tvBadge.setPadding(dp8, Math.round(2 * density), dp8, Math.round(2 * density));
+        row.addView(tvBadge);
+
+        container.addView(row);
+    }
+
+    private List<String> toStringList(Object obj) {
+        if (!(obj instanceof List)) return null;
+        List<String> out = new ArrayList<>();
+        for (Object item : (List<?>) obj) {
+            if (item != null) {
+                String s = String.valueOf(item).trim();
+                if (!s.isEmpty()) out.add(s);
+            }
+        }
+        return out;
     }
 
     private void showInaccurateNotesDialog() {
