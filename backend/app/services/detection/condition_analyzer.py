@@ -669,10 +669,17 @@ def synthesize_total_condition(
     p_disease = float(group_probs.get("infectious_disease", 0.0))
 
     # Strong visual perforation signal: many sharp enclosed dark cavities inside green foliage
-    # calibrated against outdoor + hydroponic healthy lettuce/bok choy baselines (<=19 holes, <=0.38% area)
-    # so intact leaves stay healthy while heavily insect-perforated leaves are caught accurately.
-    clip_agrees_unhealthy = (not group_probs) or (p_healthy < 0.35)
-    strong_hole_evidence = (
+    # calibrated against outdoor + hydroponic healthy lettuce/bok choy baselines (0-19 holes, <=0.38% area).
+    # Tier A (overwhelming perforations: >=35 holes and >=0.90% area) does NOT require CLIP ViT-B-32
+    # agreement, because ViT-B-32's 32x32 patches blur away fine holes on vibrant 99%-green leaves.
+    # Tier B (moderate perforations: >=22 holes and >=0.45% area) requires CLIP or YOLO uncertainty.
+    clip_agrees_unhealthy = (not group_probs) or (p_healthy < 0.35) or (primary_conf < 0.70)
+    overwhelming_hole_evidence = (
+        leaf_hole_count >= 35
+        and hole_area_pct >= 0.90
+        and green_pct >= 55.0
+    )
+    strong_hole_evidence = overwhelming_hole_evidence or (
         leaf_hole_count >= 22
         and hole_area_pct >= 0.45
         and green_pct >= 50.0

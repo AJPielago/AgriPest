@@ -312,6 +312,35 @@ def test_synthesize_overrides_high_conf_healthy_when_leaf_is_riddled_with_insect
     assert "Alternaria Leaf Spot of Brassicas" not in ca["screened_targets"]["diseases"]
 
 
+def test_synthesize_catches_overwhelming_holes_even_when_clip_healthy_is_above_50_pct():
+    # Clean high-res bright-green perforated leaf (99% green, 77 holes, 1.43% area) where CLIP ViT-B-32
+    # blurs away small holes and outputs p_healthy=0.51 -> must STILL be caught as pest_damage!
+    cond_raw = {
+        "available": True,
+        "visual_signals": {
+            "green_foliage_pct": 99.3,
+            "yellow_chlorosis_pct": 0.2,
+            "brown_necrosis_pct": 0.0,
+            "leaf_hole_count": 77,
+            "hole_area_pct": 1.43,
+        },
+        "group_probs": {"healthy": 0.51, "pest_damage": 0.14, "nutrient_deficiency": 0.21, "infectious_disease": 0.14},
+        "top_pest_damage": ("chewing_damage", 0.10),
+        "top_nutrient_deficiency": ("potassium_deficiency", 0.14),
+    }
+    res = synthesize_total_condition(
+        det_type="healthy",
+        crop_name="Lettuce",
+        primary_conf=0.50,
+        pest_name=None,
+        disease_name=None,
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "pest_damage"
+    assert res["condition_assessment"]["overall_condition"] == "Pest-Damaged Foliage"
+    assert res["condition_assessment"]["health_score"] < 60
+
+
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():
     cond_raw = {
         "available": True,
