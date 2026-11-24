@@ -341,6 +341,34 @@ def test_synthesize_catches_overwhelming_holes_even_when_clip_healthy_is_above_5
     assert res["condition_assessment"]["health_score"] < 60
 
 
+def test_synthesize_catches_zoomed_in_large_caterpillar_chew_holes():
+    # Close-up zoomed scan showing 5 large caterpillar chew holes covering 1.0% of the leaf blade
+    cond_raw = {
+        "available": True,
+        "visual_signals": {
+            "green_foliage_pct": 99.6,
+            "yellow_chlorosis_pct": 0.0,
+            "brown_necrosis_pct": 0.0,
+            "leaf_hole_count": 5,
+            "hole_area_pct": 1.02,
+        },
+        "group_probs": {"healthy": 0.11, "pest_damage": 0.04, "nutrient_deficiency": 0.07, "infectious_disease": 0.78},
+        "top_pest_damage": ("chewing_damage", 0.02),
+        "top_nutrient_deficiency": ("potassium_deficiency", 0.04),
+    }
+    res = synthesize_total_condition(
+        det_type="healthy",
+        crop_name="Lettuce",
+        primary_conf=0.60,
+        pest_name=None,
+        disease_name=None,
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "pest_damage"
+    assert res["condition_assessment"]["pest_damage"]["key"] == "chewing_damage"
+    assert res["condition_assessment"]["health_score"] < 60
+
+
 def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():
     cond_raw = {
         "available": True,

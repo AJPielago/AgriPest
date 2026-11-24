@@ -311,26 +311,30 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
         if w < 48 or h < 48:
             return 0, 0.0
         # Strip outer edges (bezels/frames/background margins) and normalize size
-        crop = im.crop((int(w * 0.12), int(h * 0.15), int(w * 0.88), int(h * 0.85)))
+        crop = im.crop((int(w * 0.08), int(h * 0.12), int(w * 0.92), int(h * 0.88)))
         crop = crop.resize((320, 320), Image.Resampling.BILINEAR)
 
         hsv = np.asarray(crop.convert("HSV"), dtype=np.float32)
         hue, sat, val = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
 
-        green = (hue >= 36) & (hue <= 118) & (sat >= 42) & (val >= 70)
+        green = (hue >= 36) & (hue <= 118) & (sat >= 42) & (val >= 75)
         soil_bg = (~green) & (val >= 55)
         if float(green.mean()) < 0.25:
             return 0, 0.0
 
         val_img = Image.fromarray(val.astype(np.uint8), mode="L")
-        # Tight 5px + wide 11px local contrast: punched insect holes have razor-sharp step edges,
-        # whereas soft shadows in healthy curled rosettes fade gradually and are ignored.
-        local_tight = np.asarray(val_img.filter(ImageFilter.BoxBlur(5)), dtype=np.float32)
-        local_wide = np.asarray(val_img.filter(ImageFilter.BoxBlur(11)), dtype=np.float32)
+        # Multi-scale local reference: wide 29x29 ceiling reaches outside large zoomed-in
+        # caterpillar chew-holes (up to ~35px wide) while still catching small flea-beetle shot-holes.
+        local_leaf_ref = np.asarray(val_img.filter(ImageFilter.MaxFilter(29)), dtype=np.float32)
+        local_mid = np.asarray(val_img.filter(ImageFilter.BoxBlur(15)), dtype=np.float32)
 
-        dark_spot = ((local_tight - val) >= 40.0) & ((local_wide - val) >= 50.0) & (val < 125.0)
+        dark_spot = (
+            ((local_leaf_ref - val) >= 62.0)
+            & ((local_mid - val) >= 24.0)
+            & (val < 130.0)
+        )
         ys, xs = np.where(dark_spot)
-        if ys.size == 0 or ys.size > 35000:
+        if ys.size == 0 or ys.size > 40000:
             return 0, 0.0
 
         height, width = dark_spot.shape
@@ -369,17 +373,17 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
                         q.append((ny, nx))
 
             area = len(pixels)
-            if touches_border or area < 5 or area > 650:
+            if touches_border or area < 6 or area > 3500:
                 continue
 
             bh = max_y - min_y + 1
             bw = max_x - min_x + 1
-            if max(bh, bw) / max(1, min(bh, bw)) > 3.2:
+            if max(bh, bw) / max(1, min(bh, bw)) > 3.5:
                 continue  # Ignore elongated leaf-fold shadow creases
-            if area / float(bh * bw) < 0.30:
+            if area / float(bh * bw) < 0.28:
                 continue  # Ignore lacy background gaps
 
-            pad = 6
+            pad = 7
             ry0, ry1 = max(0, min_y - pad), min(height, max_y + pad + 1)
             rx0, rx1 = max(0, min_x - pad), min(width, max_x + pad + 1)
 
@@ -391,14 +395,18 @@ def detect_enclosed_leaf_holes(im: Image.Image) -> Tuple[int, float]:
 
             if min(sides) < 0.65 or float(np.mean(sides)) < 0.80:
                 continue
-            if float(soil_bg[ry0:ry1, rx0:rx1].mean()) > 0.05:
+            if float(soil_bg[ry0:ry1, rx0:rx1].mean()) > 0.04:
                 continue
 
-            ring_green_vals = val[ry0:ry1, rx0:rx1][green[ry0:ry1, rx0:rx1]]
-            if ring_green_vals.size == 0:
+            # Sharp brightness cliff between immediate 3px green rim and hole interior
+            rim_pad = 3
+            iy0, iy1 = max(0, min_y - rim_pad), min(height, max_y + rim_pad + 1)
+            ix0, ix1 = max(0, min_x - rim_pad), min(width, max_x + rim_pad + 1)
+            rim_green_vals = val[iy0:iy1, ix0:ix1][green[iy0:iy1, ix0:ix1]]
+            if rim_green_vals.size == 0:
                 continue
             hole_v = float(np.mean([val[py, px] for py, px in pixels]))
-            if float(np.median(ring_green_vals)) - hole_v >= 65.0:
+            if float(np.median(rim_green_vals)) - hole_v >= 55.0:
                 hole_count += 1
                 total_hole_area += area
 
@@ -668,20 +676,19 @@ def synthesize_total_condition(
     p_deficiency = float(group_probs.get("nutrient_deficiency", 0.0))
     p_disease = float(group_probs.get("infectious_disease", 0.0))
 
-    # Strong visual perforation signal: many sharp enclosed dark cavities inside green foliage
-    # calibrated against outdoor + hydroponic healthy lettuce/bok choy baselines (0-19 holes, <=0.38% area).
-    # Tier A (overwhelming perforations: >=35 holes and >=0.90% area) does NOT require CLIP ViT-B-32
-    # agreement, because ViT-B-32's 32x32 patches blur away fine holes on vibrant 99%-green leaves.
-    # Tier B (moderate perforations: >=22 holes and >=0.45% area) requires CLIP or YOLO uncertainty.
+    # Strong visual perforation signal: multi-scale enclosed dark cavities inside green foliage
+    # calibrated against indoor & outdoor healthy lettuce/bok choy baselines (0-8 holes, <=0.43% area).
+    # Catches BOTH many tiny shot-holes (e.g. 25+ holes) AND zoomed-in large caterpillar chew-holes
+    # (e.g. 4+ large holes covering >=0.80% of the blade area).
     clip_agrees_unhealthy = (not group_probs) or (p_healthy < 0.35) or (primary_conf < 0.70)
     overwhelming_hole_evidence = (
-        leaf_hole_count >= 35
-        and hole_area_pct >= 0.90
+        leaf_hole_count >= 4
+        and hole_area_pct >= 0.80
         and green_pct >= 55.0
     )
     strong_hole_evidence = overwhelming_hole_evidence or (
-        leaf_hole_count >= 22
-        and hole_area_pct >= 0.45
+        leaf_hole_count >= 12
+        and hole_area_pct >= 0.50
         and green_pct >= 50.0
         and clip_agrees_unhealthy
     )
@@ -697,14 +704,14 @@ def synthesize_total_condition(
         else:
             dmg_key = "shothole_damage" if avg_hole_px < 24.0 else "chewing_damage"
         meta = PEST_DAMAGE_CATALOG[dmg_key]
-        hole_strength = min(1.0, (leaf_hole_count / 45.0) * 0.65 + (hole_area_pct / 2.0) * 0.35)
+        hole_strength = min(1.0, (leaf_hole_count / 30.0) * 0.40 + (hole_area_pct / 1.5) * 0.60)
         scaled_conf = round(min(0.93, max(0.68, 0.62 + hole_strength * 0.28)), 2)
         probable_pests = get_probable_culprits(dmg_key, crop_label)
         pest_damage_obj = {
             "key": dmg_key,
             "damage_type": meta["damage_type"],
             "confidence": scaled_conf,
-            "severity": "High" if leaf_hole_count >= 25 or hole_area_pct >= 1.5 else meta["severity"],
+            "severity": "High" if leaf_hole_count >= 15 or hole_area_pct >= 0.90 else meta["severity"],
             "description": (
                 f"{meta['description']} Visual scan detected {leaf_hole_count} distinct "
                 f"perforations covering {hole_area_pct:.1f}% of the central leaf blade."
