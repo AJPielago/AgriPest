@@ -74,6 +74,7 @@ CLASS_PROMPTS: Dict[str, str] = {
     "calcium_deficiency_tipburn": "brown leaf edge . scorched leaf tip . lettuce leaf . leaf .",
     "potassium_deficiency": "scorched leaf margin . yellow leaf edge . vegetable leaf . leaf .",
     "interveinal_chlorosis": "yellow veined leaf . chlorotic leaf . vegetable leaf . leaf .",
+    "abiotic_water_heat_stress": "wilted leaf . stressed vegetable plant . discolored leaf . leaf .",
     # Indirect pest-damage symptoms
     "chewing_damage": "chewed leaf . leaf with holes . damaged cabbage leaf . leaf .",
     "shothole_damage": "leaf with small holes . perforated leaf . damaged vegetable leaf . leaf .",
@@ -169,6 +170,8 @@ def main():
     parser.add_argument("--text-threshold", type=float, default=0.20, help="Text confidence threshold")
     parser.add_argument("--train-ratio", type=float, default=0.70)
     parser.add_argument("--val-ratio", type=float, default=0.20)
+    parser.add_argument("--min-class-images", type=int, default=30, help="Skip under-populated classes (<30 imgs)")
+    parser.add_argument("--max-per-class", type=int, default=650, help="Cap huge classes (e.g. lettuce_healthy) for class balance")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--out", type=str, default=str(BASE_DIR / "yolo_dataset"))
     args = parser.parse_args()
@@ -189,6 +192,10 @@ def main():
         if not cat_dir.exists():
             continue
         for cls_dir in sorted(p for p in cat_dir.iterdir() if p.is_dir()):
+            cnt = sum(1 for p in cls_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS)
+            if cnt < args.min_class_images:
+                print(f"[SKIP] {cat}/{cls_dir.name}: only {cnt} images (< {args.min_class_images})")
+                continue
             class_dirs.append((cat, cls_dir))
 
     class_names = [cls_dir.name for _, cls_dir in class_dirs]
@@ -214,6 +221,8 @@ def main():
 
         images = sorted(p for p in cls_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS)
         rng.shuffle(images)
+        if args.max_per_class > 0 and len(images) > args.max_per_class:
+            images = images[: args.max_per_class]
 
         n = len(images)
         n_train = int(n * args.train_ratio)
@@ -324,15 +333,15 @@ def main():
         }
         print(f"    -> detected={detected_cnt} ({detected_cnt / max(1, n) * 100:.1f}%) | macro_fallback={fallback_cnt} | skipped={skipped_cnt}")
 
-    # Optional background negatives
+    # Background hard negatives (recursively scans subfolders under 00_background_negatives/)
     bg_dir = BASE_DIR / "00_background_negatives"
     bg_count = 0
     if bg_dir.exists():
-        bg_imgs = sorted(p for p in bg_dir.iterdir() if p.is_file() and p.suffix.lower() in IMAGE_EXTS)
+        bg_imgs = sorted(p for p in bg_dir.rglob("*") if p.is_file() and p.suffix.lower() in IMAGE_EXTS)
         rng.shuffle(bg_imgs)
         for i, p in enumerate(bg_imgs):
             split = "train" if i < int(len(bg_imgs) * 0.8) else "val"
-            out_stem = f"bg__{p.stem}"
+            out_stem = f"bg__{p.parent.name}__{p.stem}"
             link_or_copy(p, out_dir / "images" / split / f"{out_stem}{p.suffix.lower()}")
             (out_dir / "labels" / split / f"{out_stem}.txt").write_text("", encoding="utf-8")
             bg_count += 1
