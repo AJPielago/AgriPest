@@ -38,6 +38,7 @@ def ensure_schema_compatibility():
                     ("disease_severity", "VARCHAR(50)"),
                     ("disease_recommended_action", "TEXT"),
                     ("disease_details", "JSON"),
+                    ("condition_assessment", "JSON"),
                     ("latitude", "FLOAT"),
                     ("longitude", "FLOAT"),
                     ("is_acknowledged", "BOOLEAN DEFAULT 0"),

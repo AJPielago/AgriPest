@@ -35,6 +35,9 @@ class DetectionOut(BaseModel):
     disease_recommended_action: Optional[str] = None
     disease_details: Optional[Any] = None
 
+    # Holistic Plant Condition, Indirect Pest Damage & Nutrient Deficiency Assessment
+    condition_assessment: Optional[Any] = None
+
     # Context & Feedback
     weather_condition: Optional[str] = None
     field_location: Optional[str] = None

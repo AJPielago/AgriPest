@@ -38,6 +38,10 @@ from app.models.disease_recommendation import DiseaseRecommendation
 from app.models.pest import Pest
 from app.models.recommendation import Recommendation
 from app.services.detection.base import BaseDetectionService
+from app.services.detection.condition_analyzer import (
+    HolisticConditionAnalyzer,
+    synthesize_total_condition,
+)
 from app.services.detection.domain_gate import (
     CLASS_REGISTRY,
     CLIPDomainGate,
@@ -71,6 +75,7 @@ class AIDetectionService(BaseDetectionService):
         self.model = None
         self.ood_model = None
         self.clip_gate: Optional[CLIPDomainGate] = None
+        self.condition_analyzer: Optional[HolisticConditionAnalyzer] = None
         self.load_error: Optional[str] = None
         self._load_models()
 
@@ -113,9 +118,11 @@ class AIDetectionService(BaseDetectionService):
             # Load local CLIP ViT-B-32 semantic domain gate (rejects non-target plants & non-agri objects)
             try:
                 self.clip_gate = CLIPDomainGate()
+                self.condition_analyzer = HolisticConditionAnalyzer(self.clip_gate)
             except Exception as clip_err:
                 logger.warning("[AI Model] Optional CLIP domain gate unavailable: %s", clip_err)
                 self.clip_gate = None
+                self.condition_analyzer = HolisticConditionAnalyzer(None)
         except Exception as e:
             self.load_error = (
                 f"Failed to load Ultralytics YOLO runtime ({e}). "
@@ -236,9 +243,11 @@ class AIDetectionService(BaseDetectionService):
         """
         Executes the full gated inference pipeline synchronously in a worker thread:
           1. Image sanity check
-          2. Always-on COCO general-object veto
-          3. Local CLIP Tier-1 semantic domain gate (rejects non-agri & non-target plants)
-          4. YOLOv8 detection + strict thresholds + always-on foliage HSV/anti-paper check
+          2. Local CLIP Tier-1 semantic domain gate (primary gate — rejects non-agri & non-target plants)
+          3. COCO general-object veto (runs when CLIP is unavailable OR uncertain, preventing tiny
+             yolov8n from hallucinating 'cat'/'bird' on real rotting/curled leafy greens that CLIP
+             already verified at >= 72% confidence)
+          4. YOLOv8 detection + adaptive CLIP-verified thresholds + always-on foliage HSV check
           5. CLIP Tier-2 leafy-green specificity verification (when crop/disease is present)
           6. Logical conflict suppression, host-crop filtering & 4-state resolution
         """
@@ -247,23 +256,10 @@ class AIDetectionService(BaseDetectionService):
         if sanity_error:
             return {"rejected": True, "rejection_reason": sanity_error}
 
-        # 2. Always-on COCO veto (never skipped regardless of YOLO confidence)
-        non_crop = self._detect_non_crop_object(image_source)
-        if non_crop:
-            obj_label, obj_conf = non_crop
-            return {
-                "rejected": True,
-                "rejection_reason": (
-                    f"Unrecognized non-crop object detected ({obj_label}, {int(obj_conf * 100)}%). "
-                    "Please scan only Lettuce (Litsugas), Bok Choy (Petsay), Mustard Greens (Mustasa), "
-                    "or their pests and diseases."
-                ),
-                "non_crop_label": obj_label,
-            }
-
-        # 3. CLIP Tier-1 semantic domain gate (fast GPU/CPU check)
+        # 2. CLIP Tier-1 semantic domain gate FIRST (much more accurate than tiny yolov8n COCO)
         clip_t1: Optional[DomainGateResult] = None
-        if self.clip_gate is not None and self.clip_gate.available:
+        clip_available = self.clip_gate is not None and self.clip_gate.available
+        if clip_available:
             clip_t1 = self.clip_gate.evaluate(image_source, require_leafy_crop=False)
             if not clip_t1.allowed:
                 return {
@@ -272,8 +268,39 @@ class AIDetectionService(BaseDetectionService):
                     "gate_category": clip_t1.category,
                 }
 
-        # 4. Run trained YOLOv8 detector
-        results = self.model.predict(image_source, conf=0.45, iou=0.45, verbose=False)
+        # 3. COCO veto: only run when CLIP is unavailable OR CLIP is not strongly confident
+        #    (prevents yolov8n from false-vetoing rotting lettuce leaves as 'cat' or 'sandwich')
+        clip_strongly_verified = (
+            clip_t1 is not None
+            and clip_t1.allowed
+            and clip_t1.pos_prob >= 0.72
+            and clip_t1.neg_nonagri_prob < 0.20
+        )
+        if not clip_strongly_verified:
+            non_crop = self._detect_non_crop_object(image_source)
+            if non_crop:
+                obj_label, obj_conf = non_crop
+                return {
+                    "rejected": True,
+                    "rejection_reason": (
+                        f"Unrecognized non-crop object detected ({obj_label}, {int(obj_conf * 100)}%). "
+                        "Please scan only Lettuce (Litsugas), Bok Choy (Petsay), Mustard Greens (Mustasa), "
+                        "or their pests and diseases."
+                    ),
+                    "non_crop_label": obj_label,
+                }
+
+        # 4. Run trained YOLOv8 detector (strict primary pass first so clear scans stay noise-free)
+        clip_verified_leafy = (
+            clip_t1 is not None
+            and clip_t1.allowed
+            and clip_t1.pos_prob >= 0.85
+            and clip_t1.leafy_vs_other_plant_prob >= 0.75
+            and not is_live_check
+        )
+        yolo_conf_floor = 0.25 if clip_verified_leafy else 0.45
+        results = self.model.predict(image_source, conf=yolo_conf_floor, iou=0.45, verbose=False)
+
         min_crop_conf = MIN_CONF_LIVE_CHECK if is_live_check else MIN_CONF_HEALTHY
         min_dis_conf = MIN_CONF_LIVE_CHECK if is_live_check else MIN_CONF_DISEASE
         detections = self._parse_yolo_detections(
@@ -283,6 +310,54 @@ class AIDetectionService(BaseDetectionService):
             min_disease_conf=min_dis_conf,
             min_pest_conf=MIN_CONF_PEST,
         )
+
+        # 4b. Compute holistic plant condition / indirect pest-damage / nutrient-deficiency signals
+        condition_raw: Dict[str, Any] = {}
+        if not is_live_check and self.condition_analyzer is not None:
+            condition_raw = self.condition_analyzer.analyze(image_source)
+
+        # 4c. If primary strict pass found nothing BUT CLIP strongly verified this IS one of the 3
+        #     leafy greens (e.g., chewed holes with no visible bug, nutrient yellowing, or severe brown rot),
+        #     retry with softer YOLO floor, indirect pest-damage / nutrient-deficiency promotion,
+        #     or CLIP verified leafy-green condition classifier so real affected crops aren't rejected.
+        if not detections and clip_verified_leafy:
+            detections = self._parse_yolo_detections(
+                results[0],
+                image_source,
+                min_healthy_conf=0.30,
+                min_disease_conf=0.28,
+                min_pest_conf=0.38,
+            )
+
+        clip_high_certainty_leafy = (
+            clip_t1 is not None
+            and clip_t1.allowed
+            and clip_t1.pos_prob >= 0.90
+            and clip_t1.leafy_vs_other_plant_prob >= 0.85
+            and clip_t1.neg_nonagri_prob < 0.05
+            and not is_live_check
+            and clip_available
+        )
+
+        if not detections and clip_high_certainty_leafy:
+            target_crop = selected_crop_name or clip_t1.inferred_crop
+            if target_crop in TARGET_CROPS:
+                gp = condition_raw.get("group_probs", {})
+                if gp.get("pest_damage", 0.0) >= 0.42 or gp.get("nutrient_deficiency", 0.0) >= 0.45:
+                    return {
+                        "rejected": False,
+                        "rejection_reason": None,
+                        "detection_type": "none",
+                        "resolved_crop_name": target_crop,
+                        "pest_hits": [],
+                        "disease_hits": [],
+                        "healthy_hits": [],
+                        "final_boxes": [],
+                        "condition_raw": condition_raw,
+                    }
+                fb_det = self.clip_gate.classify_verified_leafy_green(image_source, target_crop)
+                if fb_det is not None:
+                    detections = [fb_det]
 
         if not detections:
             return {
@@ -299,12 +374,7 @@ class AIDetectionService(BaseDetectionService):
         #    verify the plant is actually one of the 3 leafy greens (not tomato/flower/tree/grass/houseplant).
         has_crop_or_disease = any(d["kind"] in ("healthy", "disease") for d in detections)
         has_strong_pest = any(d["kind"] == "pest" and d["confidence"] >= 0.65 for d in detections)
-        if (
-            has_crop_or_disease
-            and not has_strong_pest
-            and self.clip_gate is not None
-            and self.clip_gate.available
-        ):
+        if has_crop_or_disease and not has_strong_pest and clip_available:
             clip_t2 = self.clip_gate.evaluate(image_source, require_leafy_crop=True)
             if not clip_t2.allowed:
                 return {
@@ -322,6 +392,8 @@ class AIDetectionService(BaseDetectionService):
             selected_crop_name=selected_crop_name,
             clip_inferred_crop=clip_inferred_crop,
         )
+        if not resolved.get("rejected"):
+            resolved["condition_raw"] = condition_raw
         return resolved
 
     def _reject(self, reason: str, http_status: int = 422) -> Dict[str, Any]:
@@ -464,7 +536,7 @@ class AIDetectionService(BaseDetectionService):
                     "confidence": dis_conf,
                 }
 
-            # --- Finalize Clean 4-State Payload ---
+            # --- Finalize Clean Multi-State Payload + Holistic Condition Synthesis ---
             if det_type == "disease":
                 # Disease ONLY — do NOT fabricate a pest name!
                 pest_id = None
@@ -488,6 +560,77 @@ class AIDetectionService(BaseDetectionService):
                 )
                 rec_action = top_h["meta"].get("action", rec_action)
 
+            # Synthesize holistic plant condition (indirect pest damage + nutrient deficiency + health score)
+            condition_raw = resolved.get("condition_raw", {})
+            synth = synthesize_total_condition(
+                det_type=det_type,
+                crop_name=resolved_crop_name,
+                primary_conf=pest_conf,
+                pest_name=pest_name if pest_hits else None,
+                disease_name=dis_name,
+                condition_raw=condition_raw,
+            )
+            promoted_type = synth["promoted_detection_type"]
+            condition_assessment = synth["condition_assessment"]
+
+            if promoted_type == "pest_damage" and condition_assessment.get("pest_damage"):
+                dmg = condition_assessment["pest_damage"]
+                culprits = condition_assessment.get("probable_pests") or []
+                det_type = "pest_damage"
+                pest_id = None
+                pest_name = dmg["damage_type"]
+                scientific_name = culprits[0]["scientific_name"] if culprits else None
+                pest_conf = dmg["confidence"]
+                pest_severity = dmg["severity"]
+                description = condition_assessment["condition_summary"]
+                rec_action = dmg["recommended_action"]
+                bounding_boxes = [
+                    {
+                        "x_min": 0.08,
+                        "y_min": 0.08,
+                        "x_max": 0.92,
+                        "y_max": 0.92,
+                        "label": f"Pest Damage: {dmg['damage_type']}",
+                        "type": "pest_damage",
+                        "confidence": pest_conf,
+                    }
+                ]
+            elif promoted_type == "nutrient_deficiency" and condition_assessment.get("nutrient_deficiency"):
+                nut = condition_assessment["nutrient_deficiency"]
+                det_type = "nutrient_deficiency"
+                pest_id = None
+                pest_name = nut["name"]
+                scientific_name = f"Abiotic Disorder ({nut['nutrient']})"
+                pest_conf = nut["confidence"]
+                pest_severity = nut["severity"]
+                description = nut["symptoms"]
+                rec_action = nut["recommended_action"]
+                disease_id = None
+                dis_name = None
+                dis_scientific = None
+                dis_pathogen = None
+                dis_symptoms = None
+                dis_conf = None
+                dis_severity = None
+                dis_action = None
+                disease_details = {}
+                bounding_boxes = [
+                    {
+                        "x_min": 0.08,
+                        "y_min": 0.08,
+                        "x_max": 0.92,
+                        "y_max": 0.92,
+                        "label": f"Nutrient: {nut['name']}",
+                        "type": "nutrient",
+                        "confidence": pest_conf,
+                    }
+                ]
+            elif det_type == "none":
+                return self._reject(
+                    "Unrecognized specimen: Unable to determine plant condition clearly. "
+                    "Please capture a well-lit close-up of the leaf."
+                )
+
             return {
                 "rejected": False,
                 "detection_type": det_type,
@@ -509,6 +652,7 @@ class AIDetectionService(BaseDetectionService):
                 "disease_symptoms": dis_symptoms,
                 "disease_recommended_action": dis_action,
                 "disease_details": disease_details,
+                "condition_assessment": condition_assessment,
                 "bounding_boxes": bounding_boxes,
             }
         except Exception as e:

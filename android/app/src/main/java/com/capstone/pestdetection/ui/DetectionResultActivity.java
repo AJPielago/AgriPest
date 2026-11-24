@@ -95,12 +95,52 @@ public class DetectionResultActivity extends BaseActivity {
     }
 
     private void displayResults() {
-        tvPestName.setText(detectionResult.getDetectedPestName() != null ? detectionResult.getDetectedPestName() : "Pest Species Detected");
+        String detType = detectionResult.getDetectionType() != null
+                ? detectionResult.getDetectionType().toLowerCase()
+                : "";
+        String rawPestName = detectionResult.getDetectedPestName();
+        String rawDiseaseName = detectionResult.getDetectedDiseaseName();
 
-        String sciName = detectionResult.getScientificName();
-        tvScientificName.setText(sciName != null ? sciName : "Identified Host Pathogen");
+        boolean isHealthy = "healthy".equals(detType)
+                || (rawPestName != null && rawPestName.toLowerCase().startsWith("healthy ") && (rawDiseaseName == null || rawDiseaseName.isEmpty()));
+        boolean isPestDamage = "pest_damage".equals(detType);
+        boolean isNutrientDeficiency = "nutrient_deficiency".equals(detType);
+        boolean isDiseaseOnly = "disease".equals(detType)
+                || (!isPestDamage && !isNutrientDeficiency && (rawPestName == null || "No Pest Detected".equalsIgnoreCase(rawPestName)) && rawDiseaseName != null && !rawDiseaseName.isEmpty());
+        boolean hasDualDisease = !isHealthy && !isDiseaseOnly && !isPestDamage && !isNutrientDeficiency && rawDiseaseName != null && !rawDiseaseName.isEmpty();
 
-        String severity = detectionResult.getSeverity() != null ? detectionResult.getSeverity() : "Low";
+        if (isDiseaseOnly) {
+            tvPestName.setText(rawDiseaseName);
+            String disSci = detectionResult.getDiseaseScientificName();
+            String pathogen = detectionResult.getDiseasePathogenType();
+            String subtitle = (disSci != null && !disSci.isEmpty()) ? disSci : "Plant Pathogen";
+            if (pathogen != null && !pathogen.isEmpty()) {
+                subtitle = subtitle + " (" + pathogen + ")";
+            }
+            tvScientificName.setText(subtitle);
+        } else if (isPestDamage) {
+            tvPestName.setText(rawPestName != null ? rawPestName : "Pest-Damaged Foliage");
+            String sciName = detectionResult.getScientificName();
+            tvScientificName.setText(sciName != null && !sciName.isEmpty()
+                    ? "Indirect Pest Damage • Probable: " + sciName
+                    : "Indirect Pest Feeding Damage (Insect not in frame)");
+        } else if (isNutrientDeficiency) {
+            tvPestName.setText(rawPestName != null ? rawPestName : "Nutrient Deficiency");
+            String sciName = detectionResult.getScientificName();
+            tvScientificName.setText(sciName != null && !sciName.isEmpty() ? sciName : "Abiotic / Nutritional Disorder");
+        } else if (isHealthy) {
+            tvPestName.setText(rawPestName != null ? rawPestName : "Healthy Leafy Green");
+            String sciName = detectionResult.getScientificName();
+            tvScientificName.setText(sciName != null && !sciName.isEmpty() ? sciName : "No pest or disease detected");
+        } else {
+            tvPestName.setText(rawPestName != null ? rawPestName : "Pest Species Detected");
+            String sciName = detectionResult.getScientificName();
+            tvScientificName.setText(sciName != null && !sciName.isEmpty() ? sciName : "Identified Insect Pest");
+        }
+
+        String severity = isDiseaseOnly && detectionResult.getDiseaseSeverity() != null
+                ? detectionResult.getDiseaseSeverity()
+                : (detectionResult.getSeverity() != null ? detectionResult.getSeverity() : "Low");
         String severityKey = severity.toLowerCase();
         String localizedSeverity;
         if (severityKey.contains("crit")) {
@@ -123,14 +163,19 @@ public class DetectionResultActivity extends BaseActivity {
             tvSeverityBadge.setTextColor(ContextCompat.getColor(this, R.color.outline));
         }
 
-        int confPercent = Math.round(detectionResult.getConfidenceScore() * 100);
+        float primaryConf = isDiseaseOnly && detectionResult.getDiseaseConfidenceScore() != null
+                ? detectionResult.getDiseaseConfidenceScore()
+                : detectionResult.getConfidenceScore();
+        int confPercent = Math.round(primaryConf * 100);
         tvConfidenceScore.setText(confPercent + "%");
 
         String cropName = detectionResult.getCropName() != null ? detectionResult.getCropName() : getString(R.string.crop_cabbage_default);
         tvResultCropName.setText(cropName);
 
-        String action = detectionResult.getRecommendedAction();
-        tvRecommendation.setText(action != null ? action : "Apply biological controls. Remove heavily infested outer leaves and consult agricultural extension guidelines.");
+        String action = isDiseaseOnly && detectionResult.getDiseaseRecommendedAction() != null
+                ? detectionResult.getDiseaseRecommendedAction()
+                : detectionResult.getRecommendedAction();
+        tvRecommendation.setText(action != null ? action : "Continue regular field scouting and preventive crop care.");
 
         tvResultLocation.setText(detectionResult.getFieldLocation() != null ? detectionResult.getFieldLocation() : getString(R.string.default_sector_location));
         tvResultWeather.setText(detectionResult.getWeatherCondition() != null ? detectionResult.getWeatherCondition() : "Sunny / Clear");
@@ -138,10 +183,11 @@ public class DetectionResultActivity extends BaseActivity {
         String dateStr = detectionResult.getCreatedAt() != null ? detectionResult.getCreatedAt().replace("T", " ").substring(0, Math.min(16, detectionResult.getCreatedAt().length())) : "Recent";
         tvResultTimestamp.setText(dateStr);
 
-        // Plant Disease Diagnosis Display (Dual Assessment)
-        if (detectionResult.getDetectedDiseaseName() != null && !detectionResult.getDetectedDiseaseName().isEmpty()) {
+        // Plant Disease Diagnosis Card: show secondary disease card ONLY for dual pest+disease detections
+        // (disease-only scans already display the disease cleanly in the primary summary card above)
+        if (hasDualDisease) {
             cardDiseaseDiagnosis.setVisibility(View.VISIBLE);
-            tvDiseaseName.setText(detectionResult.getDetectedDiseaseName());
+            tvDiseaseName.setText(rawDiseaseName);
             tvDiseaseScientific.setText(detectionResult.getDiseaseScientificName() != null ? detectionResult.getDiseaseScientificName() : "Plant Pathogen");
             tvDiseasePathogen.setText(detectionResult.getDiseasePathogenType() != null ? detectionResult.getDiseasePathogenType() : "Fungal");
 

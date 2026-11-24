@@ -73,6 +73,9 @@ datasets/01_healthy_crops/
 datasets/02_crop_diseases/
 datasets/03_philippine_pests/
 datasets/00_background_negatives/
+datasets/04_nutrient_deficiencies/
+datasets/05_pest_damage_symptoms/
+datasets/_quarantined_noise/
 datasets/raw/
 datasets/splits/
 datasets/yolo_dataset/

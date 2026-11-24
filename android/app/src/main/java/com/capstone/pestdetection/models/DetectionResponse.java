@@ -17,6 +17,9 @@ public class DetectionResponse implements Serializable {
     @SerializedName("pest_id")
     private Integer pestId;
 
+    @SerializedName("detection_type")
+    private String detectionType;
+
     @SerializedName("image_path")
     private String imagePath;
 
@@ -83,10 +86,14 @@ public class DetectionResponse implements Serializable {
     @SerializedName("feedback_notes")
     private String feedbackNotes;
 
+    @SerializedName("condition_assessment")
+    private java.util.Map<String, Object> conditionAssessment;
+
     public int getId() { return id; }
     public int getUserId() { return userId; }
     public Integer getCropId() { return cropId; }
     public Integer getPestId() { return pestId; }
+    public String getDetectionType() { return detectionType; }
     public String getImagePath() { return imagePath; }
     public float getConfidenceScore() { return confidenceScore; }
     public String getSeverity() { return severity; }
@@ -109,4 +116,5 @@ public class DetectionResponse implements Serializable {
     public String getDiseaseRecommendedAction() { return diseaseRecommendedAction; }
     public Boolean getFeedbackAccurate() { return feedbackAccurate; }
     public String getFeedbackNotes() { return feedbackNotes; }
+    public java.util.Map<String, Object> getConditionAssessment() { return conditionAssessment; }
 }

@@ -1,0 +1,675 @@
+"""
+Holistic Plant Condition, Indirect Pest-Damage Inference & Nutrient Deficiency Analyzer.
+
+Answers three real-world field diagnostic questions on every verified scan of
+Lettuce (Litsugas), Bok Choy (Petsay), or Mustard Greens (Mustasa):
+  1. Total Plant Condition: Healthy, Pest-Damaged, Diseased, Nutrient-Deficient, or Combined
+     with an objective Plant Health Score (0-100) and visual chlorosis/necrosis signals.
+  2. Indirect Pest Damage: Identifies feeding scars (chewed holes, shot-holes, leafminer
+     trails, sap-sucking curl/stippling) even when the insect itself is hidden or absent,
+     and maps them to host-crop-specific probable culprit pest species + IPM steps.
+  3. Nutrient Deficiency & Abiotic Stress: Distinguishes non-infectious nutritional/abiotic
+     disorders (Nitrogen chlorosis, Calcium tipburn, Potassium marginal scorch,
+     Magnesium/Iron interveinal chlorosis, Heat/Water stress) from pests and pathogens.
+"""
+
+import logging
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import numpy as np
+from PIL import Image
+
+from app.services.detection.domain_gate import BRASSICA_CROPS, TARGET_CROPS
+
+logger = logging.getLogger("agripest.condition")
+
+
+# ---------------------------------------------------------------------------
+# Agronomic Knowledge Base: Indirect Pest Damage -> Probable Culprit Pests
+# ---------------------------------------------------------------------------
+
+PEST_DAMAGE_CATALOG: Dict[str, Dict[str, Any]] = {
+    "chewing_damage": {
+        "damage_type": "Chewing / Skeletonized Foliage Damage",
+        "severity": "High",
+        "description": (
+            "Irregular chewed holes, ragged eaten leaf margins, or translucent windowpane "
+            "skeletonization caused by chewing caterpillar larvae."
+        ),
+        "recommended_action": (
+            "Inspect leaf undersides and soil around stems at dusk or early morning when larvae feed. "
+            "Hand-pick visible caterpillars and spray selective Bacillus thuringiensis (Bt kurstaki) at twilight."
+        ),
+        "culprits_by_crop": {
+            "Lettuce": [
+                {
+                    "name": "Cabbage Looper",
+                    "scientific_name": "Trichoplusia ni",
+                    "likelihood": "High",
+                    "evidence": "Large ragged irregular holes chewed across tender lettuce blades",
+                },
+                {
+                    "name": "Common Cutworm",
+                    "scientific_name": "Spodoptera litura",
+                    "likelihood": "High",
+                    "evidence": "Nocturnal defoliation and chewed outer wrapper leaves",
+                },
+                {
+                    "name": "Beet Armyworm",
+                    "scientific_name": "Spodoptera exigua",
+                    "likelihood": "Moderate",
+                    "evidence": "Skeletonized patches and irregular foliar feeding notches",
+                },
+            ],
+            "Brassica": [
+                {
+                    "name": "Diamondback Moth",
+                    "scientific_name": "Plutella xylostella",
+                    "likelihood": "High",
+                    "evidence": "Translucent windowpane scars and small irregular holes on brassica leaves",
+                },
+                {
+                    "name": "Cabbage Looper",
+                    "scientific_name": "Trichoplusia ni",
+                    "likelihood": "High",
+                    "evidence": "Large ragged chew holes across foliage with dark frass pellets",
+                },
+                {
+                    "name": "Common Cutworm",
+                    "scientific_name": "Spodoptera litura",
+                    "likelihood": "Moderate",
+                    "evidence": "Heavy nighttime leaf chewing and notched margins",
+                },
+                {
+                    "name": "Cabbage Cluster Caterpillar",
+                    "scientific_name": "Crocidolomia pavonana",
+                    "likelihood": "Moderate",
+                    "evidence": "Clustered skeletonizing of young inner brassica leaves",
+                },
+            ],
+        },
+    },
+    "shothole_damage": {
+        "damage_type": "Shot-Hole Punctures (Flea Beetle Feeding)",
+        "severity": "High",
+        "description": (
+            "Numerous minute circular shot-holes giving young leaves a sieve-like appearance, "
+            "typical of jumping flea beetles that flee when approached."
+        ),
+        "recommended_action": (
+            "Install 32-mesh fine insect netting over beds, place yellow sticky cards near soil level, "
+            "and dust food-grade diatomaceous earth around seedling bases."
+        ),
+        "culprits_by_crop": {
+            "Brassica": [
+                {
+                    "name": "Striped Flea Beetle",
+                    "scientific_name": "Phyllotreta striolata",
+                    "likelihood": "High",
+                    "evidence": "Signature tiny circular shot-holes across Bok Choy / Mustard foliage",
+                },
+                {
+                    "name": "Diamondback Moth",
+                    "scientific_name": "Plutella xylostella",
+                    "likelihood": "Low",
+                    "evidence": "Early-instar larvae can leave tiny translucent pinholes before expanding",
+                },
+            ],
+            "Lettuce": [
+                {
+                    "name": "Striped Flea Beetle",
+                    "scientific_name": "Phyllotreta striolata",
+                    "likelihood": "Moderate",
+                    "evidence": "Pinpoint circular feeding punctures (check adjacent brassica beds)",
+                },
+                {
+                    "name": "Beet Armyworm",
+                    "scientific_name": "Spodoptera exigua",
+                    "likelihood": "Low",
+                    "evidence": "Early instar pit-feeding on young lettuce leaves",
+                },
+            ],
+        },
+    },
+    "leafminer_damage": {
+        "damage_type": "Serpentine Leaf Mines & Tunnels",
+        "severity": "Moderate",
+        "description": (
+            "Winding silvery-white tunnels etched inside the leaf mesophyll by burrowing fly larvae "
+            "hidden beneath the leaf epidermis."
+        ),
+        "recommended_action": (
+            "Prune and destroy early mined leaves before larvae pupate in soil, and deploy bright "
+            "yellow sticky card traps at canopy height to capture adult flies."
+        ),
+        "culprits_by_crop": {
+            "Lettuce": [
+                {
+                    "name": "Serpentine Leafminer",
+                    "scientific_name": "Liriomyza trifolii",
+                    "likelihood": "High",
+                    "evidence": "Winding white serpentine feeding tunnels inside leaf blade",
+                },
+            ],
+            "Brassica": [
+                {
+                    "name": "Serpentine Leafminer",
+                    "scientific_name": "Liriomyza trifolii",
+                    "likelihood": "High",
+                    "evidence": "Winding white serpentine mines inside brassica foliage",
+                },
+            ],
+        },
+    },
+    "sucking_damage": {
+        "damage_type": "Sap-Sucking Curl, Stippling & Distortion",
+        "severity": "Moderate",
+        "description": (
+            "Curled, cupped, or crinkled leaves with pale stippling, silvery scarring, or sticky "
+            "honeydew caused by sap-sucking insects hiding on leaf undersides."
+        ),
+        "recommended_action": (
+            "Turn leaves over to confirm colonies underneath; wash undersides thoroughly with 1% "
+            "potassium insecticidal soap or cold-pressed neem oil (5ml/L) and deploy yellow/blue sticky traps."
+        ),
+        "culprits_by_crop": {
+            "Lettuce": [
+                {
+                    "name": "Green Peach Aphid",
+                    "scientific_name": "Myzus persicae",
+                    "likelihood": "High",
+                    "evidence": "Downward leaf curling, stunted young tips, and honeydew distortion",
+                },
+                {
+                    "name": "Silverleaf Whitefly",
+                    "scientific_name": "Bemisia tabaci",
+                    "likelihood": "Moderate",
+                    "evidence": "Yellowing stipples and sticky residue on underside of leaves",
+                },
+                {
+                    "name": "Onion / Leaf Thrips",
+                    "scientific_name": "Thrips tabaci / palmi",
+                    "likelihood": "Moderate",
+                    "evidence": "Silvery bronzed scraping streaks and distorted leaf margins",
+                },
+            ],
+            "Brassica": [
+                {
+                    "name": "Turnip / Mustard Aphid",
+                    "scientific_name": "Lipaphis erysimi",
+                    "likelihood": "High",
+                    "evidence": "Severe leaf cupping, crinkling, and yellowing on Bok Choy / Mustard",
+                },
+                {
+                    "name": "Green Peach Aphid",
+                    "scientific_name": "Myzus persicae",
+                    "likelihood": "High",
+                    "evidence": "Curled foliage and stunted vegetative shoot tips",
+                },
+                {
+                    "name": "Silverleaf Whitefly",
+                    "scientific_name": "Bemisia tabaci",
+                    "likelihood": "Moderate",
+                    "evidence": "Chlorotic mottling and sticky honeydew on lower leaves",
+                },
+            ],
+        },
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Agronomic Knowledge Base: Nutrient Deficiencies & Abiotic Disorders
+# ---------------------------------------------------------------------------
+
+NUTRIENT_DEFICIENCY_CATALOG: Dict[str, Dict[str, Any]] = {
+    "nitrogen_deficiency": {
+        "name": "Nitrogen (N) Deficiency",
+        "nutrient": "Nitrogen (N)",
+        "severity": "Moderate",
+        "symptoms": (
+            "Uniform pale yellow-green chlorosis beginning on older outer leaves, reduced leaf size, "
+            "and overall pale stunted foliage without distinct fungal spots or chew holes."
+        ),
+        "causes": "Depleted soil organic nitrogen, heavy rainfall leaching, or low hydroponic EC.",
+        "recommended_action": (
+            "Side-dress with organic nitrogen (vermicompost tea, fish amino acid, or balanced NPK fertilizer). "
+            "In hydroponics, verify nutrient solution EC (1.2-1.8 mS/cm for lettuce) and pH (5.8-6.4)."
+        ),
+    },
+    "calcium_deficiency_tipburn": {
+        "name": "Calcium (Ca) Deficiency / Tipburn",
+        "nutrient": "Calcium (Ca)",
+        "severity": "Moderate",
+        "symptoms": (
+            "Brown-to-black scorched necrotic leaf tips and inner leaf margins, often dry or papery "
+            "without foul bacterial slime—especially common in fast-growing lettuce and bok choy."
+        ),
+        "causes": "Poor transpiration/airflow, heat spikes, uneven watering, or low available calcium.",
+        "recommended_action": (
+            "Increase canopy air circulation, maintain steady morning drip irrigation, avoid excess "
+            "nitrogen/heat spikes, and apply a foliar calcium nitrate or chelated calcium spray."
+        ),
+    },
+    "potassium_deficiency": {
+        "name": "Potassium (K) Deficiency / Marginal Scorch",
+        "nutrient": "Potassium (K)",
+        "severity": "Moderate",
+        "symptoms": (
+            "Yellowing followed by dry brown scorching along outer leaf edges and tips of older leaves "
+            "while the central leaf blade stays comparatively green."
+        ),
+        "causes": "Low soil potassium reserves, sandy leached beds, or excess calcium/magnesium antagonism.",
+        "recommended_action": (
+            "Supplement with potassium sulfate (0-0-50), wood ash in moderation, or fermented fruit/banana-peel "
+            "potassium extract; ensure consistent root-zone moisture."
+        ),
+    },
+    "interveinal_chlorosis": {
+        "name": "Magnesium (Mg) / Iron (Fe) Interveinal Chlorosis",
+        "nutrient": "Magnesium (Mg) / Iron (Fe)",
+        "severity": "Moderate",
+        "symptoms": (
+            "Distinct yellowing between leaf veins while the veins themselves remain sharply dark green "
+            "(older outer leaves indicate Magnesium deficiency; young inner leaves indicate Iron lockout)."
+        ),
+        "causes": "High soil/water pH (> 7.0) locking out Iron, or depleted Magnesium in wet/acidic soils.",
+        "recommended_action": (
+            "Check root-zone pH and adjust to 6.0-6.5. Apply Epsom salt (magnesium sulfate, 1-2 tsp/L foliar spray) "
+            "for older-leaf chlorosis, or chelated iron (Fe-EDDHA) if young inner leaves are yellowing."
+        ),
+    },
+    "abiotic_water_heat_stress": {
+        "name": "Heat / Water / Sunscald Stress (Abiotic)",
+        "nutrient": "Abiotic (Water / Heat)",
+        "severity": "Low",
+        "symptoms": (
+            "Wilted drooping foliage, scorched papery bleached patches, or stressed pale leaves "
+            "without insect feeding scars or fungal sporulation."
+        ),
+        "causes": "Midday heat spikes, irregular irrigation, high root temperature, or direct sunscald.",
+        "recommended_action": (
+            "Install 30-50% shade netting during peak midday sun, mulch beds to cool roots, "
+            "and irrigate consistently in the early morning."
+        ),
+    },
+}
+
+
+def extract_visual_foliage_signals(image_source: Union[str, Image.Image]) -> Dict[str, float]:
+    """
+    Extracts quantitative visual foliage ratios from the central specimen region:
+      - green_foliage_pct: healthy green chlorophyll ratio
+      - yellow_chlorosis_pct: yellowing/chlorotic tissue ratio (N/Mg/Fe deficiency or viral/mildew)
+      - brown_necrosis_pct: brown/scorched/rotted tissue ratio (tipburn, K-scorch, rot, spots)
+    """
+    try:
+        if isinstance(image_source, Image.Image):
+            im = image_source.convert("RGB")
+            should_close = False
+        else:
+            im = Image.open(image_source).convert("RGB")
+            should_close = True
+        try:
+            w, h = im.size
+            # Focus on central 80% to reduce background soil/table skew
+            crop = im.crop((int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)))
+            small = crop.resize((96, 96), Image.Resampling.BILINEAR)
+            hsv = np.asarray(small.convert("HSV"), dtype=np.uint8)
+            hue, sat, val = hsv[:, :, 0], hsv[:, :, 1], hsv[:, :, 2]
+
+            # PIL HSV H in [0..255]
+            healthy_green = (hue >= 42) & (hue <= 122) & (sat >= 35) & (val >= 32)
+            yellow_chlorosis = (hue >= 22) & (hue < 42) & (sat >= 38) & (val >= 55)
+            brown_necrosis = (hue >= 6) & (hue < 22) & (sat >= 35) & (val >= 28) & (val <= 215)
+
+            return {
+                "green_foliage_pct": round(float(healthy_green.mean()) * 100.0, 1),
+                "yellow_chlorosis_pct": round(float(yellow_chlorosis.mean()) * 100.0, 1),
+                "brown_necrosis_pct": round(float(brown_necrosis.mean()) * 100.0, 1),
+            }
+        finally:
+            if should_close:
+                im.close()
+    except Exception:
+        return {
+            "green_foliage_pct": 0.0,
+            "yellow_chlorosis_pct": 0.0,
+            "brown_necrosis_pct": 0.0,
+        }
+
+
+def get_probable_culprits(damage_key: str, crop_name: Optional[str]) -> List[Dict[str, str]]:
+    entry = PEST_DAMAGE_CATALOG.get(damage_key)
+    if not entry:
+        return []
+    family = "Brassica" if crop_name in BRASSICA_CROPS else "Lettuce"
+    return [dict(c) for c in entry["culprits_by_crop"].get(family, entry["culprits_by_crop"]["Lettuce"])]
+
+
+class HolisticConditionAnalyzer:
+    """
+    Zero-shot visual plant condition, indirect pest-damage, and nutrient-deficiency analyzer.
+    Shares the already-loaded CLIP ViT-B-32 model from `CLIPDomainGate` (zero extra VRAM).
+    """
+
+    CONDITION_PROMPTS: Tuple[Tuple[str, str, str], ...] = (
+        # (group, key, text_prompt)
+        ("healthy", "healthy_foliage", "a close-up photo of fresh, vibrant green, undamaged healthy lettuce, bok choy, or mustard leaves"),
+        ("healthy", "healthy_foliage", "a photo of crisp green leafy vegetable foliage with intact edges and no holes, yellowing, or rot"),
+        # Indirect pest-damage signatures (insect not required to be visible)
+        ("pest_damage", "chewing_damage", "a photo of green leafy vegetable leaves with irregular chewed holes, ragged eaten margins, or caterpillar feeding damage"),
+        ("pest_damage", "shothole_damage", "a photo of leafy brassica or bok choy leaves riddled with many tiny round pinholes and flea beetle shot-hole punctures"),
+        ("pest_damage", "leafminer_damage", "a photo of a green vegetable leaf with winding silvery-white serpentine leafminer tunnels etched inside the leaf"),
+        ("pest_damage", "sucking_damage", "a photo of severely curled, cupped, crinkled, distorted leafy vegetable leaves with stippling or honeydew from aphids or thrips"),
+        # Nutrient deficiencies & abiotic stress
+        ("nutrient_deficiency", "nitrogen_deficiency", "a photo of pale yellow-green chlorotic lettuce or leafy vegetable plants with uniform yellowing from nitrogen nutrient deficiency"),
+        ("nutrient_deficiency", "calcium_deficiency_tipburn", "a photo of lettuce or bok choy leaves with brown scorched dead leaf tips and necrotic inner margins from calcium deficiency tipburn"),
+        ("nutrient_deficiency", "potassium_deficiency", "a photo of leafy green leaves with dry brown scorched outer edges and yellow marginal burn from potassium nutrient deficiency"),
+        ("nutrient_deficiency", "interveinal_chlorosis", "a photo of a vegetable leaf with yellow tissue between sharply dark green veins showing magnesium or iron interveinal chlorosis"),
+        ("nutrient_deficiency", "abiotic_water_heat_stress", "a photo of wilted, drooping, or sunscalded bleached leafy vegetable leaves caused by heat or water stress"),
+        # Infectious pathogen signatures (kept in softmax so diseases don't masquerade as nutrient deficiency)
+        ("infectious_disease", "fungal_mildew_spots", "a photo of a lettuce or brassica leaf with white powdery mildew, downy mildew mold, white rust pustules, or circular fungal leaf spots"),
+        ("infectious_disease", "bacterial_soft_rot", "a photo of slimy, water-soaked, dark brown decaying lettuce or bok choy stems with bacterial soft rot"),
+    )
+
+    def __init__(self, clip_gate: Optional[Any] = None):
+        self.clip_gate = clip_gate
+        self._text_features = None
+        self._init_features()
+
+    def _init_features(self) -> None:
+        if self.clip_gate is None or not getattr(self.clip_gate, "available", False):
+            return
+        try:
+            import clip
+            import torch
+
+            prompts = [p for _, _, p in self.CONDITION_PROMPTS]
+            with torch.no_grad():
+                tok = clip.tokenize(prompts).to(self.clip_gate.device)
+                feats = self.clip_gate.model.encode_text(tok)
+                self._text_features = feats / feats.norm(dim=-1, keepdim=True)
+        except Exception as err:
+            logger.warning("Failed to initialize HolisticConditionAnalyzer CLIP prompts: %s", err)
+            self._text_features = None
+
+    @property
+    def available(self) -> bool:
+        return (
+            self.clip_gate is not None
+            and getattr(self.clip_gate, "available", False)
+            and self._text_features is not None
+        )
+
+    def analyze(self, image_source: Union[str, Image.Image]) -> Dict[str, Any]:
+        """
+        Evaluates total plant condition, indirect pest-damage signatures, and nutrient deficiencies.
+        Always returns visual HSV signals even if CLIP is unavailable.
+        """
+        visual_signals = extract_visual_foliage_signals(image_source)
+        if not self.available:
+            return {
+                "available": False,
+                "visual_signals": visual_signals,
+                "group_probs": {},
+                "top_group": "unknown",
+                "top_pest_damage": None,
+                "top_nutrient_deficiency": None,
+            }
+
+        try:
+            import torch
+
+            if isinstance(image_source, Image.Image):
+                im = image_source.convert("RGB")
+                should_close = False
+            else:
+                im = Image.open(image_source).convert("RGB")
+                should_close = True
+            try:
+                img_tensor = self.clip_gate.preprocess(im).unsqueeze(0).to(self.clip_gate.device)
+            finally:
+                if should_close:
+                    im.close()
+
+            with torch.no_grad():
+                img_feat = self.clip_gate.model.encode_image(img_tensor)
+                img_feat = img_feat / img_feat.norm(dim=-1, keepdim=True)
+                sims = (img_feat @ self._text_features.T).squeeze(0).cpu().numpy()
+
+            # Compute unbiased group probabilities from the MAX cosine similarity per group
+            # (prevents groups with 5 sub-prompts from overpowering groups with 2 prompts)
+            group_order = ("healthy", "pest_damage", "nutrient_deficiency", "infectious_disease")
+            group_max_sims: Dict[str, float] = {g: -1.0 for g in group_order}
+            damage_sims: List[Tuple[str, float]] = []
+            deficiency_sims: List[Tuple[str, float]] = []
+
+            for idx, (group, key, _) in enumerate(self.CONDITION_PROMPTS):
+                s = float(sims[idx])
+                if s > group_max_sims[group]:
+                    group_max_sims[group] = s
+                if group == "pest_damage":
+                    damage_sims.append((key, s))
+                elif group == "nutrient_deficiency":
+                    deficiency_sims.append((key, s))
+
+            # Softmax over the 4 balanced group max logits (temperature=100, standard CLIP scale)
+            logits = np.array([100.0 * group_max_sims[g] for g in group_order], dtype=np.float64)
+            logits -= logits.max()
+            exp_l = np.exp(logits)
+            g_probs_arr = exp_l / exp_l.sum()
+            group_probs = {g: round(float(g_probs_arr[i]), 3) for i, g in enumerate(group_order)}
+
+            # Sub-class probabilities within pest_damage & nutrient_deficiency
+            def _top_subclass(pairs: List[Tuple[str, float]], parent_prob: float) -> Optional[Tuple[str, float]]:
+                if not pairs:
+                    return None
+                arr = np.array([100.0 * s for _, s in pairs], dtype=np.float64)
+                arr -= arr.max()
+                p = np.exp(arr)
+                p = p / p.sum()
+                best_i = int(np.argmax(p))
+                return (pairs[best_i][0], round(float(p[best_i]) * parent_prob, 3))
+
+            top_group = max(group_probs.items(), key=lambda kv: kv[1])[0]
+
+            return {
+                "available": True,
+                "visual_signals": visual_signals,
+                "group_probs": group_probs,
+                "top_group": top_group,
+                "top_pest_damage": _top_subclass(damage_sims, group_probs["pest_damage"]),
+                "top_nutrient_deficiency": _top_subclass(deficiency_sims, group_probs["nutrient_deficiency"]),
+            }
+        except Exception as err:
+            logger.warning("HolisticConditionAnalyzer runtime error: %s", err)
+            return {
+                "available": False,
+                "visual_signals": visual_signals,
+                "group_probs": {},
+                "top_group": "unknown",
+                "top_pest_damage": None,
+                "top_nutrient_deficiency": None,
+            }
+
+
+def synthesize_total_condition(
+    det_type: str,
+    crop_name: Optional[str],
+    primary_conf: float,
+    pest_name: Optional[str],
+    disease_name: Optional[str],
+    condition_raw: Dict[str, Any],
+) -> Dict[str, Any]:
+    """
+    Pure, deterministic synthesizer that combines YOLOv8 detection results with
+    `HolisticConditionAnalyzer` signals into a cohesive `condition_assessment` payload
+    AND determines whether an otherwise healthy/missed leaf should be promoted to
+    `pest_damage` or `nutrient_deficiency`.
+    """
+    visual = condition_raw.get("visual_signals", {})
+    group_probs = condition_raw.get("group_probs", {})
+    top_damage = condition_raw.get("top_pest_damage")
+    top_deficiency = condition_raw.get("top_nutrient_deficiency")
+    crop_label = crop_name if crop_name in TARGET_CROPS else "Leafy Green"
+
+    yellow_pct = float(visual.get("yellow_chlorosis_pct", 0.0))
+    brown_pct = float(visual.get("brown_necrosis_pct", 0.0))
+    stress_color_pct = yellow_pct + brown_pct
+
+    p_healthy = float(group_probs.get("healthy", 0.0))
+    p_damage = float(group_probs.get("pest_damage", 0.0))
+    p_deficiency = float(group_probs.get("nutrient_deficiency", 0.0))
+    p_disease = float(group_probs.get("infectious_disease", 0.0))
+
+    # Build optional Pest-Damage detail if CLIP sees a clear indirect feeding signature
+    pest_damage_obj: Optional[Dict[str, Any]] = None
+    probable_pests: List[Dict[str, str]] = []
+    if top_damage and (p_damage >= 0.38 or (top_damage[1] >= 0.30 and p_damage > p_healthy)):
+        dmg_key, dmg_prob = top_damage
+        meta = PEST_DAMAGE_CATALOG[dmg_key]
+        scaled_conf = round(min(0.92, max(0.55, 0.45 + p_damage * 0.50)), 2)
+        probable_pests = get_probable_culprits(dmg_key, crop_label)
+        pest_damage_obj = {
+            "key": dmg_key,
+            "damage_type": meta["damage_type"],
+            "confidence": scaled_conf,
+            "severity": meta["severity"],
+            "description": meta["description"],
+            "recommended_action": meta["recommended_action"],
+        }
+
+    # Build optional Nutrient Deficiency detail if CLIP sees clear deficiency + visual yellowing/browning
+    nutrient_def_obj: Optional[Dict[str, Any]] = None
+    if top_deficiency and (
+        p_deficiency >= 0.40
+        and p_deficiency > p_healthy
+        and (stress_color_pct >= 5.0 or p_deficiency >= 0.60)
+    ):
+        def_key, def_prob = top_deficiency
+        meta = NUTRIENT_DEFICIENCY_CATALOG[def_key]
+        scaled_conf = round(min(0.92, max(0.55, 0.45 + p_deficiency * 0.50)), 2)
+        nutrient_def_obj = {
+            "key": def_key,
+            "name": meta["name"],
+            "nutrient": meta["nutrient"],
+            "confidence": scaled_conf,
+            "severity": meta["severity"],
+            "symptoms": meta["symptoms"],
+            "causes": meta["causes"],
+            "recommended_action": meta["recommended_action"],
+        }
+
+    # Decide if a weak 'healthy' or 'none' YOLO result should be promoted to 'pest_damage' or 'nutrient_deficiency'
+    promoted_type = det_type
+    if det_type in ("healthy", "none"):
+        # Strong YOLO 'healthy' (>= 0.85) is respected unless there is overwhelming CLIP evidence
+        # backed by real visual chlorosis/necrosis (for nutrient deficiency) or strong feeding scars.
+        if det_type == "none" or primary_conf < 0.85:
+            if pest_damage_obj and p_damage >= 0.45 and p_damage >= p_deficiency and p_damage >= p_disease:
+                promoted_type = "pest_damage"
+            elif (
+                nutrient_def_obj
+                and p_deficiency >= 0.48
+                and p_deficiency > p_damage
+                and p_deficiency >= p_disease
+                and stress_color_pct >= 8.0
+            ):
+                promoted_type = "nutrient_deficiency"
+        else:
+            if pest_damage_obj and p_damage >= 0.72 and p_damage >= p_deficiency and p_damage >= p_disease:
+                promoted_type = "pest_damage"
+            elif (
+                nutrient_def_obj
+                and p_deficiency >= 0.75
+                and p_deficiency > p_damage
+                and p_deficiency >= p_disease
+                and stress_color_pct >= 18.0
+            ):
+                promoted_type = "nutrient_deficiency"
+
+    # Compose overall holistic condition summary & health score (0-100)
+    if promoted_type == "pest_and_disease":
+        overall_condition = "Pest & Disease Infestation"
+        cause_category = "combined"
+        health_score = max(15, round(45 - primary_conf * 20 - min(20, stress_color_pct * 0.4)))
+        symptom_signature = f"Active {pest_name} + {disease_name}"
+        condition_summary = (
+            f"{crop_label} shows both active insect infestation ({pest_name}) and foliar disease "
+            f"({disease_name}). Immediate combined IPM and IDM intervention is advised."
+        )
+    elif promoted_type == "pest":
+        overall_condition = "Active Pest Infestation"
+        cause_category = "direct_pest"
+        health_score = max(25, round(68 - primary_conf * 25 - min(15, stress_color_pct * 0.3)))
+        symptom_signature = pest_damage_obj["damage_type"] if pest_damage_obj else f"Direct insect sighting ({pest_name})"
+        condition_summary = (
+            f"Active {pest_name} detected directly on {crop_label}. "
+            + (
+                f"Foliage also exhibits {pest_damage_obj['damage_type'].lower()}."
+                if pest_damage_obj
+                else "No foliar infectious plant disease detected."
+            )
+        )
+    elif promoted_type == "pest_damage" and pest_damage_obj:
+        overall_condition = "Pest-Damaged Foliage"
+        cause_category = "pest_damage"
+        health_score = max(30, round(72 - pest_damage_obj["confidence"] * 28))
+        symptom_signature = pest_damage_obj["damage_type"]
+        top_culprits = ", ".join(c["name"] for c in probable_pests[:2]) if probable_pests else "leafy-green chewing/sucking pests"
+        condition_summary = (
+            f"{crop_label} shows {pest_damage_obj['damage_type'].lower()} even though no insect is "
+            f"directly visible in the frame. Most likely culprit(s): {top_culprits}."
+        )
+    elif promoted_type == "nutrient_deficiency" and nutrient_def_obj:
+        overall_condition = "Nutrient Deficiency / Abiotic Stress"
+        cause_category = "nutrient_deficiency"
+        health_score = max(35, round(78 - nutrient_def_obj["confidence"] * 25 - min(15, stress_color_pct * 0.25)))
+        symptom_signature = nutrient_def_obj["name"]
+        condition_summary = (
+            f"{crop_label} shows signs consistent with {nutrient_def_obj['name']} (non-infectious "
+            f"nutritional/abiotic stress). No active insect pest or infectious pathogen was confirmed."
+        )
+    elif promoted_type == "disease":
+        overall_condition = "Diseased Foliage"
+        cause_category = "infectious_disease"
+        health_score = max(20, round(62 - primary_conf * 25 - min(18, stress_color_pct * 0.35)))
+        symptom_signature = f"Foliar pathogen symptoms ({disease_name})"
+        extra_note = ""
+        if nutrient_def_obj and p_deficiency >= 0.42:
+            extra_note = f" Secondary abiotic/nutrient stress ({nutrient_def_obj['name']}) may also be contributing."
+        elif pest_damage_obj and p_damage >= 0.45:
+            extra_note = f" Secondary insect feeding scars ({pest_damage_obj['damage_type']}) were also noted."
+        condition_summary = (
+            f"{crop_label} exhibits foliar disease symptoms matching {disease_name} "
+            f"with no active insect pest observed.{extra_note}"
+        )
+    else:
+        overall_condition = "Healthy"
+        cause_category = "healthy"
+        health_score = min(99, max(82, round(96 - min(12, stress_color_pct * 0.4))))
+        symptom_signature = "Vibrant intact foliage"
+        condition_summary = (
+            f"{crop_label} appears healthy with intact green foliage, no visible insect pests, "
+            "no pest-feeding damage, and no signs of infectious disease or nutrient deficiency."
+        )
+        # Keep healthy assessments clean (don't show low-confidence alarms on a healthy leaf)
+        pest_damage_obj = None
+        nutrient_def_obj = None
+        probable_pests = []
+
+    return {
+        "promoted_detection_type": promoted_type,
+        "condition_assessment": {
+            "overall_condition": overall_condition,
+            "condition_summary": condition_summary,
+            "health_score": int(health_score),
+            "symptom_signature": symptom_signature,
+            "cause_category": cause_category,
+            "probable_pests": probable_pests,
+            "pest_damage": pest_damage_obj,
+            "nutrient_deficiency": nutrient_def_obj,
+            "visual_signals": visual,
+        },
+    }

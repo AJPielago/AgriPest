@@ -132,6 +132,7 @@ async def detect_pest(
         disease_severity=result.get("disease_severity"),
         disease_recommended_action=result.get("disease_recommended_action"),
         disease_details=result.get("disease_details", {}),
+        condition_assessment=result.get("condition_assessment", {}),
         weather_condition=weather_condition,
         field_location=field_location,
         latitude=latitude,

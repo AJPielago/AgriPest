@@ -41,7 +41,16 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
     disease_recommended_action,
   } = detection;
 
-  const { isHealthy, hasPest, hasDisease, primaryTitle, primaryConfidence } = getDetectionSummary(detection);
+  const {
+    isHealthy,
+    hasPest,
+    hasPestDamage,
+    hasDisease,
+    hasNutrientDeficiency,
+    primaryTitle,
+    primaryConfidence,
+    conditionAssessment,
+  } = getDetectionSummary(detection);
   const confPercent = Math.round((primaryConfidence || confidence_score || 0) * 100);
   const diseaseConfPercent = disease_confidence_score ? Math.round(disease_confidence_score * 100) : null;
 
@@ -200,7 +209,49 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
                     </span>
                   </div>
                   <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-teal-200">
-                    {pest_description || (lang === 'tl' ? 'Walang natukoy na peste o sakit sa dahon.' : 'No active insect pest or foliar plant disease detected.')}
+                    {conditionAssessment?.condition_summary || pest_description || (lang === 'tl' ? 'Walang natukoy na peste o sakit sa dahon.' : 'No active insect pest or foliar plant disease detected.')}
+                  </p>
+                </div>
+              )}
+
+              {/* Indirect Pest Damage Box */}
+              {hasPestDamage && (
+                <div className="p-3 bg-orange-50/70 border border-orange-900 rounded-sm space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-orange-600"></span>
+                      {primaryTitle}
+                    </span>
+                    <span className="px-2 py-0.5 rounded border border-orange-800 font-mono font-bold text-xs uppercase bg-white">
+                      {t('severity')}: {severity} ({confPercent}%)
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-orange-200">
+                    {conditionAssessment?.condition_summary || pest_description}
+                  </p>
+                  {conditionAssessment?.probable_pests?.length > 0 && (
+                    <p className="text-xs text-slate-900 font-mono pt-1">
+                      <strong>Probable Pest(s): </strong>
+                      {conditionAssessment.probable_pests.map((c) => `${c.name} (${c.likelihood})`).join(', ')}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Nutrient Deficiency / Abiotic Stress Box */}
+              {hasNutrientDeficiency && (
+                <div className="p-3 bg-sky-50/70 border border-sky-900 rounded-sm space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-sm text-slate-950 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-sky-600"></span>
+                      {primaryTitle}
+                    </span>
+                    <span className="px-2 py-0.5 rounded border border-sky-800 font-mono font-bold text-xs uppercase bg-white">
+                      ABIOTIC ({confPercent}%)
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-800 leading-relaxed pt-1 border-t border-sky-200">
+                    {conditionAssessment?.nutrient_deficiency?.symptoms || conditionAssessment?.condition_summary || pest_description}
                   </p>
                 </div>
               )}
@@ -298,11 +349,15 @@ export const FieldInspectionReportModal = ({ isOpen, onClose, detection }) => {
             </span>
             
             <div className={`grid grid-cols-1 ${hasPest && hasDisease ? 'md:grid-cols-2' : ''} gap-3`}>
-              {/* Healthy Preventive Care */}
-              {isHealthy && (
+              {/* Healthy / Pest Damage / Nutrient Care Protocol */}
+              {(isHealthy || hasPestDamage || hasNutrientDeficiency) && (
                 <div className="p-3 bg-teal-50/50 border-2 border-teal-900 rounded-sm text-xs text-slate-950 space-y-1">
                   <span className="font-mono font-bold text-[10px] uppercase text-teal-950 block">
-                    {lang === 'tl' ? 'Gabay sa Pangangalaga ng Pananim:' : 'Preventive Crop Maintenance:'}
+                    {hasNutrientDeficiency
+                      ? (lang === 'tl' ? 'Gabay sa Abono at Sustansya:' : 'Fertilization & Abiotic Correction Protocol:')
+                      : hasPestDamage
+                        ? (lang === 'tl' ? 'Gabay sa Pag-inspeksyon at Pagsugpo ng Peste:' : 'Pest Damage Scouting & IPM Protocol:')
+                        : (lang === 'tl' ? 'Gabay sa Pangangalaga ng Pananim:' : 'Preventive Crop Maintenance:')}
                   </span>
                   <p className="leading-relaxed font-bold">{recommended_action}</p>
                 </div>

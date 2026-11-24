@@ -34,18 +34,36 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
         const boxType = (box.type || '').toLowerCase();
         const isDisease = boxType === 'disease' || (box.label && box.label.toLowerCase().includes('disease'));
         const isHealthy = boxType === 'healthy' || (box.label && box.label.toLowerCase().includes('healthy'));
+        const isPestDamage = boxType === 'pest_damage' || (box.label && box.label.toLowerCase().includes('pest damage'));
+        const isNutrient = boxType === 'nutrient' || (box.label && box.label.toLowerCase().includes('nutrient'));
 
         const borderColor = isDisease
           ? 'border-amber-500 bg-amber-500/15'
           : isHealthy
             ? 'border-teal-500 bg-teal-500/15'
-            : 'border-rose-500 bg-rose-500/15';
+            : isPestDamage
+              ? 'border-orange-500 bg-orange-500/15'
+              : isNutrient
+                ? 'border-sky-500 bg-sky-500/15'
+                : 'border-rose-500 bg-rose-500/15';
         const badgeBg = isDisease
           ? 'bg-amber-600 text-white'
           : isHealthy
             ? 'bg-teal-700 text-white'
-            : 'bg-rose-600 text-white';
-        const iconName = isDisease ? 'coronavirus' : isHealthy ? 'eco' : 'bug_report';
+            : isPestDamage
+              ? 'bg-orange-600 text-white'
+              : isNutrient
+                ? 'bg-sky-700 text-white'
+                : 'bg-rose-600 text-white';
+        const iconName = isDisease
+          ? 'coronavirus'
+          : isHealthy
+            ? 'eco'
+            : isPestDamage
+              ? 'pest_control'
+              : isNutrient
+                ? 'science'
+                : 'bug_report';
 
         return (
           <div
@@ -55,7 +73,7 @@ export const BoundingBoxOverlay = ({ imagePath, boundingBoxes = [] }) => {
           >
             <div className={`absolute -top-6 left-0 ${badgeBg} text-[10px] font-bold px-1.5 py-0.5 rounded-xs shadow-sm whitespace-nowrap flex items-center gap-1`}>
               <span className="material-symbols-outlined text-[11px]">{iconName}</span>
-              <span>{box.label || (isDisease ? 'Disease Lesion' : isHealthy ? 'Healthy Crop' : 'Pest Specimen')}</span>
+              <span>{box.label || (isDisease ? 'Disease Lesion' : isHealthy ? 'Healthy Crop' : isNutrient ? 'Nutrient Stress' : isPestDamage ? 'Pest Damage' : 'Pest Specimen')}</span>
               {box.confidence && <span>({Math.round(box.confidence * 100)}%)</span>}
             </div>
           </div>

@@ -377,8 +377,8 @@ def has_organic_foliage_colors(
             sat = hsv_arr[:, :, 1]
             val = hsv_arr[:, :, 2]
 
-            # PIL HSV: H in [0..255] (~18..128 spans yellow-brown/chlorotic through olive & green)
-            foliage_mask = (hue >= 18) & (hue <= 128) & (sat >= 30) & (val >= 28)
+            # PIL HSV: H in [0..255] (~10..128 spans necrotic brown/tan/yellow through olive & green)
+            foliage_mask = (hue >= 10) & (hue <= 128) & (sat >= 28) & (val >= 28)
             foliage_ratio = float(foliage_mask.mean())
 
             # Paper / UI card signature: very bright & very desaturated pixels
@@ -425,6 +425,7 @@ class DomainGateResult:
     reason: Optional[str] = None
     category: str = "unknown"  # 'leafy_crop' | 'pest' | 'non_target_plant' | 'non_agri' | 'unavailable'
     pos_prob: float = 0.0
+    neg_nonagri_prob: float = 0.0
     leafy_vs_other_plant_prob: float = 0.0
     best_prompt: str = ""
     inferred_crop: Optional[str] = None
@@ -497,6 +498,36 @@ class CLIPDomainGate:
         "a photo of root vegetables like carrot, potato, onion, or garlic",
     )
 
+    # Fallback zero-shot prompts when CLIP strongly verifies a target leafy green (pos>=0.90, leafy>=0.85)
+    # but YOLOv8 produces zero boxes (e.g., severe brown rot / unusual lighting / studio background)
+    FALLBACK_CROP_CONDITION_PROMPTS: Dict[str, Tuple[Tuple[str, str], ...]] = {
+        "Lettuce": (
+            ("lettuce_healthy", "a photo of fresh, crisp, bright green healthy lettuce leaves with no brown rot or spots"),
+            ("lettuce_bacterial_soft_rot", "a photo of rotting, slimy, brown, wilted, or decayed lettuce leaves with bacterial soft rot"),
+            ("lettuce_downy_mildew", "a photo of a lettuce leaf with pale yellow angular patches and downy mildew"),
+            ("lettuce_powdery_mildew", "a photo of a lettuce leaf covered with white powdery mildew coating"),
+            ("lettuce_septoria_blight", "a photo of a lettuce leaf with small circular brown necrotic leaf spots and blight"),
+            ("lettuce_bottom_rot_drop", "a photo of a lettuce plant base with dark brown bottom rot and collapsed leaves"),
+            ("lettuce_viral", "a photo of a mottled yellow-green distorted lettuce leaf with mosaic virus symptoms"),
+        ),
+        "Bok Choy": (
+            ("bok_choy_healthy", "a photo of fresh, crisp, healthy green bok choy pechay leaves with clean white stalks"),
+            ("lettuce_bacterial_soft_rot", "a photo of rotting, brown, slimy, decayed bok choy stalks and wilted leaves"),
+            ("brassica_black_rot", "a photo of a bok choy leaf with yellow V-shaped leaf margins and blackened veins"),
+            ("brassica_downy_mildew", "a photo of a bok choy leaf with yellow chlorotic patches and fuzzy downy mildew"),
+            ("brassica_alternaria_leaf_spot", "a photo of a bok choy leaf with circular brown target-like alternaria spots"),
+            ("crucifer_white_rust", "a photo of a bok choy leaf with raised chalky white rust blisters"),
+        ),
+        "Mustard Greens": (
+            ("mustard_greens_healthy", "a photo of fresh, crisp, healthy green mustard greens leaves with no spots or rot"),
+            ("lettuce_bacterial_soft_rot", "a photo of rotting, brown, wilted, decayed mustard green leaves"),
+            ("brassica_black_rot", "a photo of a mustard green leaf with yellow V-shaped leaf edges and dark veins"),
+            ("brassica_downy_mildew", "a photo of a mustard green leaf with yellow angular patches and downy mildew"),
+            ("brassica_alternaria_leaf_spot", "a photo of a mustard green leaf with circular brown target-like spots"),
+            ("crucifer_white_rust", "a photo of a mustard green leaf with raised chalky white rust pustules"),
+        ),
+    }
+
     def __init__(self, weights_path: Optional[str] = None):
         project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
         default_weights = project_root / "weights" / "clip" / "ViT-B-32.pt"
@@ -507,6 +538,7 @@ class CLIPDomainGate:
         self.available = False
         self._t1_features = None
         self._t2_features = None
+        self._fallback_features: Dict[str, Any] = {}
         self._load()
 
     def _load(self) -> None:
@@ -537,6 +569,11 @@ class CLIPDomainGate:
                 t2_tok = clip.tokenize(all_t2).to(self.device)
                 t2_f = self.model.encode_text(t2_tok)
                 self._t2_features = t2_f / t2_f.norm(dim=-1, keepdim=True)
+
+                for crop_key, pairs in self.FALLBACK_CROP_CONDITION_PROMPTS.items():
+                    fb_tok = clip.tokenize([prompt for _, prompt in pairs]).to(self.device)
+                    fb_f = self.model.encode_text(fb_tok)
+                    self._fallback_features[crop_key] = fb_f / fb_f.norm(dim=-1, keepdim=True)
 
             self.available = True
             logger.info("Loaded CLIP ViT-B-32 domain gate on %s.", self.device)
@@ -613,6 +650,7 @@ class CLIPDomainGate:
                     ),
                     category="non_agri",
                     pos_prob=round(pos_prob, 3),
+                    neg_nonagri_prob=round(neg_nonagri_prob, 3),
                     best_prompt=best_prompt,
                 )
 
@@ -628,6 +666,7 @@ class CLIPDomainGate:
                     ),
                     category="non_target_plant",
                     pos_prob=round(pos_prob, 3),
+                    neg_nonagri_prob=round(neg_nonagri_prob, 3),
                     best_prompt=best_prompt,
                 )
 
@@ -641,6 +680,7 @@ class CLIPDomainGate:
                     ),
                     category="non_agri" if neg_nonagri_prob >= neg_plant_prob else "non_target_plant",
                     pos_prob=round(pos_prob, 3),
+                    neg_nonagri_prob=round(neg_nonagri_prob, 3),
                     best_prompt=best_prompt,
                 )
 
@@ -661,6 +701,7 @@ class CLIPDomainGate:
                     ),
                     category="non_target_plant",
                     pos_prob=round(pos_prob, 3),
+                    neg_nonagri_prob=round(neg_nonagri_prob, 3),
                     leafy_vs_other_plant_prob=round(leafy_prob, 3),
                     best_prompt=best_prompt,
                     inferred_crop=None,
@@ -671,6 +712,7 @@ class CLIPDomainGate:
                 allowed=True,
                 category=category,
                 pos_prob=round(pos_prob, 3),
+                neg_nonagri_prob=round(neg_nonagri_prob, 3),
                 leafy_vs_other_plant_prob=round(leafy_prob, 3),
                 best_prompt=best_prompt,
                 inferred_crop=inferred_crop if leafy_prob >= 0.45 else None,
@@ -678,6 +720,72 @@ class CLIPDomainGate:
         except Exception as err:
             logger.warning("CLIP domain gate runtime error (%s); falling back to YOLO + COCO gates.", err)
             return DomainGateResult(allowed=True, category="unavailable", pos_prob=1.0)
+
+    def classify_verified_leafy_green(
+        self,
+        image_source: Union[str, Image.Image],
+        crop_name: str,
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Zero-shot condition classifier invoked ONLY AFTER CLIP already verified with high certainty
+        (pos_prob >= 0.90, leafy_prob >= 0.85, neg_nonagri < 0.05) that the image is one of the 3
+        supported leafy greens, when YOLOv8 produced zero boxes (e.g., severe brown rot or unusual lighting).
+        Returns a parsed detection dict compatible with `resolve_logical_detections`, or None.
+        """
+        if not self.available or crop_name not in self._fallback_features:
+            return None
+        try:
+            import torch
+
+            im, should_close = _open_rgb_image(image_source)
+            try:
+                img_tensor = self.preprocess(im).unsqueeze(0).to(self.device)
+            finally:
+                if should_close:
+                    im.close()
+
+            with torch.no_grad():
+                img_feat = self.model.encode_image(img_tensor)
+                img_feat = img_feat / img_feat.norm(dim=-1, keepdim=True)
+                fb_feat = self._fallback_features[crop_name]
+                sims = (img_feat @ fb_feat.T).squeeze(0)
+                probs = (100.0 * sims).softmax(dim=-1).cpu().numpy()
+
+            pairs = self.FALLBACK_CROP_CONDITION_PROMPTS[crop_name]
+            best_idx = int(np.argmax(probs))
+            raw_name = pairs[best_idx][0]
+            prob = float(probs[best_idx])
+
+            if prob < 0.35 or raw_name not in CLASS_REGISTRY:
+                return None
+
+            kind, display_name, valid_crops, meta = CLASS_REGISTRY[raw_name]
+            # Scale honest confidence to [0.55..0.84] since it's a CLIP-assisted fallback
+            conf = round(min(0.84, max(0.55, 0.50 + prob * 0.35)), 3)
+            box_dict = {
+                "x_min": 0.08,
+                "y_min": 0.08,
+                "x_max": 0.92,
+                "y_max": 0.92,
+                "label": f"{'Healthy Crop' if kind == 'healthy' else kind.capitalize()}: {display_name}",
+                "type": kind,
+                "confidence": round(conf, 2),
+            }
+            if not has_organic_foliage_colors(image_source, box_dict):
+                return None
+
+            return {
+                "raw_name": raw_name,
+                "kind": kind,
+                "display_name": display_name,
+                "valid_crops": valid_crops,
+                "meta": meta,
+                "confidence": conf,
+                "box": box_dict,
+            }
+        except Exception as err:
+            logger.warning("CLIP verified leafy-green fallback failed: %s", err)
+            return None
 
 
 def suppress_conflicting_detections(detections: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -782,27 +890,24 @@ def resolve_logical_detections(
         filtered = compatible
         resolved_crop_name = normalized_selected
     else:
-        # Auto-detect crop family from highest-confidence crop-specific detection
+        # Auto-detect crop family from the highest-confidence crop-specific detection overall
         resolved_crop_name = None
         allowed_family: FrozenSet[str] = TARGET_CROPS
 
-        # Prefer explicit healthy crop detection, then crop-specific disease, then crop-specific pest
-        for kind_priority in ("healthy", "disease", "pest"):
-            specific = [
-                d for d in cleaned
-                if d["kind"] == kind_priority and len(d.get("valid_crops", TARGET_CROPS)) < len(TARGET_CROPS)
-            ]
-            if specific:
-                vc = specific[0]["valid_crops"]
-                allowed_family = vc
-                if len(vc) == 1:
-                    resolved_crop_name = next(iter(vc))
-                elif clip_inferred_crop in vc:
-                    resolved_crop_name = clip_inferred_crop
-                else:
-                    # Default Brassica representative when ambiguous between Bok Choy & Mustard Greens
-                    resolved_crop_name = "Bok Choy" if "Bok Choy" in vc else sorted(vc)[0]
-                break
+        specific = [
+            d for d in cleaned
+            if len(d.get("valid_crops", TARGET_CROPS)) < len(TARGET_CROPS)
+        ]
+        if specific:
+            specific.sort(key=lambda d: d["confidence"], reverse=True)
+            vc = specific[0]["valid_crops"]
+            allowed_family = vc
+            if len(vc) == 1:
+                resolved_crop_name = next(iter(vc))
+            elif clip_inferred_crop in vc:
+                resolved_crop_name = clip_inferred_crop
+            else:
+                resolved_crop_name = "Bok Choy" if "Bok Choy" in vc else sorted(vc)[0]
 
         if resolved_crop_name is None and clip_inferred_crop in TARGET_CROPS:
             resolved_crop_name = clip_inferred_crop

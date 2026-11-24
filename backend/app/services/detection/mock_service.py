@@ -12,6 +12,13 @@ from app.models.crop import Crop
 from app.models.disease import Disease
 from app.models.pest import Pest
 from app.services.detection.base import BaseDetectionService
+from app.services.detection.condition_analyzer import (
+    NUTRIENT_DEFICIENCY_CATALOG,
+    PEST_DAMAGE_CATALOG,
+    extract_visual_foliage_signals,
+    get_probable_culprits,
+    synthesize_total_condition,
+)
 
 
 class MockDetectionService(BaseDetectionService):
@@ -276,6 +283,8 @@ class MockDetectionService(BaseDetectionService):
 
         if outcome == "healthy":
             healthy_conf = round(random.uniform(0.88, 0.97), 2)
+            visual = extract_visual_foliage_signals(self._resolve_disk_path(image_path) or image_path)
+            synth = synthesize_total_condition("healthy", crop_name, healthy_conf, None, None, {"visual_signals": visual})
             return {
                 "rejected": False,
                 "detection_type": "healthy",
@@ -297,6 +306,7 @@ class MockDetectionService(BaseDetectionService):
                 "disease_symptoms": None,
                 "disease_recommended_action": None,
                 "disease_details": {},
+                "condition_assessment": synth["condition_assessment"],
                 "bounding_boxes": [
                     {
                         "x_min": 0.14,
@@ -311,6 +321,8 @@ class MockDetectionService(BaseDetectionService):
             }
 
         if outcome == "pest":
+            visual = extract_visual_foliage_signals(self._resolve_disk_path(image_path) or image_path)
+            synth = synthesize_total_condition("pest", crop_name, pest_confidence, pest_data["pest_name"], None, {"visual_signals": visual})
             return {
                 "rejected": False,
                 "detection_type": "pest",
@@ -332,6 +344,7 @@ class MockDetectionService(BaseDetectionService):
                 "disease_symptoms": None,
                 "disease_recommended_action": None,
                 "disease_details": {},
+                "condition_assessment": synth["condition_assessment"],
                 "bounding_boxes": [
                     {
                         "x_min": 0.22,
@@ -346,6 +359,8 @@ class MockDetectionService(BaseDetectionService):
             }
 
         if outcome == "disease":
+            visual = extract_visual_foliage_signals(self._resolve_disk_path(image_path) or image_path)
+            synth = synthesize_total_condition("disease", crop_name, disease_confidence, None, disease_data["disease_name"], {"visual_signals": visual})
             return {
                 "rejected": False,
                 "detection_type": "disease",
@@ -376,6 +391,7 @@ class MockDetectionService(BaseDetectionService):
                     "recommended_action": disease_data["recommended_action"],
                     "confidence": disease_confidence,
                 },
+                "condition_assessment": synth["condition_assessment"],
                 "bounding_boxes": [
                     {
                         "x_min": 0.20,
@@ -390,6 +406,8 @@ class MockDetectionService(BaseDetectionService):
             }
 
         # outcome == "pest_and_disease"
+        visual = extract_visual_foliage_signals(self._resolve_disk_path(image_path) or image_path)
+        synth = synthesize_total_condition("pest_and_disease", crop_name, pest_confidence, pest_data["pest_name"], disease_data["disease_name"], {"visual_signals": visual})
         return {
             "rejected": False,
             "detection_type": "pest_and_disease",
@@ -420,6 +438,7 @@ class MockDetectionService(BaseDetectionService):
                 "recommended_action": disease_data["recommended_action"],
                 "confidence": disease_confidence,
             },
+            "condition_assessment": synth["condition_assessment"],
             "bounding_boxes": [
                 {
                     "x_min": 0.18,

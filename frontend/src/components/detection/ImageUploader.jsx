@@ -6,7 +6,7 @@ import { compressAndInspectImage } from '../../utils/imageUtils';
 import { detectionService } from '../../services/detectionService';
 import { Alert } from '../ui/Alert';
 
-export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
+export const ImageUploader = ({ crops = [], onAnalyze, onReset, loading = false }) => {
   const { lang, t } = useLanguage();
   const [scanMode, setScanMode] = useState('live_camera'); // 'live_camera' | 'upload'
   const [selectedCropId, setSelectedCropId] = useState('');
@@ -119,6 +119,7 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
     setError(null);
     setOfflineQueued(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (onReset) onReset();
   };
 
   const handleManualSync = async () => {
@@ -304,7 +305,10 @@ export const ImageUploader = ({ crops = [], onAnalyze, loading = false }) => {
               ref={fileInputRef}
               accept="image/jpeg,image/png,image/jpg,image/webp"
               className="hidden"
-              onChange={(e) => handleFileChange(e.target.files[0])}
+              onChange={(e) => {
+                handleFileChange(e.target.files[0]);
+                e.target.value = '';
+              }}
             />
             
             <div className="w-12 h-12 rounded-full bg-primary-container/10 text-primary flex items-center justify-center mx-auto mb-3">

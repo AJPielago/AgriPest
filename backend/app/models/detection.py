@@ -26,6 +26,7 @@ class Detection(Base):
     disease_severity = Column(String(50), nullable=True)
     disease_recommended_action = Column(Text, nullable=True)
     disease_details = Column(JSON, nullable=True, default=dict)
+    condition_assessment = Column(JSON, nullable=True, default=dict)
 
     status = Column(String(50), default="completed")
     created_at = Column(DateTime, default=datetime.utcnow, index=True)

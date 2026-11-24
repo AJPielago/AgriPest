@@ -15,6 +15,7 @@ export const DetectPest = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [detectionResult, setDetectionResult] = useState(null);
   const [error, setError] = useState(null);
+  const [uploaderResetKey, setUploaderResetKey] = useState(0);
 
   useEffect(() => {
     const loadCrops = async () => {
@@ -32,11 +33,13 @@ export const DetectPest = () => {
 
   const handleAnalyze = async (file, cropId, weatherCondition, fieldLocation, coords = null) => {
     setError(null);
+    setDetectionResult(null);
     setAnalyzing(true);
     try {
       const result = await detectionService.detectPest(file, cropId, weatherCondition, fieldLocation, coords);
       setDetectionResult(result);
     } catch (err) {
+      setDetectionResult(null);
       setError(err.response?.data?.detail || (lang === 'tl' ? 'Nabigo ang pagsusuri sa halaman. Pakisuri ang koneksyon.' : 'Failed to process specimen diagnostic. Please check connection.'));
     } finally {
       setAnalyzing(false);
@@ -46,6 +49,7 @@ export const DetectPest = () => {
   const handleNewScan = () => {
     setDetectionResult(null);
     setError(null);
+    setUploaderResetKey((prev) => prev + 1);
   };
 
   if (loadingCrops) return <LoadingSpinner label={lang === 'tl' ? "Inihahanda ang AI engine..." : "Initializing detection engine..."} size="lg" />;
@@ -96,7 +100,16 @@ export const DetectPest = () => {
         
         {/* Left Pane (5 cols): Camera Scanner / Drag-and-Drop Image Uploader */}
         <div className="lg:col-span-5 space-y-4">
-          <ImageUploader crops={crops} onAnalyze={handleAnalyze} loading={analyzing} />
+          <ImageUploader
+            key={uploaderResetKey}
+            crops={crops}
+            onAnalyze={handleAnalyze}
+            onReset={() => {
+              setDetectionResult(null);
+              setError(null);
+            }}
+            loading={analyzing}
+          />
         </div>
 
         {/* Right Pane (7 cols): Real AI Inference Diagnostic Report */}

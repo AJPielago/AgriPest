@@ -56,11 +56,13 @@ def get_dashboard_stats(
     severity_query = sev_q.group_by(Detection.severity).all()
     severity_dist = {sev: count for sev, count in severity_query}
 
-    # Top detected pests (exclude healthy crops and disease-only scans with no insect pest)
+    # Top detected pests (exclude healthy crops, disease-only, and abiotic nutrient deficiency scans)
     top_pests_q = db.query(Detection.detected_pest_name, func.count(Detection.id).label("count")).filter(
         Detection.detected_pest_name.isnot(None),
         Detection.detected_pest_name != "No Pest Detected",
         ~Detection.detected_pest_name.ilike("Healthy%"),
+        ~Detection.detected_pest_name.ilike("%Deficiency%"),
+        ~Detection.detected_pest_name.ilike("%Stress%"),
     )
     if not is_admin:
         top_pests_q = top_pests_q.filter(Detection.user_id == current_user.id)

@@ -78,6 +78,7 @@ public class DetectActivity extends BaseActivity {
             new ActivityResultContracts.GetContent(),
             uri -> {
                 if (uri != null) {
+                    currentPhotoFile = null;
                     selectedImageUri = uri;
                     displayPreviewImage(selectedImageUri);
                 }
@@ -184,7 +185,9 @@ public class DetectActivity extends BaseActivity {
             @Override
             public void onResponse(Call<List<CropDto>> call, Response<List<CropDto>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    cropList = response.body();
+                    cropList = new ArrayList<>();
+                    cropList.add(new CropDto(-1, "Auto-Detect (Leafy Green)"));
+                    cropList.addAll(response.body());
                     ArrayAdapter<CropDto> cropAdapter = new ArrayAdapter<>(DetectActivity.this, android.R.layout.simple_spinner_dropdown_item, cropList);
                     spinnerCrops.setAdapter(cropAdapter);
                 } else {
@@ -229,7 +232,13 @@ public class DetectActivity extends BaseActivity {
     }
 
     private void displayPreviewImage(Uri uri) {
-        ivSpecimenPreview.setImageURI(uri);
+        ivSpecimenPreview.setImageDrawable(null);
+        ivSpecimenPreview.setImageURI(null);
+        com.bumptech.glide.Glide.with(this)
+                .load(uri)
+                .skipMemoryCache(true)
+                .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                .into(ivSpecimenPreview);
         layoutUploadPlaceholder.setVisibility(View.GONE);
     }
 
@@ -239,7 +248,7 @@ public class DetectActivity extends BaseActivity {
             return;
         }
 
-        File uploadFile = getFileFromUri(selectedImageUri);
+        final File uploadFile = getFileFromUri(selectedImageUri);
         if (uploadFile == null || !uploadFile.exists()) {
             Toast.makeText(this, getString(R.string.prepare_image_failed), Toast.LENGTH_LONG).show();
             return;
@@ -247,13 +256,16 @@ public class DetectActivity extends BaseActivity {
 
         setLoading(true);
 
-        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), uploadFile);
-        MultipartBody.Part body = MultipartBody.Part.createFormData("file", uploadFile.getName(), requestFile);
+        String uniqueUploadName = "specimen_" + System.currentTimeMillis() + ".jpg";
+        RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), uploadFile);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("file", uniqueUploadName, requestFile);
 
         RequestBody cropIdBody = null;
         if (spinnerCrops.getSelectedItem() != null) {
             CropDto selectedCrop = (CropDto) spinnerCrops.getSelectedItem();
-            cropIdBody = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(selectedCrop.getId()));
+            if (selectedCrop.getId() > 0) {
+                cropIdBody = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(selectedCrop.getId()));
+            }
         }
 
         String weatherVal = spinnerWeather.getSelectedItem() != null ? spinnerWeather.getSelectedItem().toString() : "Sunny";

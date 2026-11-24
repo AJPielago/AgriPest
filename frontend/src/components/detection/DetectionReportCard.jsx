@@ -53,10 +53,20 @@ export const DetectionReportCard = ({ detection }) => {
   } = detection;
 
   const summary = getDetectionSummary(detection);
-  const { outcome, isHealthy, hasPest, hasDisease, primaryTitle } = summary;
+  const {
+    outcome,
+    isHealthy,
+    hasPest,
+    hasPestDamage,
+    hasDisease,
+    hasNutrientDeficiency,
+    primaryTitle,
+    conditionAssessment,
+  } = summary;
 
   const pestConfPercent = hasPest ? Math.round((confidence_score || 0) * 100) : 0;
   const healthyConfPercent = isHealthy ? Math.round((confidence_score || 0) * 100) : 0;
+  const primaryConfPercent = Math.round((summary.primaryConfidence || confidence_score || 0) * 100);
   const diseaseConfPercent = hasDisease
     ? Math.round((disease_confidence_score ?? disease_details?.confidence ?? 0) * 100)
     : 0;
@@ -68,11 +78,30 @@ export const DetectionReportCard = ({ detection }) => {
   const resolvedDiseaseSymptoms = disease_symptoms || disease_details?.symptoms || null;
   const resolvedDiseaseAction = disease_recommended_action || disease_details?.recommended_action || recommended_action || null;
 
+  const probablePests = conditionAssessment?.probable_pests || [];
+  const pestDamageInfo = conditionAssessment?.pest_damage || null;
+  const nutrientInfo = conditionAssessment?.nutrient_deficiency || null;
+  const visualSignals = conditionAssessment?.visual_signals || null;
+
   const getOutcomeBadge = () => {
     if (outcome === 'healthy') {
       return (
         <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-700 dark:text-teal-300 font-bold text-[10px] uppercase tracking-wider border border-teal-500/20">
           {lang === 'tl' ? 'Malusog na Pananim' : 'Healthy Leafy Green'}
+        </span>
+      );
+    }
+    if (outcome === 'pest_damage') {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-800 dark:text-orange-300 font-bold text-[10px] uppercase tracking-wider border border-orange-500/20">
+          {lang === 'tl' ? 'Pinsala ng Peste sa Dahon' : 'Pest-Damaged Foliage'}
+        </span>
+      );
+    }
+    if (outcome === 'nutrient_deficiency') {
+      return (
+        <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-800 dark:text-sky-300 font-bold text-[10px] uppercase tracking-wider border border-sky-500/20">
+          {lang === 'tl' ? 'Kakulangan sa Sustansya' : 'Nutrient Deficiency / Abiotic'}
         </span>
       );
     }
@@ -322,6 +351,195 @@ export const DetectionReportCard = ({ detection }) => {
 
             {/* Findings Container */}
             <div className="space-y-4">
+
+              {/* TOTAL PLANT CONDITION OVERVIEW BANNER (Always shown when condition_assessment is present) */}
+              {conditionAssessment?.overall_condition && (
+                <div className="p-3.5 rounded-xl border border-outline-variant dark:border-outline bg-surface-container-low/60 dark:bg-surface-container space-y-2.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px] text-primary">monitoring</span>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-on-surface-variant block">
+                          {lang === 'tl' ? 'Kabuuang Kondisyon ng Halaman' : 'Total Plant Condition'}
+                        </span>
+                        <span className="font-bold text-sm text-on-surface dark:text-inverse-on-surface">
+                          {conditionAssessment.overall_condition}
+                        </span>
+                      </div>
+                    </div>
+                    {typeof conditionAssessment.health_score === 'number' && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-container-lowest dark:bg-slate-900 border border-outline-variant text-xs font-bold">
+                        <span className="text-on-surface-variant text-[10px] uppercase">
+                          {lang === 'tl' ? 'Kalusugan' : 'Health Score'}
+                        </span>
+                        <span className={
+                          conditionAssessment.health_score >= 80
+                            ? 'text-teal-700 dark:text-teal-400'
+                            : conditionAssessment.health_score >= 55
+                              ? 'text-amber-700 dark:text-amber-400'
+                              : 'text-error'
+                        }>
+                          {conditionAssessment.health_score}/100
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {conditionAssessment.condition_summary && (
+                    <p className="text-xs text-on-surface-variant leading-relaxed">
+                      {conditionAssessment.condition_summary}
+                    </p>
+                  )}
+
+                  {visualSignals && (
+                    <div className="grid grid-cols-3 gap-2 pt-1 text-[10px] font-semibold">
+                      <div className="px-2 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+                        <span>{lang === 'tl' ? 'Berdeng Dahon' : 'Green Leaf'}</span>
+                        <span className="font-bold">{visualSignals.green_foliage_pct}%</span>
+                      </div>
+                      <div className="px-2 py-1.5 rounded-lg bg-amber-500/10 text-amber-800 dark:text-amber-300 flex items-center justify-between">
+                        <span>{lang === 'tl' ? 'Paninilaw' : 'Chlorosis'}</span>
+                        <span className="font-bold">{visualSignals.yellow_chlorosis_pct}%</span>
+                      </div>
+                      <div className="px-2 py-1.5 rounded-lg bg-orange-500/10 text-orange-900 dark:text-orange-300 flex items-center justify-between">
+                        <span>{lang === 'tl' ? 'Pagkatuyot' : 'Necrosis'}</span>
+                        <span className="font-bold">{visualSignals.brown_necrosis_pct}%</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* STATE: Indirect Pest-Damaged Foliage (Pest not directly visible -> lists Probable Culprits) */}
+              {hasPestDamage && (
+                <div className="p-4 rounded-xl border border-orange-500/35 bg-orange-500/5 dark:bg-orange-950/20 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 text-orange-700 dark:text-orange-300 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-[18px]">pest_control</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-orange-800 dark:text-orange-300">
+                          {lang === 'tl' ? 'Pinsala ng Peste (Walang Nakitang Insekto)' : 'Indirect Pest Damage Assessment'}
+                        </span>
+                        <h4 className="font-bold text-base sm:text-lg text-on-surface dark:text-inverse-on-surface">
+                          {pestDamageInfo?.damage_type || primaryTitle}
+                        </h4>
+                      </div>
+                    </div>
+                    <div>{getSeverityBadge(pestDamageInfo?.severity || severity)}</div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-on-surface-variant font-medium">
+                        {lang === 'tl' ? 'Katiyakan ng Pinsala' : 'Damage Signature Confidence'}
+                      </span>
+                      <span className="text-orange-700 dark:text-orange-300 font-bold">{primaryConfPercent}%</span>
+                    </div>
+                    <div className="w-full bg-surface-variant dark:bg-surface-container rounded-full h-2 overflow-hidden">
+                      <div className="bg-orange-600 h-2 rounded-full transition-all duration-500" style={{ width: `${primaryConfPercent}%` }}></div>
+                    </div>
+                  </div>
+
+                  {probablePests.length > 0 && (
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-orange-900 dark:text-orange-300 block">
+                        {lang === 'tl' ? 'Posibleng Pesteng Gumawa ng Pinsala' : 'Probable Causal Pest(s)'}
+                      </span>
+                      <div className="space-y-1.5">
+                        {probablePests.map((culprit, idx) => (
+                          <div key={idx} className="p-2.5 rounded-lg bg-surface-container-lowest dark:bg-surface-container border border-orange-400/25 flex items-start justify-between gap-2 text-xs">
+                            <div>
+                              <span className="font-bold text-on-surface dark:text-inverse-on-surface">{culprit.name}</span>
+                              {culprit.scientific_name && (
+                                <span className="ml-1.5 text-[11px] italic text-on-surface-variant font-serif">({culprit.scientific_name})</span>
+                              )}
+                              {culprit.evidence && (
+                                <p className="text-[11px] text-on-surface-variant mt-0.5">{culprit.evidence}</p>
+                              )}
+                            </div>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/15 text-orange-800 dark:text-orange-300 whitespace-nowrap">
+                              {culprit.likelihood}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60 text-xs">
+                    <span className="font-bold text-orange-800 dark:text-orange-300 block mb-0.5 text-[11px] uppercase tracking-wider">
+                      {lang === 'tl' ? 'Hakbang sa Pagsugpo at Pag-inspeksyon' : 'Scouting & IPM Protocol'}
+                    </span>
+                    <p className="text-on-surface-variant leading-relaxed font-medium">
+                      {pestDamageInfo?.recommended_action || recommended_action}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* STATE: Nutrient Deficiency / Abiotic Stress (Non-infectious) */}
+              {hasNutrientDeficiency && (
+                <div className="p-4 rounded-xl border border-sky-500/35 bg-sky-500/5 dark:bg-sky-950/20 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-700 dark:text-sky-300 flex items-center justify-center font-bold flex-shrink-0 mt-0.5">
+                        <span className="material-symbols-outlined text-[18px]">science</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-sky-800 dark:text-sky-300">
+                          {lang === 'tl' ? 'Kakulangan sa Sustansya (Hindi Nakakahawa)' : 'Nutrient Deficiency / Abiotic Assessment'}
+                        </span>
+                        <h4 className="font-bold text-base sm:text-lg text-on-surface dark:text-inverse-on-surface">
+                          {nutrientInfo?.name || primaryTitle}
+                        </h4>
+                        {nutrientInfo?.nutrient && (
+                          <p className="text-xs text-sky-700 dark:text-sky-300 font-semibold">{nutrientInfo.nutrient}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>{getSeverityBadge(nutrientInfo?.severity || severity)}</div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-on-surface-variant font-medium">
+                        {lang === 'tl' ? 'Katiyakan ng Pagsusuri' : 'Assessment Confidence'}
+                      </span>
+                      <span className="text-sky-700 dark:text-sky-300 font-bold">{primaryConfPercent}%</span>
+                    </div>
+                    <div className="w-full bg-surface-variant dark:bg-surface-container rounded-full h-2 overflow-hidden">
+                      <div className="bg-sky-600 h-2 rounded-full transition-all duration-500" style={{ width: `${primaryConfPercent}%` }}></div>
+                    </div>
+                  </div>
+
+                  {nutrientInfo?.symptoms && (
+                    <div className="p-2.5 bg-sky-500/10 rounded-lg border border-sky-400/20 text-xs text-sky-950 dark:text-sky-200">
+                      <span className="font-bold block text-[10px] uppercase tracking-wider mb-0.5">
+                        {lang === 'tl' ? 'Mga Palatandaan' : 'Observed Deficiency Symptoms'}
+                      </span>
+                      <p className="font-medium text-[11px] leading-relaxed">{nutrientInfo.symptoms}</p>
+                      {nutrientInfo.causes && (
+                        <p className="text-[11px] mt-1 opacity-90">
+                          <strong>{lang === 'tl' ? 'Karaniwang Sanhi: ' : 'Common Causes: '}</strong>
+                          {nutrientInfo.causes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="p-3 bg-surface-container-lowest dark:bg-surface-container rounded-lg border border-outline-variant/60 text-xs">
+                    <span className="font-bold text-sky-800 dark:text-sky-300 block mb-0.5 text-[11px] uppercase tracking-wider">
+                      {lang === 'tl' ? 'Gabay sa Abono at Patubig' : 'Fertilization & Correction Protocol'}
+                    </span>
+                    <p className="text-on-surface-variant leading-relaxed font-medium">
+                      {nutrientInfo?.recommended_action || recommended_action}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* STATE 1: Healthy Leafy Green (No Pest, No Disease) */}
               {isHealthy && (
                 <div className="p-4 rounded-xl border border-teal-500/30 bg-teal-500/5 dark:bg-teal-950/20 space-y-3">

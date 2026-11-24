@@ -16,6 +16,11 @@ from PIL import Image
 from app.core.config import settings
 from app.core.rate_limiter import detection_limiter, login_limiter
 from app.main import app
+from app.services.detection.condition_analyzer import (
+    extract_visual_foliage_signals,
+    get_probable_culprits,
+    synthesize_total_condition,
+)
 from app.services.detection.domain_gate import (
     CLASS_REGISTRY,
     check_image_sanity,
@@ -199,6 +204,80 @@ def test_suppress_conflicting_large_pest_and_disease_same_box():
     kept = suppress_conflicting_detections(dets)
     assert len(kept) == 1
     assert kept[0]["raw_name"] == "common_cutworm"
+
+
+# ---------------------------------------------------------------------------
+# 2b. Pure Unit Tests: Holistic Condition, Indirect Pest Damage & Nutrient Deficiency
+# ---------------------------------------------------------------------------
+
+
+def test_indirect_pest_damage_infers_host_specific_culprits():
+    # Chewing damage on Bok Choy should point to Diamondback Moth & Cabbage Looper
+    bok_culprits = [c["name"] for c in get_probable_culprits("chewing_damage", "Bok Choy")]
+    assert "Diamondback Moth" in bok_culprits
+    assert "Cabbage Looper" in bok_culprits
+
+    # Chewing damage on Lettuce should NOT blame Brassica-specialist Diamondback Moth
+    lettuce_culprits = [c["name"] for c in get_probable_culprits("chewing_damage", "Lettuce")]
+    assert "Diamondback Moth" not in lettuce_culprits
+    assert "Cabbage Looper" in lettuce_culprits
+
+    # Shot-hole damage on Mustard Greens points to Striped Flea Beetle
+    shothole_culprits = [c["name"] for c in get_probable_culprits("shothole_damage", "Mustard Greens")]
+    assert shothole_culprits[0] == "Striped Flea Beetle"
+
+
+def test_synthesize_promotes_chewed_leaf_to_pest_damage_without_visible_bug():
+    cond_raw = {
+        "available": True,
+        "visual_signals": {"green_foliage_pct": 62.0, "yellow_chlorosis_pct": 4.0, "brown_necrosis_pct": 3.0},
+        "group_probs": {"healthy": 0.12, "pest_damage": 0.71, "nutrient_deficiency": 0.09, "infectious_disease": 0.08},
+        "top_pest_damage": ("chewing_damage", 0.64),
+        "top_nutrient_deficiency": ("nitrogen_deficiency", 0.05),
+    }
+    res = synthesize_total_condition(
+        det_type="healthy",
+        crop_name="Bok Choy",
+        primary_conf=0.68,
+        pest_name=None,
+        disease_name=None,
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "pest_damage"
+    ca = res["condition_assessment"]
+    assert ca["overall_condition"] == "Pest-Damaged Foliage"
+    assert ca["pest_damage"]["key"] == "chewing_damage"
+    assert any(c["name"] == "Diamondback Moth" for c in ca["probable_pests"])
+
+
+def test_synthesize_promotes_yellowing_leaf_to_nutrient_deficiency():
+    cond_raw = {
+        "available": True,
+        "visual_signals": {"green_foliage_pct": 40.0, "yellow_chlorosis_pct": 38.0, "brown_necrosis_pct": 4.0},
+        "group_probs": {"healthy": 0.08, "pest_damage": 0.07, "nutrient_deficiency": 0.74, "infectious_disease": 0.11},
+        "top_pest_damage": ("sucking_damage", 0.05),
+        "top_nutrient_deficiency": ("nitrogen_deficiency", 0.61),
+    }
+    res = synthesize_total_condition(
+        det_type="none",
+        crop_name="Lettuce",
+        primary_conf=0.0,
+        pest_name=None,
+        disease_name=None,
+        condition_raw=cond_raw,
+    )
+    assert res["promoted_detection_type"] == "nutrient_deficiency"
+    ca = res["condition_assessment"]
+    assert ca["overall_condition"] == "Nutrient Deficiency / Abiotic Stress"
+    assert ca["nutrient_deficiency"]["key"] == "nitrogen_deficiency"
+    assert ca["probable_pests"] == []
+
+
+def test_visual_foliage_signals_quantifies_green_vs_yellow_chlorosis():
+    yellow_leaf = Image.new("RGB", (120, 120), (220, 210, 45))
+    sig = extract_visual_foliage_signals(yellow_leaf)
+    assert sig["yellow_chlorosis_pct"] >= 80.0
+    assert sig["green_foliage_pct"] <= 10.0
 
 
 # ---------------------------------------------------------------------------
